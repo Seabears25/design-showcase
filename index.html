@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Template Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/lyht-ui.css">
+<link rel="stylesheet" href="assets/theme.css">
+<style>
+  body.gallery{
+    --site-bg:#0b0c0f;
+    --site-surface:#151619;
+    --site-text:#f4f4f2;
+    --site-text-muted:#9a9a9c;
+    --site-border:#2a2b2f;
+    --site-accent:#6ee7c4;
+    font-family:'Inter',sans-serif;
+  }
+  .gallery .display{ font-family:'Space Grotesk',sans-serif; letter-spacing:-.02em; }
+  .gallery .mono{ font-family:'JetBrains Mono',monospace; }
+
+  .gallery-head{ padding-block: var(--lyht-space-10) var(--lyht-space-6); }
+
+  .gallery .tabs{ border-bottom-color:var(--site-border); gap:var(--lyht-space-8); }
+  .gallery .tabs button{ color:var(--site-text-muted); font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:var(--lyht-text-md); padding-block:var(--lyht-space-3); }
+  .gallery .tabs button:hover{ color:var(--site-text); }
+  .gallery .tabs button.active{ color:var(--site-text); border-bottom-color:var(--site-accent); }
+
+  .tab-meta{
+    display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:var(--lyht-space-4);
+    padding-block:var(--lyht-space-6);
+  }
+
+  .frame-shell{
+    border:1px solid var(--site-border);
+    border-radius:var(--lyht-radius-lg);
+    overflow:hidden;
+    background:var(--site-surface);
+  }
+  .frame-shell .frame-bar{
+    display:flex; align-items:center; gap:.4rem;
+    padding:.7rem 1rem;
+    border-bottom:1px solid var(--site-border);
+  }
+  .frame-shell .dot{ width:.6rem; height:.6rem; border-radius:50%; background:var(--site-border); }
+  .frame-shell iframe{
+    width:100%;
+    height:78vh;
+    border:0;
+    display:block;
+    background:#fff;
+  }
+
+  .swatch{ display:inline-flex; gap:.3rem; margin-top:.6rem; }
+  .swatch span{ width:1.1rem; height:1.1rem; border-radius:3px; border:1px solid #ffffff22; }
+
+  .gallery .card{ background:var(--site-surface); border-color:var(--site-border); }
+  .gallery .btn{ border-radius:999px; }
+  .gallery .btn.primary{ background:var(--site-accent); border-color:var(--site-accent); color:#08110d; }
+  .gallery .btn.primary:hover{ background:#57d6ae; border-color:#57d6ae; }
+
+  @media (max-width: 767px){
+    .frame-shell iframe{ height:70vh; }
+  }
+</style>
+</head>
+<body class="gallery">
+
+  <header class="site-nav">
+    <div class="container flex items-center justify-between">
+      <a href="#" class="brand"><span style="width:1.2rem;height:1.2rem;background:var(--site-accent);display:inline-block;border-radius:3px;"></span> Studio Templates</a>
+      <nav class="site-nav-links">
+        <a href="https://pages.github.com/" target="_blank" rel="noopener">Deploy on GitHub Pages ↗</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="container gallery-head reveal">
+    <p class="eyebrow">Built on the LYHT UI grid</p>
+    <h1 class="display mt-3" style="font-size:clamp(2rem,4.5vw,3.2rem); max-width:40rem;">Four agency site templates, one tab bar.</h1>
+    <p class="mt-4" style="color:var(--site-text-muted); max-width:38rem;">
+      Each tab below is a full, self-contained page — nav, hero, three sections, footer —
+      built from the same <span class="mono">.container / .grid / .span-*</span> classes.
+      Swap the <span class="mono">&lt;img&gt;</span> placeholders for your own photography and
+      publish the whole folder to GitHub Pages as-is.
+    </p>
+  </div>
+
+  <div class="container">
+    <div class="tabs" role="tablist" id="templateTabs">
+      <button class="active" role="tab" data-target="monolith">Monolith</button>
+      <button role="tab" data-target="pulse">Pulse</button>
+      <button role="tab" data-target="ink-grain">Ink &amp; Grain</button>
+      <button role="tab" data-target="kinetic">Kinetic</button>
+    </div>
+
+    <div class="tab-meta">
+      <div id="tabDescription">
+        <h2 class="display" style="font-size:var(--lyht-text-xl);" id="tabTitle">Monolith</h2>
+        <p style="color:var(--site-text-muted); max-width:36rem;" id="tabCopy">
+          Architecture &amp; spatial design. Warm stone surfaces, a blueprint grid, and a single
+          cobalt accent. Space Grotesk display, JetBrains Mono for coordinates.
+        </p>
+        <div class="swatch" id="tabSwatch">
+          <span style="background:#e9e6de;"></span><span style="background:#19180f;"></span><span style="background:#2438ff;"></span>
+        </div>
+      </div>
+      <a href="templates/monolith.html" target="_blank" rel="noopener" class="btn primary" id="tabOpen">Open full page ↗</a>
+    </div>
+
+    <div class="frame-shell reveal mb-16">
+      <div class="frame-bar">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="mono" style="font-size:.7rem; color:var(--site-text-muted); margin-left:.5rem;" id="tabUrl">templates/monolith.html</span>
+      </div>
+      <iframe id="previewFrame" src="templates/monolith.html" title="Template preview" loading="lazy"></iframe>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="container flex justify-between items-center" style="flex-wrap:wrap; gap:1rem;">
+      <p style="color:var(--site-text-muted); font-size:var(--lyht-text-sm);">All four templates share <span class="mono">assets/lyht-ui.css</span> + <span class="mono">assets/theme.css</span> + <span class="mono">assets/site.js</span>.</p>
+      <p style="color:var(--site-text-muted); font-size:var(--lyht-text-sm);">© 2026</p>
+    </div>
+  </footer>
+
+  <script src="assets/site.js"></script>
+  <script>
+    const data = {
+      monolith: {
+        title: 'Monolith',
+        copy: 'Architecture &amp; spatial design. Warm stone surfaces, a blueprint grid, and a single cobalt accent. Space Grotesk display, JetBrains Mono for coordinates.',
+        swatch: ['#e9e6de', '#19180f', '#2438ff'],
+        url: 'templates/monolith.html'
+      },
+      pulse: {
+        title: 'Pulse',
+        copy: 'Product / SaaS design studio. Dark navy-ink base, a violet-to-cyan gradient, glass cards. Sora display, JetBrains Mono for stats.',
+        swatch: ['#0a0c16', '#7c5cff', '#33e6c8'],
+        url: 'templates/pulse.html'
+      },
+      'ink-grain': {
+        title: 'Ink &amp; Grain',
+        copy: 'Branding &amp; editorial studio. Warm ink-black, paper grain texture, mustard-gold accent. Italic Fraunces display for a print-house feel.',
+        swatch: ['#161311', '#f3ece2', '#d9a441'],
+        url: 'templates/ink-grain.html'
+      },
+      kinetic: {
+        title: 'Kinetic',
+        copy: 'Motion &amp; animation studio. Bright white base, flat magenta/orange color-blocking, numbered film frames. Archivo Black display.',
+        swatch: ['#ffffff', '#ff2d78', '#ff7a00'],
+        url: 'templates/kinetic.html'
+      }
+    };
+
+    const tabs = document.querySelectorAll('#templateTabs button');
+    const frame = document.getElementById('previewFrame');
+    const title = document.getElementById('tabTitle');
+    const copy = document.getElementById('tabCopy');
+    const swatch = document.getElementById('tabSwatch');
+    const open = document.getElementById('tabOpen');
+    const url = document.getElementById('tabUrl');
+
+    tabs.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        tabs.forEach((b) => b.classList.remove('active'));
+        btn.classList.add('active');
+        const key = btn.dataset.target;
+        const d = data[key];
+        frame.src = d.url;
+        title.innerHTML = d.title;
+        copy.innerHTML = d.copy;
+        swatch.innerHTML = d.swatch.map((c) => `<span style="background:${c};"></span>`).join('');
+        open.href = d.url;
+        url.textContent = d.url;
+      });
+    });
+  </script>
+</body>
+</html>
