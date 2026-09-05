@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nucleus — One record. Every team.</title>
+<link rel="stylesheet" href="lyht-ui.css">
+<link rel="stylesheet" href="brand.css">
+</head>
+<body>
+
+<div class="page">
+
+  <!-- NAV -->
+  <header class="navbar" style="background:var(--nx-paper);">
+    <div class="container site-nav">
+      <a href="#" class="wordmark">Nucleus</a>
+      <nav class="site-nav-links">
+        <a href="#features">Product</a>
+        <a href="#ecosystem">Ecosystem</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#">Docs</a>
+      </nav>
+      <div class="site-nav-actions">
+        <a href="#" class="login">Log in</a>
+        <a href="#" class="btn primary sm">Start free trial</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-main">
+
+    <!-- HERO -->
+    <section class="container">
+      <div class="hero">
+        <div>
+          <h1>Every customer relationship, one core record.</h1>
+          <p class="lede">Nucleus keeps sales, support, marketing, and billing looking at the same customer — then lets you build anything else on top of it.</p>
+          <div class="hero-actions">
+            <a href="#" class="btn primary lg">Start free trial</a>
+            <a href="#ecosystem" class="btn ghost lg">See the ecosystem</a>
+          </div>
+          <p class="hero-note">No credit card to start. Import your existing CRM in one sitting, not one quarter.</p>
+        </div>
+
+        <div class="hero-visual">
+          <svg viewBox="0 0 520 480" width="100%" height="100%" role="img" aria-label="Diagram of a central customer record connected to Sales, Support, Marketing, Billing, Automation, and API modules">
+            <!-- connecting lines -->
+            <g stroke="var(--nx-line)" stroke-width="1.5" fill="none">
+              <path d="M260,240 C230,190 190,150 150,110" />
+              <path d="M260,240 C300,190 340,150 380,105" />
+              <path d="M260,240 C210,240 160,240 90,235" />
+              <path d="M260,240 C310,240 370,240 440,245" />
+              <path d="M260,240 C240,290 210,330 170,375" />
+              <path d="M260,240 C285,290 320,330 365,378" />
+            </g>
+
+            <!-- rotating faint orbit ring with two data-packet dots -->
+            <g class="orbit-ring">
+              <circle cx="260" cy="240" r="150" fill="none" stroke="var(--nx-line)" stroke-width="1" stroke-dasharray="2 6" />
+              <circle cx="410" cy="240" r="4" fill="var(--nx-citrine)" />
+            </g>
+            <g class="orbit-ring-slow">
+              <circle cx="260" cy="240" r="205" fill="none" stroke="var(--nx-line)" stroke-width="1" stroke-dasharray="2 6" />
+              <circle cx="260" cy="35" r="4" fill="var(--nx-indigo)" />
+            </g>
+
+            <!-- satellite nodes -->
+            <g font-family="var(--lyht-font)">
+              <!-- Sales -->
+              <circle cx="150" cy="110" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
+              <text x="150" y="106" text-anchor="middle" class="orbit-label">Sales</text>
+              <text x="150" y="121" text-anchor="middle" class="orbit-label-sub">pipeline</text>
+
+              <!-- Marketing -->
+              <circle cx="380" cy="105" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
+              <text x="380" y="101" text-anchor="middle" class="orbit-label">Marketing</text>
+              <text x="380" y="116" text-anchor="middle" class="orbit-label-sub">campaigns</text>
+
+              <!-- Support -->
+              <circle cx="90" cy="235" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
+              <text x="90" y="231" text-anchor="middle" class="orbit-label">Support</text>
+              <text x="90" y="246" text-anchor="middle" class="orbit-label-sub">tickets</text>
+
+              <!-- API -->
+              <circle cx="440" cy="245" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
+              <text x="440" y="241" text-anchor="middle" class="orbit-label">API</text>
+              <text x="440" y="256" text-anchor="middle" class="orbit-label-sub">webhooks</text>
+
+              <!-- Billing -->
+              <circle cx="170" cy="375" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
+              <text x="170" y="371" text-anchor="middle" class="orbit-label">Billing</text>
+              <text x="170" y="386" text-anchor="middle" class="orbit-label-sub">invoices</text>
+
+              <!-- Automation -->
+              <circle cx="365" cy="378" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
+              <text x="365" y="374" text-anchor="middle" class="orbit-label">Automation</text>
+              <text x="365" y="389" text-anchor="middle" class="orbit-label-sub">workflows</text>
+            </g>
+
+            <!-- central node -->
+            <circle cx="260" cy="240" r="52" fill="var(--nx-ink)" />
+            <text x="260" y="235" text-anchor="middle" fill="#fff" font-family="var(--font-display)" font-size="14">Customer</text>
+            <text x="260" y="252" text-anchor="middle" fill="#C7CCC3" font-size="11">record</text>
+          </svg>
+        </div>
+      </div>
+
+      <p class="strip-label">Nucleus fits into the tools your teams already run their day on.</p>
+      <div class="category-strip">
+        <span class="category-chip">Email &amp; calendar</span>
+        <span class="category-chip">Chat</span>
+        <span class="category-chip">Billing</span>
+        <span class="category-chip">Support desk</span>
+        <span class="category-chip">Warehouse &amp; inventory</span>
+        <span class="category-chip">Field service</span>
+        <span class="category-chip">Reporting</span>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="container" id="features">
+      <div class="feature-row">
+        <div class="feature">
+          <h3>Sales</h3>
+          <p>Pipeline stages, quotes, and forecasts pull from the same record support and billing already see. No duplicate entry, no stale spreadsheet.</p>
+        </div>
+        <div class="feature">
+          <h3>Support</h3>
+          <p>Every ticket carries full order and billing history. Agents stop asking customers to repeat themselves.</p>
+        </div>
+        <div class="feature">
+          <h3>Marketing</h3>
+          <p>Segment and message customers using real usage data, not a CSV someone exported last Tuesday.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- STAT BAND -->
+    <section class="section-ink">
+      <div class="container">
+        <div class="stat-row">
+          <div class="stat-block">
+            <div class="num">1 record</div>
+            <p>Shared by every team and updated in real time, instead of four exports that all disagree.</p>
+          </div>
+          <div class="stat-block">
+            <div class="num">300+ apps</div>
+            <p>Already built on the Nucleus platform by teams solving problems we hadn't thought of.</p>
+          </div>
+          <div class="stat-block">
+            <div class="num">11 minutes</div>
+            <p>Average time to first response after teams move support onto the same record as sales.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ECOSYSTEM -->
+    <section class="container ecosystem" id="ecosystem">
+      <div class="ecosystem-intro">
+        <div>
+          <h2>Build on the same core.</h2>
+        </div>
+        <p>Nucleus opens the customer record to a developer API and a growing marketplace of modules. Anyone on the team can add a capability without asking IT to stitch together another point-to-point integration.</p>
+      </div>
+
+      <div class="cluster">
+        <div class="tile">
+          <h4>Automation</h4>
+          <p>Trigger workflows when a deal, ticket, or invoice changes stage.</p>
+        </div>
+        <div class="tile">
+          <h4>Billing</h4>
+          <p>Sync invoices and payment status straight onto the customer timeline.</p>
+        </div>
+        <div class="tile">
+          <h4>Support desk</h4>
+          <p>Bring ticket history into the same view sales and success use daily.</p>
+        </div>
+        <div class="tile">
+          <h4>Warehouse &amp; inventory</h4>
+          <p>Check stock and fulfillment status without leaving a customer's record.</p>
+        </div>
+        <div class="tile">
+          <h4>Field service</h4>
+          <p>Schedule and track on-site visits tied to the account that requested them.</p>
+        </div>
+        <div class="tile">
+          <h4>Reporting</h4>
+          <p>Build dashboards straight from the shared record — no separate warehouse to maintain.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TESTIMONIAL -->
+    <section class="container">
+      <div class="testimonial">
+        <blockquote>"We used to have four versions of the same customer. Now support, sales, and billing look at the same record, and it actually stays true."</blockquote>
+        <cite><strong>Priya Nandan</strong>Head of Revenue Operations, Alder &amp; Finch</cite>
+      </div>
+    </section>
+
+    <!-- PRICING -->
+    <section class="container pricing" id="pricing">
+      <h2>Plans that grow with the team, not against it.</h2>
+      <div class="plans">
+        <div class="plan">
+          <div class="plan-name">Starter</div>
+          <div class="plan-price">$29</div>
+          <div class="plan-unit">per user / month</div>
+          <ul>
+            <li>Core CRM record</li>
+            <li>Up to 3 pipelines</li>
+            <li>Standard integrations</li>
+            <li>Email support</li>
+          </ul>
+          <a href="#" class="btn outline-primary block">Start free trial</a>
+        </div>
+
+        <div class="plan featured">
+          <span class="badge primary" style="align-self:flex-start; margin-bottom: var(--lyht-space-4);">Most teams choose this</span>
+          <div class="plan-name">Growth</div>
+          <div class="plan-price">$79</div>
+          <div class="plan-unit">per user / month</div>
+          <ul>
+            <li>Everything in Starter</li>
+            <li>Full ecosystem &amp; marketplace access</li>
+            <li>Unlimited pipelines and automations</li>
+            <li>Priority support, 11-minute average response</li>
+          </ul>
+          <a href="#" class="btn primary block">Start free trial</a>
+        </div>
+
+        <div class="plan">
+          <div class="plan-name">Scale</div>
+          <div class="plan-price">Custom</div>
+          <div class="plan-unit">annual contract</div>
+          <ul>
+            <li>Everything in Growth</li>
+            <li>SSO &amp; SCIM provisioning</li>
+            <li>Dedicated infrastructure</li>
+            <li>Named success manager</li>
+          </ul>
+          <a href="#" class="btn outline-primary block">Talk to sales</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="section-ink">
+      <div class="container cta-band">
+        <h2>Bring your teams into one record.</h2>
+        <div class="cta-actions">
+          <a href="#" class="btn lg" style="background:#fff; border-color:#fff; color:var(--nx-ink);">Start free trial</a>
+          <a href="#" class="talk-to-sales">Or talk to sales</a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="page-footer site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <span class="wordmark">Nucleus</span>
+          <p>One customer record for sales, support, marketing, and billing — and a platform to build on top of it.</p>
+        </div>
+        <div class="footer-col">
+          <h5>Product</h5>
+          <ul>
+            <li><a href="#">Sales</a></li>
+            <li><a href="#">Support</a></li>
+            <li><a href="#">Marketing</a></li>
+            <li><a href="#">Automation</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Ecosystem</h5>
+          <ul>
+            <li><a href="#">Marketplace</a></li>
+            <li><a href="#">Build an app</a></li>
+            <li><a href="#">API docs</a></li>
+            <li><a href="#">Status</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Company</h5>
+          <ul>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Careers</a></li>
+            <li><a href="#">Blog</a></li>
+            <li><a href="#">Contact</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h5>Legal</h5>
+          <ul>
+            <li><a href="#">Privacy</a></li>
+            <li><a href="#">Terms</a></li>
+            <li><a href="#">Security</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 Nucleus Software, Inc.</span>
+        <span>Built on the LYHT UI framework.</span>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+</body>
+</html>
