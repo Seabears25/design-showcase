@@ -1,0 +1,2402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Second Wind Thrift — Platform (single page)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ==========================================================================
+   LEDGER.CSS
+   A component framework for Second Wind Thrift's business platform.
+   Structured the same way as lyht.css: root design tokens, a fluid grid,
+   then components defined as a parent class with child elements styled
+   through descendant selectors, and visual variants applied as extra
+   classes alongside the base (e.g. class="btn btn-ghost"), plus small
+   is-* state classes for JS-toggled states (is-active, is-checked).
+   ========================================================================== */
+
+:root {
+  /* ---- Fluid type scale ---- */
+  --fs-min: 16px;
+  --fs-max: 3vw;
+  --fs-body: 1rem;
+  --fs-h: 1.5rem;
+  --fs-subh: 1.125rem;
+  --gr: 1.618; /* Golden ratio, kept from lyht's scale approach */
+  --fs-h1: calc(var(--fs-h) * var(--gr));
+  --fs-h2: calc(var(--fs-subh) * var(--gr));
+
+  /* ---- Spacing scale ---- */
+  --space-xxs: 4px;
+  --space-xs: 8px;
+  --space-s: 12px;
+  --space-m: 16px;
+  --space-l: 24px;
+  --space-xl: 32px;
+  --space-xxl: 64px;
+  --space-xxxl: 128px;
+
+  /* ---- Sizing ---- */
+  --w-base: 60vw;
+  --w-min: 200px;
+  --w-max: 1200px;
+
+  /* ---- Color: the "ledger" palette ----
+     Named for what they're used for, not their hue, so a future
+     re-theme only touches this block. */
+  --ink: #23241F;        /* body text */
+  --paper: #F0EADC;      /* canvas / card background */
+  --paper-dim: #E4DBC5;  /* recessed surfaces, table heads */
+  --shell: #202822;      /* dark chrome: sidebar, stamped buttons */
+  --shell-soft: #2B342C; /* dark chrome hover/active */
+  --mustard: #C99A2E;    /* primary accent */
+  --mustard-soft: #E7C875;
+  --clay: #A85A42;       /* secondary accent / warnings */
+  --sage: #6B8068;       /* success / in-stock */
+  --line: rgba(35, 36, 31, 0.14);
+  --wht: #FFFFFF;
+
+  /* ---- Radius ---- */
+  --radius-s: 4px;
+  --radius-m: 8px;
+  --radius-l: 14px;
+
+  /* ---- Shadow ---- */
+  --shadow-flat: 0 1px 0 rgba(35, 36, 31, 0.06);
+  --shadow-lift: 3px 4px 0 var(--mustard-soft);
+
+  /* ---- Type families ----
+     Display = slab serif (stamped-ledger feel), Body = humanist sans,
+     Mono = utility/data (prices, SKUs, dates, meta). */
+  --font-display: 'Zilla Slab', serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* ---- Breakpoints ---- */
+  --bp-mob: 480px;
+  --bp-tab: 768px;
+  --bp-sm: 1024px;
+  --bp-md: 1200px;
+}
+
+/* ==========================================================================
+   Grid — same mechanism as lyht's row/item system (kept because it's
+   layout math, not aesthetic), gap driven by the ledger spacing scale.
+   ========================================================================== */
+
+.container {
+  max-width: var(--w-max);
+  margin: 0 auto;
+  padding: 0 var(--space-l);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: var(--space-l);
+}
+
+.row-1 > * { width: 100%; }
+.row-2 > * { width: calc(50% - var(--space-l)); }
+.row-3 > * { width: calc(33.333% - var(--space-l)); }
+.row-4 > * { width: calc(25% - var(--space-l)); }
+
+.item-3  { width: calc(25% - var(--space-l)); }
+.item-4  { width: calc(33.333% - var(--space-l)); }
+.item-6  { width: calc(50% - var(--space-l)); }
+.item-8  { width: calc(66.666% - var(--space-l)); }
+.item-12 { width: 100%; }
+
+.row > * { flex-grow: 1; min-width: 0; }
+
+@media (max-width: 768px) {
+  .row-1 > *, .row-2 > *, .row-3 > *, .row-4 > *, .row > * { width: 100%; }
+}
+
+/* ==========================================================================
+   Base + Typography
+   ========================================================================== */
+
+body, html { margin: 0; padding: 0; }
+
+body {
+  background: var(--paper-dim);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: clamp(var(--fs-min), 1vw + 0.9rem, 18px);
+  -webkit-font-smoothing: antialiased;
+}
+
+.h1, .h2, .h3 { font-family: var(--font-display); font-weight: 600; margin: 0 0 var(--space-s); line-height: 1.2; }
+.h1 { font-size: clamp(1.75rem, 3vw + 1rem, var(--fs-h1)); }
+.h2 { font-size: clamp(1.4rem, 2vw + 1rem, var(--fs-h2)); }
+.h3 { font-size: 1.15rem; }
+
+.text-lg { font-size: 1.125rem; }
+.text-sm { font-size: 0.875rem; }
+.text-xs { font-size: 0.75rem; }
+.text-mono { font-family: var(--font-mono); }
+.text-muted { color: rgba(35, 36, 31, 0.55); }
+
+/* ==========================================================================
+   .btn — base button, variants applied alongside the base class:
+   class="btn btn-ghost", class="btn btn-sm", etc. Mirrors lyht's
+   .button / .button-alt / .button-dashed pattern.
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 13.5px;
+  padding: 9px 16px;
+  border-radius: var(--radius-m);
+  border: none;
+  background: var(--ink);
+  color: var(--paper);
+  cursor: pointer;
+  box-shadow: 2px 2px 0 var(--mustard);
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.btn:hover { transform: translateY(-1px); }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px dashed rgba(35, 36, 31, 0.3);
+  box-shadow: none;
+}
+.btn-ghost:hover { border-color: var(--mustard); transform: none; }
+
+.btn-sm { padding: 7px 12px; font-size: 12px; }
+.btn-block { width: 100%; justify-content: center; }
+
+/* ==========================================================================
+   .card — generic panel. Children styled through named descendant
+   classes rather than nth-child, so markup order can change freely.
+   ========================================================================== */
+
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-m);
+  padding: 18px 20px;
+  box-shadow: var(--shadow-flat);
+}
+.card .card-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: var(--space-m); }
+.card .card-head h2, .card .card-head .h2 { font-size: 16px; margin: 0; }
+.card:hover { box-shadow: var(--shadow-lift); }
+
+/* ==========================================================================
+   .tag — the signature component: a price-tag shaped card with a
+   punch-hole corner and a dashed perforation line. Same idea as
+   lyht's .header (underlay/overlay/content layering pattern), just
+   applied to a small card instead of a full-bleed banner.
+   ========================================================================== */
+
+.tag {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 4px 14px 4px 4px;
+  padding: 18px 16px 14px;
+  clip-path: polygon(14px 0, 100% 0, 100% 100%, 0 100%, 0 14px);
+  box-shadow: var(--shadow-flat);
+  cursor: grab;
+  transition: transform .15s ease, box-shadow .15s ease;
+}
+.tag:hover { transform: translateY(-3px) rotate(-.6deg); box-shadow: var(--shadow-lift); }
+.tag .tag-punch { position: absolute; top: 8px; left: 8px; width: 16px; height: 16px; color: rgba(35, 36, 31, .35); }
+.tag .tag-icon { font-size: 22px; margin: 6px 0 10px; }
+.tag .tag-name { font-family: var(--font-display); font-size: 15.5px; font-weight: 600; margin: 0 0 4px; }
+.tag .tag-category { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .03em; text-transform: uppercase; color: var(--clay); }
+.tag .tag-perf { border-top: 1px dashed var(--line); margin: 14px 0 10px; }
+.tag .tag-foot { display: flex; align-items: center; justify-content: space-between; font-family: var(--font-mono); font-size: 10.5px; color: rgba(35, 36, 31, .45); }
+
+.tag-ghost {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  border: 1.5px dashed rgba(35, 36, 31, .28);
+  background: transparent; clip-path: none; border-radius: var(--radius-l);
+  color: rgba(35, 36, 31, .55); cursor: pointer; min-height: 150px;
+}
+.tag-ghost:hover { border-color: var(--mustard); color: var(--ink); }
+
+/* ==========================================================================
+   .pill — status indicator. Variants: pill-good, pill-warn, pill-muted.
+   ========================================================================== */
+
+.pill {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 9.5px; letter-spacing: .02em; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 20px;
+  background: rgba(35, 36, 31, .07); color: rgba(35, 36, 31, .55);
+}
+.pill-good  { background: rgba(107, 128, 104, .16); color: #3D5C3A; }
+.pill-warn  { background: rgba(201, 154, 46, .16); color: #8A6A1E; }
+.pill-muted { color: rgba(35, 36, 31, .45); }
+
+/* ==========================================================================
+   .chip — filter/selector chip. Toggled state uses .is-active, not a
+   variant class, since it's JS-driven rather than a fixed style choice.
+   ========================================================================== */
+
+.chip {
+  font-family: var(--font-mono);
+  font-size: 11.5px; letter-spacing: .02em;
+  padding: 6px 12px; border-radius: 20px;
+  border: 1px solid var(--line);
+  background: var(--paper); color: rgba(35, 36, 31, .65);
+  cursor: pointer;
+}
+.chip-ghost { background: transparent; }
+.chip.is-active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+
+/* ==========================================================================
+   .nav — sidebar navigation. Same descendant-scoping idea as lyht's
+   .navbar .nav-links li, just applied to a vertical rail.
+   ========================================================================== */
+
+.nav { display: flex; flex-direction: column; gap: 2px; list-style: none; margin: 0; padding: 0; }
+.nav .nav-item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 9px 10px; border-radius: 7px;
+  font-size: 13.5px; color: rgba(240, 234, 220, .72); cursor: pointer;
+}
+.nav .nav-item:hover { background: var(--shell-soft); color: var(--paper); }
+.nav .nav-item.is-active { background: var(--shell-soft); color: var(--mustard-soft); box-shadow: inset 2px 0 0 var(--mustard); }
+.nav .nav-icon { width: 18px; text-align: center; }
+
+/* ==========================================================================
+   .form — floating-label inputs, restyled from lyht's form but same
+   descendant pattern (.form input, .form label) and the same
+   primary/ghost variant convention.
+   ========================================================================== */
+
+.form { display: flex; flex-direction: column; gap: var(--space-l); }
+.form .form-group { position: relative; width: 100%; }
+.form input, .form textarea, .form select {
+  width: 100%; box-sizing: border-box;
+  padding: 12px 16px; border-radius: var(--radius-m);
+  border: 1.5px solid var(--line); background: var(--paper);
+  font-family: var(--font-body); font-size: 14px; color: var(--ink);
+  outline: none; transition: border-color .2s ease;
+}
+.form input:focus, .form textarea:focus, .form select:focus { border-color: var(--mustard); }
+.form label {
+  position: absolute; top: 50%; left: 16px; transform: translateY(-50%);
+  color: rgba(35, 36, 31, .5); font-size: 14px; pointer-events: none;
+  transition: all .2s ease; background: var(--paper); padding: 0 4px;
+}
+.form input:focus + label, .form input:not(:placeholder-shown) + label {
+  top: 0; font-size: 11px; color: var(--clay);
+}
+.form input.ghost, .form textarea.ghost { background: transparent; border-style: dashed; }
+
+/* ==========================================================================
+   .table — ledger-style data table.
+   ========================================================================== */
+
+.table { width: 100%; border-collapse: collapse; font-size: 13px; background: var(--paper); }
+.table thead th {
+  text-align: left; font-family: var(--font-mono);
+  font-size: 10.5px; letter-spacing: .03em; text-transform: uppercase;
+  color: rgba(35, 36, 31, .5); background: var(--paper-dim);
+  padding: 10px 14px; border-bottom: 1px solid var(--line);
+}
+.table tbody tr { border-bottom: 1px dashed var(--line); }
+.table tbody tr:hover { background: rgba(201, 154, 46, .06); }
+.table td { padding: 11px 14px; }
+
+/* ==========================================================================
+   .tabs — same structural naming as lyht's tab-container / tabs /
+   tab-title / tab-content, restyled to the ledger palette.
+   ========================================================================== */
+
+.tab-container { display: flex; flex-direction: column; width: 100%; }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+.tabs .tab-title {
+  padding: 8px 16px; cursor: pointer; font-size: 12.5px;
+  font-family: var(--font-mono); color: rgba(35, 36, 31, .55);
+  border-radius: var(--radius-m) var(--radius-m) 0 0;
+}
+.tabs .tab-title.is-active { background: var(--paper); color: var(--ink); font-weight: 600; }
+.tab-content { padding: var(--space-l) 0; }
+.tab-content .tab-pane { display: none; }
+.tab-content .tab-pane.is-active { display: block; }
+
+@media (max-width: 768px) {
+  .tabs { flex-direction: column; }
+}
+
+/* ==========================================================================
+   .stat — small metric tile, used in ledger-style stat rows.
+   ========================================================================== */
+
+.stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: var(--radius-m); overflow: hidden; }
+.stat { background: var(--paper); padding: 14px 18px; display: flex; flex-direction: column; gap: 4px; }
+.stat .stat-label { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; color: rgba(35, 36, 31, .5); }
+.stat .stat-value { font-family: var(--font-display); font-size: 22px; font-weight: 600; }
+
+
+
+/* This file is an EXTENSION layer on top of ledger.css — only styles for
+   things the framework doesn't cover (app shell, page-specific layouts,
+   one-off components like inventory item cards, the calendar grid, chat
+   bubbles). Anything that duplicated a ledger.css component (.btn, .pill,
+   .tag, .chip, .stat, .table, .nav) has been removed in favor of the
+   framework version; components were updated to use those class names. */
+
+:root{
+  --shell-line: rgba(240,234,220,0.12);
+}
+*{box-sizing:border-box;}
+
+.shell{
+  display:flex;
+  min-height:100vh;
+}
+
+/* ---------- Sidebar shell (app chrome — not part of the generic .nav) ---------- */
+.shell-nav{
+  width:240px;
+  flex-shrink:0;
+  background:var(--shell);
+  color:var(--paper);
+  display:flex;
+  flex-direction:column;
+  padding:22px 16px;
+  transition:width .2s ease, padding .2s ease;
+  position:relative;
+}
+.shell-nav .nav{flex:1;}
+.shell-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:6px 8px 22px;
+  border-bottom:1px solid var(--shell-line);
+  margin-bottom:14px;
+  position:relative;
+}
+.collapse-btn{
+  position:absolute;
+  right:-12px;top:2px;
+  width:24px;height:24px;
+  border-radius:50%;
+  border:1px solid var(--shell-line);
+  background:var(--shell-soft);
+  color:var(--paper);
+  font-size:13px;
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:transform .2s ease;
+  z-index:2;
+}
+.collapse-btn:hover{background:var(--mustard);color:var(--shell);border-color:var(--mustard);}
+
+/* ---- Collapsed state ---- */
+.shell-nav.is-collapsed{width:68px;padding:22px 10px;}
+.shell-nav.is-collapsed .shell-brand{
+  justify-content:center;padding:6px 0 22px;border-bottom:1px solid var(--shell-line);
+}
+.shell-nav.is-collapsed .brand-text{display:none;}
+.shell-nav.is-collapsed .collapse-btn{transform:rotate(180deg);}
+.shell-nav.is-collapsed .nav-item{justify-content:center;padding:9px 0;}
+.shell-nav.is-collapsed .nav-item.is-active{box-shadow:none;background:var(--shell-soft);}
+.shell-nav.is-collapsed .nav-label,
+.shell-nav.is-collapsed .nav-badge{display:none;}
+.shell-nav.is-collapsed .shell-foot{justify-content:center;padding:9px 0;}
+.shell-nav.is-collapsed .nav-icon{width:auto;}
+
+.brand-mark{
+  width:36px;height:36px;
+  border-radius:8px;
+  background:var(--mustard);
+  color:var(--shell);
+  font-family:var(--font-display);
+  font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;
+}
+.brand-text{display:flex;flex-direction:column;line-height:1.25;}
+.brand-text strong{font-family:var(--font-display);font-size:15px;font-weight:600;}
+.brand-text small{color:rgba(240,234,220,0.55);font-size:11.5px;letter-spacing:.02em;}
+
+/* .nav base styling (item hover/active/icon) now comes from ledger.css .nav —
+   only the badge and the label (for collapse-hiding) are app-specific. */
+.nav-label{}
+.nav-badge{
+  margin-left:auto;
+  background:var(--mustard);
+  color:var(--shell);
+  font-family:var(--font-mono);
+  font-size:10.5px;
+  font-weight:500;
+  padding:1px 6px;
+  border-radius:20px;
+}
+.shell-foot{
+  display:flex;align-items:center;gap:11px;
+  padding:9px 10px;
+  margin-top:10px;
+  border-top:1px solid var(--shell-line);
+  color:rgba(240,234,220,0.55);
+  font-size:13px;
+}
+
+@media (max-width:900px){
+  .shell{flex-direction:column;}
+  .shell-nav{width:100%;flex-direction:row;overflow-x:auto;}
+  .shell-nav .nav{flex-direction:row;}
+  .shell-foot{display:none;}
+}
+
+/* ---------- Canvas / top bar ---------- */
+.canvas{flex:1;display:flex;flex-direction:column;background:var(--paper);min-width:0;}
+.canvas-top{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 32px;
+  border-bottom:1px solid var(--line);
+  background:var(--paper);
+}
+.crumb{font-size:13px;color:rgba(35,36,31,0.5);display:flex;gap:8px;align-items:center;}
+.crumb strong{color:var(--ink);font-weight:600;}
+.crumb-sep{opacity:.4;}
+.top-actions{display:flex;align-items:center;gap:12px;}
+.search-tag{
+  display:flex;align-items:center;gap:8px;
+  background:var(--paper-dim);
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:7px 14px;
+  width:230px;
+}
+.search-icon{opacity:.5;font-size:13px;}
+.search-tag input{
+  border:none;background:transparent;outline:none;
+  font-family:var(--font-body);
+  font-size:13px;color:var(--ink);width:100%;
+}
+.search-tag--wide{width:280px;}
+
+/* ---------- Button variants ledger.css doesn't define ---------- */
+.btn-stamp{transform:rotate(-0.4deg);}
+.btn-charge{padding:13px;font-size:15px;}
+.stamp-plus{font-size:15px;line-height:1;}
+
+/* ---------- Page shell ---------- */
+.library{padding:28px 32px 60px;}
+.library-head{margin-bottom:20px;}
+.library-head h1{
+  font-family:var(--font-display);
+  font-size:26px;font-weight:600;margin:0 0 6px;
+}
+.library-head p{margin:0;color:rgba(35,36,31,0.6);font-size:13.5px;max-width:520px;}
+
+.filter-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:22px;
+  padding-bottom:14px;
+  border-bottom:1px dashed var(--line);
+}
+.chip-set{display:flex;flex-wrap:wrap;gap:8px;}
+.chip-set--muted{opacity:.85;}
+.view-toggle{display:flex;gap:4px;}
+.view-btn{
+  width:28px;height:28px;border-radius:6px;border:1px solid var(--line);
+  background:var(--paper);color:rgba(35,36,31,0.5);cursor:pointer;
+}
+.view-btn.is-active{background:var(--paper-dim);color:var(--ink);}
+
+.tag-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(192px,1fr));
+  gap:20px;
+}
+/* .tag / .tag-ghost core shape now comes from ledger.css. These are the
+   inner meta/action elements the framework doesn't define. */
+.tag-new-plus{font-size:22px;line-height:1;color:var(--mustard);}
+.tag-uses{
+  font-family:var(--font-mono);
+  font-size:10.5px;color:rgba(35,36,31,0.45);
+}
+.tag-actions{display:flex;gap:4px;}
+.tag-action{
+  width:22px;height:22px;border-radius:5px;border:none;
+  background:transparent;color:rgba(35,36,31,0.45);
+  font-size:11px;cursor:pointer;
+}
+.tag-action:hover{background:var(--paper-dim);color:var(--ink);}
+.tag-drag{cursor:grab;}
+
+/* .stat-row / .stat come from ledger.css; just add the section spacing
+   and the note styling the framework doesn't cover. */
+.stat-row{margin-bottom:22px;}
+.stat-note{font-size:11px;font-family:var(--font-mono);}
+.stat-note--sage{color:var(--sage);}
+.stat-note--clay{color:var(--clay);}
+
+/* ---------- Inventory item cards ---------- */
+.item-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+  gap:20px;
+}
+.item-card{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  overflow:hidden;
+  box-shadow:var(--shadow-flat);
+  transition:transform .15s ease, box-shadow .15s ease;
+}
+.item-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-lift);}
+.item-card--sold{opacity:.6;}
+
+.item-photo{
+  position:relative;
+  height:118px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:34px;
+}
+.item-photo--a{background:#DCD3B8;}
+.item-photo--b{background:#D8C9BC;}
+.item-photo--c{background:#C9D0C2;}
+.item-photo--d{background:#D6CDD9;}
+.item-photo-icon{filter:saturate(0.85);}
+
+/* .pill from ledger.css handles the badge itself; position it in-context */
+.item-photo .pill{position:absolute;top:8px;right:8px;}
+
+.price-tag{
+  position:absolute;left:10px;bottom:-1px;
+  background:var(--mustard);
+  color:var(--shell);
+  font-family:var(--font-display);font-weight:700;
+  font-size:13px;
+  padding:4px 10px 5px 12px;
+  border-radius:3px 8px 0 0;
+  display:flex;align-items:baseline;gap:6px;
+  transform:translateY(1px);
+}
+.price-tag-was{
+  font-family:var(--font-mono);
+  font-weight:400;font-size:10.5px;
+  text-decoration:line-through;
+  opacity:.65;
+}
+
+.item-body{padding:12px 14px 14px;}
+.item-name{
+  font-family:var(--font-display);
+  font-size:14.5px;font-weight:600;margin:0 0 4px;line-height:1.25;
+}
+.item-meta{font-size:12px;color:rgba(35,36,31,0.55);margin-bottom:8px;}
+.consignor-pill{
+  display:inline-block;
+  font-family:var(--font-mono);
+  font-size:10px;color:var(--clay);
+  border:1px dashed rgba(168,90,66,0.4);
+  border-radius:20px;
+  padding:2px 8px;
+  margin-bottom:10px;
+}
+.item-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  border-top:1px dashed var(--line);
+  padding-top:9px;
+}
+.item-days{font-family:var(--font-mono);font-size:10.5px;color:rgba(35,36,31,0.45);}
+.item-actions{display:flex;gap:4px;}
+.item-card-new{
+  min-height:214px;
+}
+
+/* ---------- CRM ---------- */
+.crm-table-wrap{
+  border:1px solid var(--line);
+  border-radius:8px;
+  overflow:hidden;
+  background:var(--paper);
+}
+.mono-cell{font-family:var(--font-mono);font-size:12px;color:rgba(35,36,31,0.7);}
+.cust-spent{color:var(--ink);font-weight:500;}
+
+.cust-name-cell{display:flex;align-items:center;gap:10px;}
+.cust-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:var(--shell);color:var(--paper);
+  font-family:var(--font-display);font-weight:600;font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.cust-name{font-weight:500;}
+
+.cust-tags{display:flex;gap:5px;flex-wrap:wrap;}
+.cust-tag{
+  font-family:var(--font-mono);
+  font-size:9.5px;letter-spacing:.02em;text-transform:uppercase;
+  padding:2px 7px;border-radius:20px;
+  border:1px solid transparent;
+}
+.cust-tag--vip{background:rgba(201,154,46,0.16);color:#8A6A1E;}
+.cust-tag--regular{background:rgba(107,128,104,0.14);color:#4E6049;}
+.cust-tag--consignor{background:transparent;color:var(--clay);border-color:rgba(168,90,66,0.4);border-style:dashed;}
+.cust-tag--new{background:rgba(35,36,31,0.07);color:rgba(35,36,31,0.6);}
+
+.cust-note-cell{
+  max-width:220px;
+  color:rgba(35,36,31,0.6);
+  font-size:12px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
+/* ---------- Blog / block picker ---------- */
+.block-picker{
+  border:1px dashed rgba(35,36,31,0.28);
+  border-radius:10px;
+  padding:14px 16px;
+  margin-bottom:20px;
+  background:rgba(240,234,220,0.4);
+}
+.block-picker-label{
+  font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;
+  color:rgba(35,36,31,0.5);
+  margin-bottom:10px;
+}
+.block-chip-row{display:flex;flex-wrap:wrap;gap:8px;}
+.block-chip{
+  display:flex;align-items:center;gap:7px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:7px 12px;
+  font-size:12.5px;
+  cursor:grab;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.block-chip:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift);}
+.block-chip-icon{font-size:14px;}
+
+.post-cover{
+  position:relative;
+  height:110px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:30px;
+}
+.post-cover--a{background:#DCD3B8;}
+.post-cover--b{background:#C9D0C2;}
+.post-cover--c{background:#D6CDD9;}
+.post-cover--d{background:#D8C9BC;}
+.post-cover-icon{filter:saturate(0.85);}
+.post-cover .pill{position:absolute;top:8px;right:8px;}
+
+.embed-badge{
+  position:absolute;left:10px;bottom:8px;
+  font-family:var(--font-mono);
+  font-size:9.5px;
+  background:var(--shell);
+  color:var(--paper);
+  padding:3px 8px;
+  border-radius:20px;
+}
+
+.post-excerpt{
+  font-size:12.5px;color:rgba(35,36,31,0.6);
+  margin:0 0 10px;line-height:1.4;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.post-byline{
+  display:flex;align-items:center;gap:7px;
+  margin-bottom:10px;
+}
+.cust-avatar--sm{width:22px;height:22px;font-size:9.5px;}
+.post-author{font-size:12px;font-weight:500;}
+.post-date{
+  font-family:var(--font-mono);
+  font-size:10.5px;color:rgba(35,36,31,0.45);
+  margin-left:auto;
+}
+.post-card--draft{opacity:.75;}
+
+/* ---------- Dashboard panels ---------- */
+.dash-grid{
+  display:grid;
+  grid-template-columns:1.6fr 1fr;
+  gap:20px;
+  align-items:start;
+}
+.dash-col{display:flex;flex-direction:column;gap:20px;}
+
+.panel{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:18px 20px;
+}
+.panel-head{
+  display:flex;align-items:baseline;justify-content:space-between;
+  margin-bottom:14px;
+}
+.panel-head h2{
+  font-family:var(--font-display);
+  font-size:16px;font-weight:600;margin:0;
+}
+.panel-sub{
+  font-family:var(--font-mono);
+  font-size:11.5px;color:rgba(35,36,31,0.5);
+}
+
+.sales-chart{width:100%;height:auto;overflow:visible;}
+.bar{fill:var(--paper-dim);stroke:var(--line);stroke-width:1;}
+.bar--today{fill:var(--mustard);}
+.bar-label{
+  font-family:var(--font-mono);
+  font-size:9px;fill:rgba(35,36,31,0.5);
+}
+
+.activity-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;}
+.activity-row{
+  display:flex;align-items:flex-start;gap:12px;
+  padding:10px 0;
+  border-top:1px dashed var(--line);
+}
+.activity-row:first-child{border-top:none;}
+.activity-icon{
+  width:26px;height:26px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;flex-shrink:0;
+  background:rgba(35,36,31,0.06);
+}
+.activity-icon--sale{background:rgba(107,128,104,0.16);}
+.activity-icon--intake{background:rgba(201,154,46,0.16);}
+.activity-icon--blog{background:rgba(214,205,217,0.5);}
+.activity-icon--customer{background:rgba(168,90,66,0.12);}
+.activity-body{display:flex;flex-direction:column;gap:2px;}
+.activity-text{font-size:13px;}
+.activity-time{
+  font-family:var(--font-mono);
+  font-size:10.5px;color:rgba(35,36,31,0.45);
+}
+
+.panel--attention{border-color:rgba(168,90,66,0.3);}
+.attention-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;}
+.attention-row{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:10px;
+  padding:9px 0;
+  border-top:1px dashed var(--line);
+  font-size:12.5px;
+}
+.attention-row:first-child{border-top:none;}
+.attention-chip{
+  font-size:9.5px;padding:2px 8px;flex-shrink:0;
+}
+.attention-chip--clay{color:var(--clay);border-color:rgba(168,90,66,0.4);border-style:dashed;border-width:1px;}
+.attention-chip--mustard{color:#8A6A1E;background:rgba(201,154,46,0.16);}
+
+.quick-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.quick-action{
+  display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+  background:var(--paper-dim);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:12px;
+  cursor:pointer;
+  font-family:var(--font-body);
+  font-size:12px;font-weight:500;
+  text-align:left;
+}
+.quick-action:hover{border-color:var(--mustard);background:var(--paper);}
+.quick-action-icon{font-size:17px;}
+
+@media (max-width:1100px){
+  .dash-grid{grid-template-columns:1fr;}
+}
+
+/* ---------- Team page ---------- */
+.panel--wide{margin-bottom:20px;overflow-x:auto;}
+.dash-grid--team{grid-template-columns:1.3fr 1fr;}
+
+.cal-grid{min-width:640px;}
+.cal-row{
+  display:grid;
+  grid-template-columns:150px repeat(7,1fr);
+  gap:6px;
+  align-items:stretch;
+  margin-bottom:6px;
+}
+.cal-row--head{margin-bottom:10px;}
+.cal-day-head{
+  font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;
+  color:rgba(35,36,31,0.5);
+  text-align:center;
+}
+.cal-staff-col{display:flex;align-items:center;gap:8px;}
+.cal-staff-name{font-size:12.5px;font-weight:500;}
+.cal-cell{
+  background:var(--paper-dim);
+  border-radius:6px;
+  min-height:52px;
+  padding:5px;
+  display:flex;flex-direction:column;gap:3px;
+  align-items:center;justify-content:center;
+}
+.cal-chip{
+  font-family:var(--font-mono);
+  font-size:9.5px;
+  padding:2px 6px;
+  border-radius:20px;
+  white-space:nowrap;
+}
+.cal-chip--shift{color:var(--paper);}
+.cal-chip--a{background:#8A6A1E;}
+.cal-chip--b{background:#4E6049;}
+.cal-chip--c{background:#7A4A6B;}
+.cal-chip--task{
+  background:transparent;
+  border:1px dashed rgba(35,36,31,0.35);
+  color:rgba(35,36,31,0.6);
+}
+
+.panel--chat{display:flex;flex-direction:column;}
+.chat-thread{
+  display:flex;flex-direction:column;gap:12px;
+  max-height:320px;overflow-y:auto;
+  padding-right:4px;
+  margin-bottom:12px;
+}
+.chat-msg{display:flex;gap:8px;align-items:flex-start;}
+.chat-msg--self{flex-direction:row-reverse;}
+.chat-bubble{
+  background:var(--paper-dim);
+  border-radius:10px;
+  padding:8px 12px;
+  max-width:78%;
+  display:flex;flex-direction:column;gap:2px;
+}
+.chat-msg--self .chat-bubble{background:rgba(201,154,46,0.18);}
+.chat-author{font-size:11px;font-weight:600;color:var(--clay);}
+.chat-text{margin:0;font-size:12.5px;line-height:1.4;}
+.chat-time{
+  font-family:var(--font-mono);
+  font-size:9.5px;color:rgba(35,36,31,0.4);
+  align-self:flex-end;
+}
+.chat-input-row{display:flex;gap:8px;border-top:1px dashed var(--line);padding-top:12px;}
+.chat-input{
+  flex:1;border:1px solid var(--line);border-radius:20px;
+  padding:8px 14px;font-family:var(--font-body);font-size:12.5px;
+  background:var(--paper);outline:none;
+}
+
+.task-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;}
+.task-filter-row{margin-bottom:12px;padding-bottom:12px;border-bottom:1px dashed var(--line);}
+.task-row{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:9px 0;
+  border-top:1px dashed var(--line);
+}
+.task-row:first-child{border-top:none;}
+.task-row--done .task-text{text-decoration:line-through;color:rgba(35,36,31,0.4);}
+.task-check{
+  width:18px;height:18px;border-radius:5px;
+  border:1.5px solid rgba(35,36,31,0.3);
+  flex-shrink:0;margin-top:1px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;color:var(--paper);
+}
+.task-check.is-checked{background:var(--sage);border-color:var(--sage);}
+.task-body{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+.task-text-row{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+.task-text{font-size:13px;}
+.task-meta{
+  font-family:var(--font-mono);
+  font-size:10.5px;color:rgba(35,36,31,0.45);
+}
+.task-freq{
+  font-family:var(--font-mono);
+  font-size:9px;letter-spacing:.02em;text-transform:uppercase;
+  padding:2px 7px;border-radius:20px;
+  flex-shrink:0;
+}
+.task-freq--daily{background:rgba(107,128,104,0.16);color:#4E6049;}
+.task-freq--weekly{background:rgba(201,154,46,0.16);color:#8A6A1E;}
+.task-freq--monthly{background:rgba(122,74,107,0.14);color:#7A4A6B;}
+.task-freq--oneoff{background:rgba(35,36,31,0.07);color:rgba(35,36,31,0.55);}
+
+@media (max-width:1100px){
+  .dash-grid--team{grid-template-columns:1fr;}
+}
+
+/* ---------- Website builder ---------- */
+.dash-grid--site{grid-template-columns:280px 1fr;}
+
+.panel--pages{align-self:start;}
+.page-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;}
+.page-row{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:11px 4px;
+  border-top:1px dashed var(--line);
+  cursor:pointer;
+}
+.page-row:first-child{border-top:none;}
+.page-row.is-active{
+  background:rgba(201,154,46,0.08);
+  margin:0 -8px;padding:11px 8px;border-radius:6px;border-top-color:transparent;
+}
+.page-row-main{display:flex;flex-direction:column;gap:2px;}
+.page-name{font-size:13px;font-weight:500;}
+.page-updated{
+  font-family:var(--font-mono);
+  font-size:10px;color:rgba(35,36,31,0.45);
+}
+
+.panel--canvas{background:var(--paper-dim);}
+.site-canvas{display:flex;flex-direction:column;gap:14px;}
+.cv-block{
+  background:var(--paper);
+  border:1px dashed rgba(35,36,31,0.28);
+  border-radius:8px;
+  overflow:hidden;
+}
+.cv-block:hover{border-color:var(--mustard);}
+.cv-block-tab{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 10px;
+  background:var(--paper-dim);
+  border-bottom:1px dashed var(--line);
+}
+.cv-block-drag{font-size:11px;color:rgba(35,36,31,0.4);cursor:grab;}
+.cv-block-label{
+  font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:.02em;text-transform:uppercase;
+  color:rgba(35,36,31,0.55);
+  flex:1;
+}
+.cv-block-actions{display:flex;gap:2px;}
+.cv-block-preview{padding:18px 20px;}
+
+.cv-hero{
+  display:flex;align-items:center;gap:16px;
+}
+.cv-hero-mark{
+  width:44px;height:44px;border-radius:10px;
+  background:var(--ink);color:var(--paper);
+  font-family:var(--font-display);font-weight:700;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.cv-hero strong{font-family:var(--font-display);font-size:17px;display:block;}
+.cv-hero p{margin:2px 0 0;font-size:12.5px;color:rgba(35,36,31,0.6);}
+.cv-hero .btn{margin-left:auto;}
+
+.cv-hours{display:flex;flex-direction:column;gap:6px;max-width:260px;}
+.cv-hours-row{
+  display:flex;justify-content:space-between;
+  font-size:12.5px;
+  padding-bottom:5px;border-bottom:1px dashed var(--line);
+}
+.cv-hours-row:last-child{border-bottom:none;padding-bottom:0;}
+
+.cv-showcase{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+.cv-showcase-item{
+  border-radius:6px;
+  min-height:70px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:6px;font-size:20px;
+}
+.cv-showcase-price{
+  font-family:var(--font-mono);font-size:10px;color:var(--ink);
+}
+
+.cv-testimonial{max-width:420px;}
+.cv-testimonial p{
+  font-family:var(--font-display);font-size:14.5px;font-style:italic;margin:0 0 8px;
+}
+.cv-testimonial-author{
+  font-family:var(--font-mono);font-size:11px;color:rgba(35,36,31,0.55);
+}
+
+.cv-booking{
+  display:flex;align-items:center;justify-content:space-between;
+  background:var(--paper-dim);
+  border-radius:8px;padding:12px 16px;
+  font-size:13px;
+}
+
+.cv-map{
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;color:rgba(35,36,31,0.7);
+}
+
+.panel--canvas .panel-head{align-items:flex-start;}
+.canvas-mode-toggle{display:flex;gap:4px;flex-shrink:0;}
+.mode-btn{
+  font-family:var(--font-mono);
+  font-size:11px;
+  padding:6px 12px;
+  border-radius:20px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  color:rgba(35,36,31,0.55);
+  cursor:pointer;
+}
+.mode-btn.is-active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+
+.add-component-zone{
+  border:1.5px dashed rgba(35,36,31,0.28);
+  border-radius:10px;
+  padding:16px 18px;
+  background:rgba(240,234,220,0.4);
+}
+.add-component-label{
+  display:block;
+  font-family:var(--font-mono);
+  font-size:10.5px;letter-spacing:.03em;text-transform:uppercase;
+  color:rgba(35,36,31,0.5);
+  margin-bottom:10px;
+}
+
+/* ---------- POS ---------- */
+.dash-grid--pos{grid-template-columns:1.6fr 1fr;}
+
+.pos-search-row{display:flex;align-items:center;gap:14px;margin-bottom:16px;flex-wrap:wrap;}
+
+.pos-tile-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(120px,1fr));
+  gap:12px;
+}
+.pos-tile{
+  display:flex;flex-direction:column;align-items:center;gap:8px;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:8px;
+  padding:10px;
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease;
+}
+.pos-tile:hover{transform:translateY(-2px);box-shadow:var(--shadow-lift);}
+.pos-tile-photo{
+  width:100%;height:56px;border-radius:6px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:22px;
+}
+.pos-tile-name{font-size:11.5px;font-weight:500;text-align:center;line-height:1.25;}
+.pos-tile-price{
+  font-family:var(--font-mono);font-size:11px;color:var(--clay);
+}
+
+.panel--cart{display:flex;flex-direction:column;}
+.cart-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;max-height:220px;overflow-y:auto;}
+.cart-row{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:9px 0;
+  border-top:1px dashed var(--line);
+}
+.cart-row:first-child{border-top:none;}
+.cart-row-main{display:flex;flex-direction:column;gap:2px;}
+.cart-item-name{font-size:13px;}
+.cart-item-sub{
+  font-family:var(--font-mono);font-size:10px;color:var(--clay);
+}
+.cart-row-side{display:flex;align-items:center;gap:10px;}
+
+.cart-totals{
+  border-top:1px solid var(--line);
+  margin-top:10px;padding-top:10px;
+  display:flex;flex-direction:column;gap:6px;
+}
+.cart-total-row{display:flex;justify-content:space-between;font-size:12.5px;color:rgba(35,36,31,0.65);}
+.cart-total-row--grand{
+  font-family:var(--font-display);font-size:17px;font-weight:600;color:var(--ink);
+  padding-top:6px;border-top:1px dashed var(--line);
+}
+
+.pay-method-row{display:flex;gap:8px;margin:14px 0 10px;}
+.pay-method{
+  flex:1;
+  font-size:12px;font-weight:500;
+  padding:9px 0;border-radius:8px;
+  border:1px solid var(--line);
+  background:var(--paper-dim);
+  cursor:pointer;
+}
+.pay-method.is-active{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+
+@media (max-width:1100px){
+  .dash-grid--pos{grid-template-columns:1fr;}
+}
+
+
+.tag .tag-punch{ border:1.4px dashed rgba(35,36,31,.35); border-radius:50%; }
+.chart-mount{ width:100%; }
+
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script>
+/* ============================================================
+   elment.js
+   A dependency-free JS framework: no HTML strings, no build step.
+
+   Core call shape:
+     Tag(attrs, ...children)(events)
+
+     - attrs: a plain object of props (class, style, value, etc.)
+     - children: passed as trailing args, NOT wrapped in []
+     - the whole thing returns a callable; calling it again attaches
+       events / render methods and returns the finalized vnode
+     - a bare function instead of an events object is shorthand
+       for { onclick: fn }
+
+   Example:
+     Button({ class: 'btn' }, 'Click me')(() => console.log('hi'))
+
+   Multiple top-level nodes go through Html(...), not bare parens
+   — JS's comma operator would silently drop all but the last value:
+     Html(
+       Div({}, 'first'),
+       Div({}, 'second')
+     )
+
+   Load this file with a plain <script src="elment.js"> tag, closed
+   normally, before your app code; it defines its API as ordinary
+   globals (Div, Button, If, For, start, etc.) so nothing else to wire up.
+   ============================================================ */
+
+(function (global) {
+
+  function isVNode(x) {
+    return typeof x === 'function' && x.__isVNode === true;
+  }
+
+  function makeTag(tagName) {
+    return function (attrs, ...rest) {
+      let props = {};
+      let children;
+
+      // Detect whether the first arg is a props object or actually a child
+      // (a plain object that isn't itself a vnode counts as props)
+      if (attrs && typeof attrs === 'object' && !isVNode(attrs)) {
+        props = attrs;
+        children = rest;
+      } else {
+        children = attrs === undefined ? rest : [attrs, ...rest];
+      }
+
+      const vnode = { tag: tagName, props, children, events: {} };
+
+      function finalize(eventsOrHandler) {
+        if (typeof eventsOrHandler === 'function') {
+          vnode.events = { onclick: eventsOrHandler };
+        } else if (eventsOrHandler && typeof eventsOrHandler === 'object') {
+          vnode.events = eventsOrHandler;
+        }
+        // keep the callable in sync so it can still be read as a vnode
+        finalize.events = vnode.events;
+        return finalize;
+      }
+
+      // Make the callable itself readable as a vnode (covers the case
+      // where a child is never "finalized" with a second call)
+      finalize.__isVNode = true;
+      finalize.tag = vnode.tag;
+      finalize.props = vnode.props;
+      finalize.children = vnode.children;
+      finalize.events = vnode.events;
+
+      return finalize;
+    };
+  }
+
+  // A fragment wrapper — holds multiple top-level nodes, since JS's
+  // comma operator can't (Html = (Div(...), Div(...)) would just
+  // discard everything but the last value).
+  function Html(...children) {
+    return { tag: '__fragment__', props: {}, children, events: {} };
+  }
+
+  /* ============================================================
+     Control-flow render methods.
+     Plain functions (not tags) — they return vnodes, arrays of
+     vnodes, or null, and slot directly into a children list.
+     The renderer flattens arrays and skips null/undefined/false.
+     ============================================================ */
+
+  // If(condition, thenBranch, elseBranch)
+  // Branches can be a vnode or a zero-arg function returning one
+  // (use a function when the branch does work you don't want to
+  // pay for — or that would throw — unless it's actually taken).
+  function If(condition, thenBranch, elseBranch) {
+    const branch = condition ? thenBranch : elseBranch;
+    if (branch === undefined) return null;
+    return typeof branch === 'function' ? branch() : branch;
+  }
+
+  // Else(x) — pure syntactic sugar, just returns what you pass it.
+  // Lets If(cond, Div(...), Else(Div(...))) read the way you'd expect.
+  function Else(branch) {
+    return branch;
+  }
+
+  // For(array, mapFn) — maps data to vnodes. mapFn gets (item, index).
+  function For(array, mapFn) {
+    return (array || []).map(mapFn);
+  }
+
+  // While(conditionFn, bodyFn) — builds a list by repeatedly calling
+  // bodyFn() while conditionFn() is true. bodyFn is responsible for
+  // advancing whatever state conditionFn checks, or this loops forever.
+  // Capped as a safety net against runaway loops during development.
+  function While(conditionFn, bodyFn, safetyLimit = 10000) {
+    const results = [];
+    let i = 0;
+    while (conditionFn() && i < safetyLimit) {
+      results.push(bodyFn());
+      i++;
+    }
+    return results;
+  }
+
+  // Case(value, { key: branch, ..., default: branch })
+  // Branches can be a vnode or a zero-arg function returning one.
+  function Case(value, cases) {
+    const branch = Object.prototype.hasOwnProperty.call(cases, value)
+      ? cases[value]
+      : cases.default;
+    if (branch === undefined) return null;
+    return typeof branch === 'function' ? branch() : branch;
+  }
+
+  // Auto-generate tag functions for every standard HTML content element.
+  // Excluded on purpose: document-structure tags (html, head, body, meta,
+  // link, base, title) and raw-text tags (script, style) — these don't
+  // fit the vnode/children model and aren't things a component tree
+  // builds. Add more here if a real one is still missing.
+  const tagNames = [
+    // text content
+    'div', 'span', 'p', 'a', 'br', 'hr', 'blockquote', 'q', 'pre', 'code',
+    'kbd', 'samp', 'var', 'cite', 'abbr', 'address', 'time', 'mark',
+    'small', 'strong', 'em', 'b', 'i', 'u', 's', 'sub', 'sup', 'del',
+    'ins', 'wbr',
+    // headings
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hgroup',
+    // lists
+    'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+    // sections
+    'header', 'footer', 'nav', 'main', 'article', 'aside', 'section',
+    // forms
+    'form', 'input', 'label', 'select', 'option', 'optgroup', 'textarea',
+    'button', 'fieldset', 'legend', 'datalist', 'output', 'progress',
+    'meter',
+    // tables
+    'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'caption',
+    'colgroup', 'col',
+    // media / embedded
+    'img', 'audio', 'video', 'source', 'track', 'canvas', 'svg', 'iframe',
+    'embed', 'object', 'param', 'picture', 'figure', 'figcaption', 'map',
+    'area',
+    // interactive
+    'details', 'summary', 'dialog', 'menu',
+    // misc containers
+    'template', 'slot', 'noscript'
+  ];
+  const el = {};
+  tagNames.forEach(t => { el[t] = makeTag(t); });
+
+  function flattenChildren(children) {
+    const out = [];
+    (children || []).forEach(child => {
+      if (Array.isArray(child)) {
+        out.push(...flattenChildren(child));
+      } else if (child !== null && child !== undefined && child !== false) {
+        out.push(child);
+      }
+    });
+    return out;
+  }
+
+  function isText(v) {
+    return typeof v === 'string' || typeof v === 'number';
+  }
+
+  /* ============================================================
+     Diff/patch renderer.
+     Builds real DOM once, then on re-render walks old vnode vs
+     new vnode and only touches what actually changed, instead of
+     tearing everything down and recreating it.
+
+     Form fields get special handling: value/checked are set as
+     live DOM properties, not attributes, and only touched when
+     they actually differ from what's already in the field — so
+     typing doesn't get clobbered by the render that its own
+     keystroke triggered.
+     ============================================================ */
+
+  function createDom(vnode) {
+    if (vnode === null || vnode === undefined || vnode === false) {
+      return document.createComment('');
+    }
+    if (isText(vnode)) {
+      return document.createTextNode(String(vnode));
+    }
+    const dom = document.createElement(vnode.tag);
+    applyProps(dom, {}, vnode.props || {});
+    applyEvents(dom, {}, vnode.events || {});
+    flattenChildren(vnode.children).forEach(child => {
+      dom.appendChild(createDom(child));
+    });
+    // <select>'s value only "sticks" once its <option> children exist,
+    // so it's set again here, after they're appended.
+    if (vnode.tag === 'select' && vnode.props && 'value' in vnode.props) {
+      dom.value = vnode.props.value;
+    }
+    dom.__vnode = vnode;
+    return dom;
+  }
+
+  function applyProps(dom, oldProps, newProps) {
+    Object.keys(oldProps).forEach(key => {
+      if (!(key in newProps)) {
+        if (key === 'class') dom.className = '';
+        else if (key === 'value') dom.value = '';
+        else if (key === 'checked') dom.checked = false;
+        else dom.removeAttribute(key);
+      }
+    });
+    Object.keys(newProps).forEach(key => {
+      const val = newProps[key];
+      if (oldProps[key] === val) return;
+      if (key === 'class') {
+        dom.className = val;
+      } else if (key === 'style' && typeof val === 'object') {
+        Object.assign(dom.style, val);
+      } else if (key === 'value') {
+        // Only touch .value if it actually differs — this is what
+        // stops a controlled <input> from jumping the cursor on
+        // every keystroke-triggered re-render.
+        if (dom.value !== val) dom.value = val;
+      } else if (key === 'checked') {
+        dom.checked = !!val;
+      } else {
+        dom.setAttribute(key, val);
+      }
+    });
+  }
+
+  function applyEvents(dom, oldEvents, newEvents) {
+    Object.keys(oldEvents).forEach(evt => {
+      if (evt === 'onmount' || evt === 'onupdate') return;
+      if (newEvents[evt] !== oldEvents[evt]) {
+        dom.removeEventListener(evt.replace(/^on/, ''), oldEvents[evt]);
+      }
+    });
+    Object.keys(newEvents).forEach(evt => {
+      if (evt === 'onmount') {
+        if (!oldEvents.onmount) queueMicrotask(() => newEvents.onmount(dom));
+        return;
+      }
+      if (evt === 'onupdate') {
+        queueMicrotask(() => newEvents.onupdate(dom));
+        return;
+      }
+      if (newEvents[evt] !== oldEvents[evt]) {
+        dom.addEventListener(evt.replace(/^on/, ''), newEvents[evt]);
+      }
+    });
+  }
+
+  // Diffs a single slot: oldVNode/newVNode against the DOM node
+  // currently occupying that slot in parentDom.
+  function diffNode(parentDom, oldVNode, newVNode, domNode) {
+    if (newVNode === undefined) {
+      if (domNode) parentDom.removeChild(domNode);
+      return;
+    }
+    if (oldVNode === undefined || domNode === undefined) {
+      parentDom.appendChild(createDom(newVNode));
+      return;
+    }
+
+    const oldText = isText(oldVNode);
+    const newText = isText(newVNode);
+
+    if (oldText && newText) {
+      if (String(oldVNode) !== String(newVNode)) domNode.textContent = String(newVNode);
+      return;
+    }
+    if (oldText !== newText || (!oldText && !newText && oldVNode.tag !== newVNode.tag)) {
+      parentDom.replaceChild(createDom(newVNode), domNode);
+      return;
+    }
+
+    // Same tag in the same slot — update it in place instead of
+    // replacing it, so the actual DOM node (and its focus state)
+    // survives the re-render.
+    applyProps(domNode, oldVNode.props || {}, newVNode.props || {});
+    applyEvents(domNode, oldVNode.events || {}, newVNode.events || {});
+    diffChildren(domNode, flattenChildren(oldVNode.children), flattenChildren(newVNode.children));
+    if (newVNode.tag === 'select' && newVNode.props && 'value' in newVNode.props) {
+      domNode.value = newVNode.props.value;
+    }
+    domNode.__vnode = newVNode;
+  }
+
+  function diffChildren(parentDom, oldChildren, newChildren) {
+    const max = Math.max(oldChildren.length, newChildren.length);
+    // Index-based reconciliation — simple, and fine for lists that
+    // don't reorder. A reordering list would want key-based matching
+    // instead; worth adding if/when list output gets sorted/shuffled.
+    for (let i = max - 1; i >= 0; i--) {
+      if (oldChildren[i] === undefined && newChildren[i] !== undefined) {
+        parentDom.appendChild(createDom(newChildren[i]));
+      }
+    }
+    // Reverse order, same as the insertion loop above: deleting from a
+    // live childNodes list while counting up shifts every later index,
+    // so it ends up deleting roughly every other node instead of the
+    // intended tail. Deleting from the highest index down avoids that.
+    for (let i = max - 1; i >= 0; i--) {
+      if (newChildren[i] === undefined && oldChildren[i] !== undefined) {
+        const doomed = parentDom.childNodes[i];
+        if (doomed) parentDom.removeChild(doomed);
+      }
+    }
+    for (let i = 0; i < Math.min(oldChildren.length, newChildren.length); i++) {
+      diffNode(parentDom, oldChildren[i], newChildren[i], parentDom.childNodes[i]);
+    }
+  }
+
+  let __rootVNode = null;
+  let __rootContainer = null;
+
+  function mount(vnode, container) {
+    __rootContainer = container;
+    __rootVNode = vnode;
+    container.innerHTML = '';
+    const roots = vnode && vnode.tag === '__fragment__' ? flattenChildren(vnode.children) : [vnode];
+    roots.forEach(child => container.appendChild(createDom(child)));
+  }
+
+  function update(vnode) {
+    if (!__rootContainer) return;
+    const oldRoots = __rootVNode && __rootVNode.tag === '__fragment__'
+      ? flattenChildren(__rootVNode.children) : [__rootVNode];
+    const newRoots = vnode && vnode.tag === '__fragment__'
+      ? flattenChildren(vnode.children) : [vnode];
+    __rootVNode = vnode;
+    diffChildren(__rootContainer, oldRoots, newRoots);
+  }
+
+  /* ============================================================
+     App runner — remembers "how to rebuild the whole tree" so
+     anything (a click handler, a resolved Fetch) can trigger a
+     diffed re-render without passing callbacks around everywhere.
+     ============================================================ */
+  let rerender = () => {};
+
+  function start(appFn, container) {
+    rerender = () => update(appFn());
+    mount(appFn(), container);
+  }
+
+  /* ============================================================
+     Fetch — an async render method.
+     Fetch(key, loaderFn, renderFn)
+       key       — cache key; the same key won't re-fetch every render
+       loaderFn  — () => Promise<data>  (e.g. () => fetch(url).then(r => r.json()))
+       renderFn  — ({status, data, error}) => vnode
+     First render returns renderFn's "loading" branch immediately;
+     when the promise settles, it stores the result and calls
+     rerender() so the tree rebuilds with real data.
+     ============================================================ */
+  const __fetchCache = new Map();
+
+  function Fetch(key, loaderFn, renderFn) {
+    if (!__fetchCache.has(key)) {
+      const entry = { status: 'loading', data: null, error: null };
+      __fetchCache.set(key, entry);
+      Promise.resolve()
+        .then(loaderFn)
+        .then(data => {
+          entry.status = 'done';
+          entry.data = data;
+          rerender();
+        })
+        .catch(err => {
+          entry.status = 'error';
+          entry.error = err;
+          rerender();
+        });
+    }
+    return renderFn(__fetchCache.get(key));
+  }
+
+  /* ============================================================
+     Helper injection — provide(key, value) / use(key)
+     A tiny service locator so shared helpers (formatters, API
+     clients, config) don't have to be threaded through every
+     function as arguments. Provide once at startup, pull anywhere.
+     ============================================================ */
+  const __registry = new Map();
+
+  function provide(key, value) {
+    __registry.set(key, value);
+  }
+
+  function use(key) {
+    if (!__registry.has(key)) {
+      throw new Error(`elment: no helper injected for "${key}" — call provide('${key}', ...) first`);
+    }
+    return __registry.get(key);
+  }
+
+  /* ============================================================
+     Public API — exposed as plain globals so a bare <script> tag
+     is enough to use them, matching the rest of elment's
+     no-build-step philosophy.
+
+     A few tag names, capitalized, collide with real JS/DOM globals
+     (div -> Div is fine, but object -> Object and map -> Map would
+     silently overwrite the built-in Object and Map constructors —
+     which this very file depends on internally via Object.keys,
+     Object.assign, and new Map()). Those tags are still buildable,
+     just via el.object(...) / el.map(...) instead of a bare global,
+     so nothing on the page — including elment.js itself — gets its
+     built-ins clobbered.
+     ============================================================ */
+  const RESERVED_GLOBALS = new Set([
+    'Object', 'Map', 'Set', 'Array', 'Function', 'Date', 'Boolean',
+    'Number', 'String', 'Symbol', 'Promise', 'RegExp', 'Error', 'Proxy',
+    'Reflect', 'JSON', 'Math', 'Node', 'Text', 'Event', 'Document', 'Window'
+  ]);
+
+  const tagGlobals = Object.fromEntries(
+    Object.entries(el)
+      .map(([tag, fn]) => [tag.charAt(0).toUpperCase() + tag.slice(1), fn])
+      .filter(([capName]) => !RESERVED_GLOBALS.has(capName))
+  );
+
+  const api = {
+    // tag functions, capitalized (Div, Button, H1, ...) — minus the
+    // handful reserved above, which stay reachable via el.<tag>
+    ...tagGlobals,
+    Html, If, Else, For, While, Case,
+    start, mount, update, rerender: () => rerender(),
+    Fetch, provide, use,
+    // escape hatch: the raw lowercase tag map, and isVNode for advanced use
+    el, isVNode
+  };
+
+  Object.assign(global, api);
+  global.elment = api;
+
+})(typeof window !== 'undefined' ? window : globalThis);
+/* ============================================================
+   Second Wind Thrift — single-page app, built on elment.js.
+   All eight views live in one document; the sidebar switches
+   between them by updating state.view and calling rerender() —
+   no page reloads, no separate HTML files.
+   ============================================================ */
+
+// ---------------------------------------------------------------
+// State
+// ---------------------------------------------------------------
+const state = {
+  view: 'dashboard',
+  navCollapsed: false,
+  componentCategory: 'All',
+  inventoryStatus: 'All',
+  inventoryCategory: 'All categories',
+  crmTag: 'All',
+  blogStatus: 'All',
+  blogAuthor: 'All authors',
+  posCategory: 'All',
+  taskFilter: 'All'
+};
+
+function go(view) {
+  state.view = view;
+  // Navigating swaps in a structurally different page tree. elment's
+  // diff is index/tag based with no notion of "this subtree is a
+  // different page now" — diffing old page vs new page can patch
+  // unrelated nodes into each other. A full remount avoids that;
+  // in-page state changes below still use the cheaper diffed update.
+  mount(App(), document.getElementById('root'));
+}
+function toggleNav() { state.navCollapsed = !state.navCollapsed; rerender(); }
+function setFilter(key, value) { state[key] = value; rerender(); }
+
+// ---------------------------------------------------------------
+// Nav + per-page metadata
+// ---------------------------------------------------------------
+const NAV_ITEMS = [
+  { key: 'dashboard', icon: '▤', label: 'Dashboard' },
+  { key: 'website', icon: '◫', label: 'Website' },
+  { key: 'components', icon: '⌗', label: 'Components' },
+  { key: 'inventory', icon: '▥', label: 'Inventory', badge: 12 },
+  { key: 'pos', icon: '⛁', label: 'POS' },
+  { key: 'crm', icon: '☺', label: 'CRM' },
+  { key: 'blog', icon: '✎', label: 'Blog', badge: 2 },
+  { key: 'team', icon: '⚇', label: 'Team', badge: 3 }
+];
+
+const PAGE_META = {
+  dashboard: { crumbParent: 'Home', crumbCurrent: 'Dashboard', search: 'Search everything…', action: 'New sale' },
+  website: { crumbParent: 'Website', crumbCurrent: 'Home', search: 'Search pages…', action: 'Publish' },
+  components: { crumbParent: 'Website', crumbCurrent: 'Component Library', search: 'Search components…', action: 'Create component' },
+  inventory: { crumbParent: 'Inventory', crumbCurrent: 'All Items', search: 'Search by name, tag, or consignor…', action: 'Add item' },
+  pos: { crumbParent: 'POS', crumbCurrent: 'New Sale', search: 'Scan barcode or search item…', action: 'Open drawer' },
+  crm: { crumbParent: 'CRM', crumbCurrent: 'All Customers', search: 'Search by name, email, or tag…', action: 'Add customer' },
+  blog: { crumbParent: 'Blog', crumbCurrent: 'All Posts', search: 'Search posts…', action: 'Write post' },
+  team: { crumbParent: 'Team', crumbCurrent: 'Overview', search: 'Search messages or tasks…', action: 'Add task' }
+};
+
+// ---------------------------------------------------------------
+// Shell: sidebar + topbar (shared across every view)
+// ---------------------------------------------------------------
+function Sidebar() {
+  return Nav({ class: 'shell-nav' + (state.navCollapsed ? ' is-collapsed' : '') },
+    Div({ class: 'shell-brand' },
+      Span({ class: 'brand-mark' }, 'SW'),
+      Div({ class: 'brand-text' },
+        Strong({}, 'Second Wind Thrift'),
+        Small({}, 'Component Library')
+      ),
+      Button({ class: 'collapse-btn', title: 'Collapse sidebar' }, '‹')(() => toggleNav())
+    ),
+    Ul({ class: 'nav' }, For(NAV_ITEMS, (item) =>
+      Li({ class: 'nav-item' + (state.view === item.key ? ' is-active' : ''), title: item.label },
+        Span({ class: 'nav-icon' }, item.icon),
+        Span({ class: 'nav-label' }, item.label),
+        If(item.badge, Span({ class: 'nav-badge' }, String(item.badge)))
+      )(() => go(item.key))
+    )),
+    Div({ class: 'shell-foot' },
+      Span({ class: 'nav-icon' }, '⚙'),
+      Span({}, 'Settings')
+    )
+  );
+}
+
+function Topbar() {
+  const meta = PAGE_META[state.view];
+  return Header({ class: 'canvas-top' },
+    Div({ class: 'crumb' },
+      Span({}, meta.crumbParent),
+      Span({ class: 'crumb-sep' }, '/'),
+      Strong({}, meta.crumbCurrent)
+    ),
+    Div({ class: 'top-actions' },
+      Div({ class: 'search-tag' },
+        Span({ class: 'search-icon' }, '⌕'),
+        Input({ type: 'text', placeholder: meta.search })
+      ),
+      Button({ class: 'btn btn-stamp' },
+        Span({ class: 'stamp-plus' }, '+'),
+        Span({}, meta.action)
+      )
+    )
+  );
+}
+
+// Small shared building blocks reused by several pages
+function StatRow(stats) {
+  return Div({ class: 'stat-row' }, For(stats, (s) =>
+    Div({ class: 'stat' },
+      Span({ class: 'stat-label' }, s.label),
+      Strong({ class: 'stat-value' }, s.value),
+      If(s.note, Span({ class: 'stat-note stat-note--' + (s.tone || 'neutral') }, s.note))
+    )
+  ));
+}
+
+function PageHead(title, sub) {
+  return Div({ class: 'library-head' }, H1({}, title), P({}, sub));
+}
+// ---------------------------------------------------------------
+// Components (library) page
+// ---------------------------------------------------------------
+const COMPONENT_CATEGORIES = ['All', 'Info', 'Inventory', 'Action', 'Trust', 'Media', 'Blog', 'Promo'];
+const COMPONENTS_DATA = [
+  { name: 'Hours Widget', category: 'Info', uses: 214, icon: '⏱' },
+  { name: 'Item Showcase', category: 'Inventory', uses: 189, icon: '🏷' },
+  { name: 'Booking Widget', category: 'Action', uses: 156, icon: '📅' },
+  { name: 'Testimonial Block', category: 'Trust', uses: 98, icon: '💬' },
+  { name: 'Photo Gallery', category: 'Media', uses: 143, icon: '🖼' },
+  { name: 'Staff Byline', category: 'Blog', uses: 41, icon: '✎' },
+  { name: 'Price Tag Banner', category: 'Promo', uses: 77, icon: '🏷' },
+  { name: 'Map & Directions', category: 'Info', uses: 132, icon: '📍' },
+  { name: 'New Drop Alert', category: 'Promo', uses: 63, icon: '✦' },
+  { name: 'Consignor Credit', category: 'Trust', uses: 29, icon: '⟳' }
+];
+
+function TagCard(item) {
+  return Article({ class: 'tag' },
+    Div({ class: 'tag-punch' }),
+    Div({ class: 'tag-icon' }, item.icon),
+    H3({ class: 'tag-name' }, item.name),
+    Span({ class: 'tag-category' }, item.category),
+    Div({ class: 'tag-perf' }),
+    Div({ class: 'tag-foot' },
+      Span({ class: 'tag-uses' }, item.uses + ' uses'),
+      Div({ class: 'tag-actions' },
+        Button({ class: 'tag-action', title: 'Edit' }, '✎'),
+        Button({ class: 'tag-action', title: 'Duplicate' }, '⧉'),
+        Button({ class: 'tag-action tag-drag', title: 'Drag into page' }, '⠿')
+      )
+    )
+  );
+}
+
+function ComponentsPage() {
+  const visible = state.componentCategory === 'All'
+    ? COMPONENTS_DATA
+    : COMPONENTS_DATA.filter((c) => c.category === state.componentCategory);
+  return Section({ class: 'library' },
+    PageHead('Component library', 'Reusable pieces for your website and blog. Drag one onto a page, or build your own.'),
+    Div({ class: 'filter-row' },
+      Div({ class: 'chip-set' }, For(COMPONENT_CATEGORIES, (cat) =>
+        Span({ class: 'chip' + (cat === state.componentCategory ? ' is-active' : '') }, cat)(() => setFilter('componentCategory', cat))
+      )),
+      Div({ class: 'view-toggle' },
+        Button({ class: 'view-btn is-active' }, '▦'),
+        Button({ class: 'view-btn' }, '☰')
+      )
+    ),
+    Div({ class: 'tag-grid' },
+      For(visible, (item) => TagCard(item)),
+      Button({ class: 'tag tag-ghost' },
+        Span({ class: 'tag-new-plus' }, '+'),
+        Span({}, 'Create component')
+      )
+    )
+  );
+}
+
+// ---------------------------------------------------------------
+// Inventory page
+// ---------------------------------------------------------------
+const STATUS_LABEL = { 'in-stock': 'In stock', 'marked-down': 'Marked down', 'sold': 'Sold' };
+const STATUS_TONE = { 'in-stock': 'pill-good', 'marked-down': 'pill-warn', 'sold': 'pill-muted' };
+
+const INVENTORY_STATS = [
+  { label: 'Total items', value: '412' },
+  { label: 'In stock', value: '361', note: '88%', tone: 'sage' },
+  { label: 'Sold this week', value: '27', note: '+6 vs last wk', tone: 'sage' },
+  { label: 'Consignment owed', value: '$318.40', note: '9 consignors', tone: 'clay' }
+];
+const INVENTORY_STATUS_FILTERS = ['All', 'In stock', 'Marked down', 'Sold'];
+const INVENTORY_CATEGORY_FILTERS = ['All categories', 'Clothing', 'Furniture', 'Electronics', 'Books', 'Decor', 'Records', 'Jewelry'];
+const INVENTORY_DATA = [
+  { name: 'Denim Jacket, Lined', category: 'Clothing', condition: 'Good', price: '$18', status: 'in-stock', icon: '🧥', tint: 'a', daysListed: '4 days', consignor: 'J. Alvarez', consignorCut: '40%' },
+  { name: 'Oak Side Table', category: 'Furniture', condition: 'Fair', price: '$32', wasPrice: '$45', status: 'marked-down', icon: '🪑', tint: 'b', daysListed: '19 days' },
+  { name: 'Turntable, Tested', category: 'Electronics', condition: 'Excellent', price: '$64', status: 'sold', icon: '🎧', tint: 'c', daysListed: 'Sold Tue' },
+  { name: 'Hardback Set (12)', category: 'Books', condition: 'Good', price: '$14', status: 'in-stock', icon: '📚', tint: 'd', daysListed: '2 days' },
+  { name: 'Brass Table Lamp', category: 'Decor', condition: 'Good', price: '$22', status: 'in-stock', icon: '💡', tint: 'a', daysListed: '7 days', consignor: 'M. Chen', consignorCut: '50%' },
+  { name: 'Vinyl: Jazz Bundle', category: 'Records', condition: 'Good', price: '$9', wasPrice: '$15', status: 'marked-down', icon: '💿', tint: 'b', daysListed: '31 days' },
+  { name: 'Silver Locket', category: 'Jewelry', condition: 'Excellent', price: '$28', status: 'in-stock', icon: '📿', tint: 'c', daysListed: '1 day', consignor: 'R. Boone', consignorCut: '40%' },
+  { name: 'Wool Peacoat', category: 'Clothing', condition: 'Excellent', price: '$34', status: 'sold', icon: '🧥', tint: 'd', daysListed: 'Sold Mon' },
+  { name: 'Ceramic Vase Set', category: 'Decor', condition: 'Good', price: '$16', status: 'in-stock', icon: '🏺', tint: 'a', daysListed: '5 days' },
+  { name: 'Film Camera, 35mm', category: 'Electronics', condition: 'Fair', price: '$40', status: 'in-stock', icon: '📷', tint: 'b', daysListed: '11 days', consignor: 'J. Alvarez', consignorCut: '40%' }
+];
+
+function ItemCard(item) {
+  return Article({ class: 'item-card item-card--' + item.status },
+    Div({ class: 'item-photo item-photo--' + item.tint },
+      Span({ class: 'item-photo-icon' }, item.icon),
+      Span({ class: 'pill ' + STATUS_TONE[item.status] }, STATUS_LABEL[item.status]),
+      Div({ class: 'price-tag' },
+        Span({ class: 'price-tag-amount' }, item.price),
+        If(item.wasPrice, Span({ class: 'price-tag-was' }, item.wasPrice))
+      )
+    ),
+    Div({ class: 'item-body' },
+      H3({ class: 'item-name' }, item.name),
+      Div({ class: 'item-meta' }, item.category + ' · ' + item.condition),
+      If(item.consignor, Div({ class: 'consignor-pill' }, '↩ ' + item.consignor + ' · ' + item.consignorCut)),
+      Div({ class: 'item-foot' },
+        Span({ class: 'item-days' }, item.daysListed),
+        Div({ class: 'item-actions' },
+          Button({ class: 'tag-action', title: 'Edit' }, '✎'),
+          Button({ class: 'tag-action', title: 'Cross-list' }, '⇄'),
+          Button({ class: 'tag-action', title: 'Mark sold' }, '✓')
+        )
+      )
+    )
+  );
+}
+
+function statusKeyFor(label) {
+  if (label === 'In stock') return 'in-stock';
+  if (label === 'Marked down') return 'marked-down';
+  if (label === 'Sold') return 'sold';
+  return null;
+}
+
+function InventoryPage() {
+  const visible = INVENTORY_DATA.filter((it) => {
+    const statusOk = state.inventoryStatus === 'All' || it.status === statusKeyFor(state.inventoryStatus);
+    const catOk = state.inventoryCategory === 'All categories' || it.category === state.inventoryCategory;
+    return statusOk && catOk;
+  });
+  return Section({ class: 'library' },
+    PageHead('Inventory', 'One-off items, tracked from intake to sale. Cross-list to your online channels straight from here.'),
+    StatRow(INVENTORY_STATS),
+    Div({ class: 'filter-row' },
+      Div({ class: 'chip-set' }, For(INVENTORY_STATUS_FILTERS, (f) =>
+        Span({ class: 'chip' + (f === state.inventoryStatus ? ' is-active' : '') }, f)(() => setFilter('inventoryStatus', f))
+      )),
+      Div({ class: 'chip-set chip-set--muted' }, For(INVENTORY_CATEGORY_FILTERS, (c) =>
+        Span({ class: 'chip chip-ghost' + (c === state.inventoryCategory ? ' is-active' : '') }, c)(() => setFilter('inventoryCategory', c))
+      ))
+    ),
+    Div({ class: 'item-grid' },
+      For(visible, (item) => ItemCard(item)),
+      Button({ class: 'tag tag-ghost item-card-new' },
+        Span({ class: 'tag-new-plus' }, '+'),
+        Span({}, 'Add item')
+      )
+    )
+  );
+}
+// ---------------------------------------------------------------
+// POS page
+// ---------------------------------------------------------------
+const POS_STATS = [
+  { label: 'Sales today', value: '$286', note: '+18% vs avg', tone: 'sage' },
+  { label: 'Transactions', value: '9' },
+  { label: 'Avg ticket', value: '$31.80' },
+  { label: 'Drawer status', value: 'Open', note: 'since 9:02 AM', tone: 'sage' }
+];
+const POS_CATEGORIES = ['All', 'Clothing', 'Furniture', 'Electronics', 'Books', 'Decor', 'Records', 'Jewelry'];
+const POS_ITEMS = [
+  { name: 'Denim Jacket, Lined', price: '$18', icon: '🧥', tint: 'a', category: 'Clothing' },
+  { name: 'Oak Side Table', price: '$32', icon: '🪑', tint: 'b', category: 'Furniture' },
+  { name: 'Turntable, Tested', price: '$64', icon: '🎧', tint: 'c', category: 'Electronics' },
+  { name: 'Hardback Set (12)', price: '$14', icon: '📚', tint: 'd', category: 'Books' },
+  { name: 'Brass Table Lamp', price: '$22', icon: '💡', tint: 'a', category: 'Decor' },
+  { name: 'Vinyl: Jazz Bundle', price: '$9', icon: '💿', tint: 'b', category: 'Records' },
+  { name: 'Silver Locket', price: '$28', icon: '📿', tint: 'c', category: 'Jewelry' },
+  { name: 'Ceramic Vase Set', price: '$16', icon: '🏺', tint: 'a', category: 'Decor' },
+  { name: 'Film Camera, 35mm', price: '$40', icon: '📷', tint: 'b', category: 'Electronics' },
+  { name: 'Wool Peacoat', price: '$34', icon: '🧥', tint: 'd', category: 'Clothing' }
+];
+const CART_ITEMS = [
+  { name: 'Denim Jacket, Lined', price: '$18.00', consignor: 'J. Alvarez · 40%' },
+  { name: 'Silver Locket', price: '$28.00', consignor: 'R. Boone · 40%' },
+  { name: 'Hardback Set (12)', price: '$14.00' }
+];
+
+function POSPage() {
+  const visible = state.posCategory === 'All' ? POS_ITEMS : POS_ITEMS.filter((i) => i.category === state.posCategory);
+  return Section({ class: 'library' },
+    PageHead('Point of Sale', 'Items sold here come straight off Inventory — no separate product list to keep in sync.'),
+    StatRow(POS_STATS),
+    Div({ class: 'dash-grid dash-grid--pos' },
+      Div({ class: 'panel panel--pos-grid' },
+        Div({ class: 'pos-search-row' },
+          Div({ class: 'search-tag search-tag--wide' },
+            Span({ class: 'search-icon' }, '⌕'),
+            Input({ type: 'text', placeholder: 'Scan barcode or search item…' })
+          ),
+          Div({ class: 'chip-set chip-set--muted' }, For(POS_CATEGORIES, (c) =>
+            Span({ class: 'chip chip-ghost' + (c === state.posCategory ? ' is-active' : '') }, c)(() => setFilter('posCategory', c))
+          ))
+        ),
+        Div({ class: 'pos-tile-grid' }, For(visible, (it) =>
+          Button({ class: 'pos-tile' },
+            Div({ class: 'pos-tile-photo item-photo--' + it.tint }, it.icon),
+            Span({ class: 'pos-tile-name' }, it.name),
+            Span({ class: 'pos-tile-price' }, it.price)
+          )
+        ))
+      ),
+      Div({ class: 'panel panel--cart' },
+        Div({ class: 'panel-head' },
+          H2({}, 'Current sale'),
+          Button({ class: 'tag-action', title: 'Clear cart' }, '✕')
+        ),
+        Ul({ class: 'cart-list' }, For(CART_ITEMS, (it) =>
+          Li({ class: 'cart-row' },
+            Div({ class: 'cart-row-main' },
+              Span({ class: 'cart-item-name' }, it.name),
+              If(it.consignor, Span({ class: 'cart-item-sub' }, '↩ ' + it.consignor))
+            ),
+            Div({ class: 'cart-row-side' },
+              Span({ class: 'mono-cell' }, it.price),
+              Button({ class: 'tag-action', title: 'Edit price/qty' }, '✎'),
+              Button({ class: 'tag-action', title: 'Remove' }, '✕')
+            )
+          )
+        )),
+        Div({ class: 'cart-totals' },
+          Div({ class: 'cart-total-row' }, Span({}, 'Subtotal'), Span({ class: 'mono-cell' }, '$60.00')),
+          Div({ class: 'cart-total-row' }, Span({}, 'Tax'), Span({ class: 'mono-cell' }, '$3.90')),
+          Div({ class: 'cart-total-row cart-total-row--grand' }, Span({}, 'Total'), Span({ class: 'mono-cell' }, '$63.90'))
+        ),
+        Div({ class: 'pay-method-row' }, For(['Card', 'Cash', 'Split'], (m) =>
+          Button({ class: 'pay-method' + (m === 'Card' ? ' is-active' : '') }, m)
+        )),
+        Button({ class: 'btn btn-block btn-charge' }, 'Charge $63.90')
+      )
+    )
+  );
+}
+
+// ---------------------------------------------------------------
+// CRM page
+// ---------------------------------------------------------------
+const CRM_STATS = [
+  { label: 'Total customers', value: '286' },
+  { label: 'Repeat rate', value: '61%', note: '+4% vs last mo', tone: 'sage' },
+  { label: 'Avg lifetime spend', value: '$142' },
+  { label: 'New this month', value: '19', note: '5 from referral', tone: 'sage' }
+];
+const CRM_TAG_FILTERS = ['All', 'VIP', 'Regular', 'Consignor', 'New'];
+const CUSTOMERS = [
+  { name: 'Jordan Alvarez', initials: 'JA', contact: 'jordan.a@mail.com', tags: ['VIP', 'Consignor'], lastVisit: 'Jul 15', visits: 24, totalSpent: '$612', note: 'Prefers denim, drops off Fridays' },
+  { name: 'Maya Chen', initials: 'MC', contact: '(413) 555-0142', tags: ['Regular', 'Consignor'], lastVisit: 'Jul 12', visits: 15, totalSpent: '$340', note: 'Home decor consignor, weekly drop-offs' },
+  { name: 'Ray Boone', initials: 'RB', contact: 'r.boone@mail.com', tags: ['New'], lastVisit: 'Jul 16', visits: 1, totalSpent: '$28', note: 'Found us via Instagram' },
+  { name: 'Priya Nair', initials: 'PN', contact: 'priya.n@mail.com', tags: ['VIP'], lastVisit: 'Jul 10', visits: 31, totalSpent: '$894', note: 'Buys vinyl + furniture, big spender' },
+  { name: 'Tom Whitfield', initials: 'TW', contact: '(413) 555-0187', tags: ['Regular'], lastVisit: 'Jul 3', visits: 8, totalSpent: '$156', note: '' },
+  { name: 'Lena Ostrowski', initials: 'LO', contact: 'lena.o@mail.com', tags: ['Regular'], lastVisit: 'Jun 28', visits: 11, totalSpent: '$203', note: 'Asked about book bundle discounts' },
+  { name: 'Devon Marsh', initials: 'DM', contact: 'devon.m@mail.com', tags: ['New'], lastVisit: 'Jul 14', visits: 2, totalSpent: '$41', note: '' },
+  { name: 'Sofia Reyes', initials: 'SR', contact: '(413) 555-0119', tags: ['VIP', 'Regular'], lastVisit: 'Jul 16', visits: 42, totalSpent: '$1,180', note: 'Best customer — books her own pickup slots' }
+];
+
+function CRMPage() {
+  const visible = state.crmTag === 'All' ? CUSTOMERS : CUSTOMERS.filter((c) => c.tags.includes(state.crmTag));
+  return Section({ class: 'library' },
+    PageHead('Customers', 'Purchase history, notes, and tags — pulled straight from POS and booking activity.'),
+    StatRow(CRM_STATS),
+    Div({ class: 'filter-row' },
+      Div({ class: 'chip-set' }, For(CRM_TAG_FILTERS, (f) =>
+        Span({ class: 'chip' + (f === state.crmTag ? ' is-active' : '') }, f)(() => setFilter('crmTag', f))
+      )),
+      Button({ class: 'btn btn-ghost' }, Span({ class: 'stamp-plus' }, '+'), Span({}, 'Add customer'))
+    ),
+    Div({ class: 'crm-table-wrap' },
+      Table({ class: 'table' },
+        Thead({}, Tr({},
+          Th({}, 'Customer'), Th({}, 'Contact'), Th({}, 'Tags'),
+          Th({}, 'Last visit'), Th({}, 'Visits'), Th({}, 'Total spent'),
+          Th({}, 'Notes'), Th({}, '')
+        )),
+        Tbody({}, For(visible, (c) =>
+          Tr({},
+            Td({}, Div({ class: 'cust-name-cell' }, Span({ class: 'cust-avatar' }, c.initials), Span({ class: 'cust-name' }, c.name))),
+            Td({ class: 'mono-cell' }, c.contact),
+            Td({}, Div({ class: 'cust-tags' }, For(c.tags, (t) => Span({ class: 'cust-tag cust-tag--' + t.toLowerCase() }, t)))),
+            Td({ class: 'mono-cell' }, c.lastVisit),
+            Td({ class: 'mono-cell' }, String(c.visits)),
+            Td({ class: 'mono-cell cust-spent' }, c.totalSpent),
+            Td({ class: 'cust-note-cell' }, c.note),
+            Td({}, Div({ class: 'item-actions' },
+              Button({ class: 'tag-action', title: 'View history' }, '⧉'),
+              Button({ class: 'tag-action', title: 'Message' }, '✉')
+            ))
+          )
+        ))
+      )
+    )
+  );
+}
+// ---------------------------------------------------------------
+// Blog page
+// ---------------------------------------------------------------
+const BLOG_STATS = [
+  { label: 'Published posts', value: '38' },
+  { label: 'Drafts', value: '4' },
+  { label: 'Views this week', value: '2,140', note: '+12%', tone: 'sage' },
+  { label: 'Active authors', value: '3' }
+];
+const BLOG_BLOCKS = [
+  { icon: '¶', label: 'Text' }, { icon: '🖼', label: 'Image' }, { icon: '🏷', label: 'Item embed' },
+  { icon: '▦', label: 'Gallery' }, { icon: '❝', label: 'Quote' }, { icon: '✎', label: 'Byline' }
+];
+const BLOG_STATUS_FILTERS = ['All', 'Published', 'Draft'];
+const BLOG_AUTHOR_FILTERS = ['All authors', 'Jordan', 'Maya', 'Devon'];
+const POSTS = [
+  { title: 'Just In: Oak Side Table Restock', excerpt: 'A small batch of mid-century oak pieces hit the floor this morning — first come, first served.', author: 'Jordan', authorInitials: 'J', date: 'Jul 15', status: 'published', views: 412, icon: '🪑', tint: 'a', embedItem: 'Oak Side Table' },
+  { title: 'How Consignment Works Here', excerpt: 'A plain-language walkthrough of drop-off, pricing, and payout timing for new consignors.', author: 'Maya', authorInitials: 'M', date: 'Jul 11', status: 'published', views: 298, icon: '📋', tint: 'b', embedItem: null },
+  { title: "Vinyl Crate Dig: This Week's Finds", excerpt: 'Jazz, soul, and a few surprise soundtracks made it into the crate this week.', author: 'Jordan', authorInitials: 'J', date: 'Jul 9', status: 'published', views: 176, icon: '💿', tint: 'c', embedItem: 'Vinyl: Jazz Bundle' },
+  { title: 'Weekend Markdown Preview', excerpt: "A first look at what's dropping to clearance before Saturday.", author: 'Devon', authorInitials: 'D', date: 'Jul 17', status: 'draft', savedNote: 'Saved 2h ago', icon: '🏷', tint: 'd', embedItem: null },
+  { title: 'Meet Our Newest Consignor', excerpt: 'A profile on a local maker now selling handmade jewelry through the shop.', author: 'Maya', authorInitials: 'M', date: 'Jul 5', status: 'published', views: 203, icon: '📿', tint: 'a', embedItem: 'Silver Locket' },
+  { title: 'Saturday Pop-Up Recap', excerpt: "Photos and notes from last weekend's sidewalk sale.", author: 'Devon', authorInitials: 'D', date: 'Jun 30', status: 'draft', savedNote: 'Saved yesterday', icon: '🖼', tint: 'b', embedItem: null }
+];
+
+function PostCard(post) {
+  return Article({ class: 'post-card post-card--' + post.status },
+    Div({ class: 'post-cover post-cover--' + post.tint },
+      Span({ class: 'post-cover-icon' }, post.icon),
+      Span({ class: 'pill ' + (post.status === 'draft' ? 'pill-warn' : 'pill-good') }, post.status === 'draft' ? 'Draft' : 'Published'),
+      If(post.embedItem, Span({ class: 'embed-badge' }, '🏷 ' + post.embedItem))
+    ),
+    Div({ class: 'item-body' },
+      H3({ class: 'item-name' }, post.title),
+      P({ class: 'post-excerpt' }, post.excerpt),
+      Div({ class: 'post-byline' },
+        Span({ class: 'cust-avatar cust-avatar--sm' }, post.authorInitials),
+        Span({ class: 'post-author' }, post.author),
+        Span({ class: 'post-date' }, post.date)
+      ),
+      Div({ class: 'item-foot' },
+        Span({ class: 'item-days' }, post.status === 'draft' ? post.savedNote : post.views + ' views'),
+        Div({ class: 'item-actions' },
+          Button({ class: 'tag-action', title: 'Edit' }, '✎'),
+          Button({ class: 'tag-action', title: 'Duplicate' }, '⧉')
+        )
+      )
+    )
+  );
+}
+
+function BlogPage() {
+  const visible = POSTS.filter((p) => {
+    const statusOk = state.blogStatus === 'All' || (state.blogStatus === 'Published' ? p.status === 'published' : p.status === 'draft');
+    const authorOk = state.blogAuthor === 'All authors' || p.author === state.blogAuthor;
+    return statusOk && authorOk;
+  });
+  return Section({ class: 'library' },
+    PageHead('Blog & News', 'Built from the same components as your website. Embed a live inventory item and it updates automatically.'),
+    StatRow(BLOG_STATS),
+    Div({ class: 'block-picker' },
+      Div({ class: 'block-picker-label' }, 'New post — drag a block to start'),
+      Div({ class: 'block-chip-row' }, For(BLOG_BLOCKS, (b) =>
+        Div({ class: 'block-chip' }, Span({ class: 'block-chip-icon' }, b.icon), Span({}, b.label))
+      ))
+    ),
+    Div({ class: 'filter-row' },
+      Div({ class: 'chip-set' }, For(BLOG_STATUS_FILTERS, (f) =>
+        Span({ class: 'chip' + (f === state.blogStatus ? ' is-active' : '') }, f)(() => setFilter('blogStatus', f))
+      )),
+      Div({ class: 'chip-set chip-set--muted' }, For(BLOG_AUTHOR_FILTERS, (a) =>
+        Span({ class: 'chip chip-ghost' + (a === state.blogAuthor ? ' is-active' : '') }, a)(() => setFilter('blogAuthor', a))
+      ))
+    ),
+    Div({ class: 'item-grid' },
+      For(visible, (post) => PostCard(post)),
+      Button({ class: 'tag tag-ghost item-card-new' }, Span({ class: 'tag-new-plus' }, '+'), Span({}, 'Write post'))
+    )
+  );
+}
+
+// ---------------------------------------------------------------
+// Dashboard page
+// ---------------------------------------------------------------
+const DASH_STATS = [
+  { label: 'Sales today', value: '$286', note: '+18% vs avg', tone: 'sage' },
+  { label: 'Items sold today', value: '11' },
+  { label: 'New customers', value: '3' },
+  { label: 'Consignment due', value: '$318.40', note: '9 consignors', tone: 'clay' }
+];
+const SALES_BY_DAY = [
+  { day: 'Mon', value: 210 }, { day: 'Tue', value: 260 }, { day: 'Wed', value: 180 },
+  { day: 'Thu', value: 305 }, { day: 'Fri', value: 286, isToday: true },
+  { day: 'Sat', value: 0 }, { day: 'Sun', value: 0 }
+];
+const ACTIVITY = [
+  { icon: '$', tint: 'sale', text: 'Sale: Turntable, Tested — $64', time: '18 min ago' },
+  { icon: '↩', tint: 'intake', text: 'Jordan Alvarez dropped off 6 items', time: '1 hr ago' },
+  { icon: '✎', tint: 'blog', text: 'Devon saved a draft: "Weekend Markdown Preview"', time: '2 hr ago' },
+  { icon: '☺', tint: 'customer', text: 'New customer: Ray Boone', time: '3 hr ago' },
+  { icon: '$', tint: 'sale', text: 'Sale: Wool Peacoat — $34', time: 'Yesterday' }
+];
+const QUICK_ACTIONS = [
+  { icon: '⛁', label: 'New sale' }, { icon: '▥', label: 'Add item' },
+  { icon: '☺', label: 'Add customer' }, { icon: '✎', label: 'Write post' }
+];
+const ATTENTION = [
+  { text: '3 items marked down 14+ days', tag: 'Inventory', tone: 'mustard' },
+  { text: 'Payout owed to Maya Chen', tag: '$62.00', tone: 'clay' },
+  { text: '2 blog drafts unpublished', tag: 'Blog', tone: 'mustard' },
+  { text: 'Payout owed to Jordan Alvarez', tag: '$140.80', tone: 'clay' }
+];
+
+function SalesChart() {
+  const max = Math.max(...SALES_BY_DAY.map((d) => d.value));
+  const barW = 34, gap = 22, chartH = 140, baseX = 10;
+  const width = baseX * 2 + SALES_BY_DAY.length * (barW + gap) - gap;
+  const bars = SALES_BY_DAY.map((d, i) => {
+    const h = Math.round((d.value / max) * chartH);
+    const x = baseX + i * (barW + gap);
+    const y = chartH - h + 20;
+    return '<g><rect x="' + x + '" y="' + y + '" width="' + barW + '" height="' + h + '" rx="4" class="' +
+      (d.isToday ? 'bar bar--today' : 'bar') + '"></rect>' +
+      '<text x="' + (x + barW / 2) + '" y="' + (chartH + 38) + '" class="bar-label" text-anchor="middle">' + d.day + '</text></g>';
+  }).join('');
+  const svgMarkup = '<svg viewBox="0 0 ' + width + ' ' + (chartH + 44) + '" class="sales-chart">' + bars + '</svg>';
+  return Div({ class: 'panel' },
+    Div({ class: 'panel-head' }, H2({}, 'This week'), Span({ class: 'panel-sub' }, '$1,940 this week')),
+    Div({ class: 'chart-mount' })({ onmount: (dom) => { dom.innerHTML = svgMarkup; } })
+  );
+}
+
+function DashboardPage() {
+  return Section({ class: 'library' },
+    PageHead('Good morning, Second Wind Thrift', "Friday, July 17 — here's what's happening across the shop."),
+    StatRow(DASH_STATS),
+    Div({ class: 'dash-grid' },
+      Div({ class: 'dash-col dash-col--main' },
+        SalesChart(),
+        Div({ class: 'panel' },
+          Div({ class: 'panel-head' }, H2({}, 'Recent activity')),
+          Ul({ class: 'activity-list' }, For(ACTIVITY, (a) =>
+            Li({ class: 'activity-row' },
+              Span({ class: 'activity-icon activity-icon--' + a.tint }, a.icon),
+              Div({ class: 'activity-body' }, Span({ class: 'activity-text' }, a.text), Span({ class: 'activity-time' }, a.time))
+            )
+          ))
+        )
+      ),
+      Div({ class: 'dash-col dash-col--side' },
+        Div({ class: 'panel' },
+          Div({ class: 'panel-head' }, H2({}, 'Quick actions')),
+          Div({ class: 'quick-actions' }, For(QUICK_ACTIONS, (q) =>
+            Button({ class: 'quick-action' }, Span({ class: 'quick-action-icon' }, q.icon), Span({}, q.label))
+          ))
+        ),
+        Div({ class: 'panel panel--attention' },
+          Div({ class: 'panel-head' }, H2({}, 'Needs attention')),
+          Ul({ class: 'attention-list' }, For(ATTENTION, (a) =>
+            Li({ class: 'attention-row' },
+              Span({ class: 'attention-text' }, a.text),
+              Span({ class: 'chip chip-ghost attention-chip attention-chip--' + a.tone }, a.tag)
+            )
+          ))
+        )
+      )
+    )
+  );
+}
+// ---------------------------------------------------------------
+// Team page
+// ---------------------------------------------------------------
+const TEAM_STATS = [
+  { label: 'On shift today', value: '3' },
+  { label: 'Open tasks', value: '7', note: '2 overdue', tone: 'clay' },
+  { label: 'Unread messages', value: '5' },
+  { label: 'Time off requests', value: '1', note: 'pending', tone: 'mustard' }
+];
+const CAL_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const STAFF_ROWS = [
+  { name: 'Jordan', initials: 'J', tint: 'a', cells: [{ shift: '9–5' }, { shift: '9–5' }, {}, { shift: '9–5' }, { shift: '9–5', task: 'Intake' }, {}, {}] },
+  { name: 'Maya', initials: 'M', tint: 'b', cells: [{}, { shift: '12–8' }, { shift: '12–8' }, {}, { shift: '12–8' }, { shift: '10–4' }, {}] },
+  { name: 'Devon', initials: 'D', tint: 'c', cells: [{ shift: '12–8', task: 'Blog' }, {}, { shift: '9–5' }, { shift: '9–5' }, {}, { shift: '10–4' }, {}] }
+];
+const MESSAGES = [
+  { author: 'Jordan', initials: 'J', text: 'Restocked the denim rack, tagged everything from this morning\u2019s intake.', time: '9:14 AM', self: false },
+  { author: 'You', text: 'Nice — can you snap photos for the item embeds on the blog post?', time: '9:20 AM', self: true },
+  { author: 'Maya', initials: 'M', text: 'I can grab those when I\u2019m in at noon.', time: '9:22 AM', self: false },
+  { author: 'Devon', initials: 'D', text: 'Markdown pass is done for anything over 14 days. 6 items updated.', time: '11:03 AM', self: false }
+];
+const TASK_FILTERS = ['All', 'Daily', 'Weekly', 'Monthly', 'One-off'];
+const TASKS = [
+  { text: 'Count register drawer', assignee: 'Jordan', due: 'Today', done: false, frequency: 'daily', frequencyLabel: 'Daily' },
+  { text: 'Sweep and tidy front window', assignee: 'Devon', due: 'Today', done: true, frequency: 'daily', frequencyLabel: 'Daily' },
+  { text: 'Photograph new denim intake for blog embed', assignee: 'Maya', due: 'Today', done: false, frequency: 'oneoff', frequencyLabel: 'One-off' },
+  { text: 'Run markdown pass on 14+ day items', assignee: 'Devon', due: 'Fridays', done: false, frequency: 'weekly', frequencyLabel: 'Weekly' },
+  { text: 'Restock price tag printer paper', assignee: 'Maya', due: 'Mondays', done: true, frequency: 'weekly', frequencyLabel: 'Weekly' },
+  { text: 'Sort Saturday consignment drop-offs', assignee: 'Jordan', due: 'Saturdays', done: false, frequency: 'weekly', frequencyLabel: 'Weekly' },
+  { text: 'Publish "Weekend Markdown Preview"', assignee: 'Devon', due: 'Tomorrow', done: false, frequency: 'oneoff', frequencyLabel: 'One-off' },
+  { text: 'Reconcile consignor payouts', assignee: 'Jordan', due: '1st of month', done: false, frequency: 'monthly', frequencyLabel: 'Monthly' },
+  { text: 'Deep clean fitting rooms', assignee: 'Maya', due: 'Last Sun', done: true, frequency: 'monthly', frequencyLabel: 'Monthly' }
+];
+
+function TeamPage() {
+  const freqKey = { 'Daily': 'daily', 'Weekly': 'weekly', 'Monthly': 'monthly', 'One-off': 'oneoff' };
+  const visibleTasks = state.taskFilter === 'All' ? TASKS : TASKS.filter((t) => t.frequency === freqKey[state.taskFilter]);
+  return Section({ class: 'library' },
+    PageHead('Team', 'Shifts, tasks, and chat in one place — no more group texts.'),
+    StatRow(TEAM_STATS),
+    Div({ class: 'panel panel--wide' },
+      Div({ class: 'panel-head' }, H2({}, 'This week'), Span({ class: 'panel-sub' }, 'Jul 13 – Jul 19')),
+      Div({ class: 'cal-grid' },
+        Div({ class: 'cal-row cal-row--head' },
+          Div({ class: 'cal-staff-col' }),
+          For(CAL_DAYS, (d) => Div({ class: 'cal-day-head' }, d))
+        ),
+        For(STAFF_ROWS, (row) =>
+          Div({ class: 'cal-row' },
+            Div({ class: 'cal-staff-col' }, Span({ class: 'cust-avatar cust-avatar--sm' }, row.initials), Span({ class: 'cal-staff-name' }, row.name)),
+            For(row.cells, (cell) =>
+              Div({ class: 'cal-cell' },
+                If(cell.shift, Span({ class: 'cal-chip cal-chip--shift cal-chip--' + row.tint }, cell.shift)),
+                If(cell.task, Span({ class: 'cal-chip cal-chip--task' }, cell.task))
+              )
+            )
+          )
+        )
+      )
+    ),
+    Div({ class: 'dash-grid dash-grid--team' },
+      Div({ class: 'panel panel--chat' },
+        Div({ class: 'panel-head' }, H2({}, 'Team chat'), Span({ class: 'panel-sub' }, '#shop-floor')),
+        Div({ class: 'chat-thread' }, For(MESSAGES, (m) =>
+          Div({ class: 'chat-msg' + (m.self ? ' chat-msg--self' : '') },
+            If(!m.self, Span({ class: 'cust-avatar cust-avatar--sm' }, m.initials)),
+            Div({ class: 'chat-bubble' },
+              If(!m.self, Span({ class: 'chat-author' }, m.author)),
+              P({ class: 'chat-text' }, m.text),
+              Span({ class: 'chat-time' }, m.time)
+            )
+          )
+        )),
+        Div({ class: 'chat-input-row' },
+          Input({ type: 'text', class: 'chat-input', placeholder: 'Message the team…' }),
+          Button({ class: 'btn btn-sm' }, 'Send')
+        )
+      ),
+      Div({ class: 'panel panel--tasks' },
+        Div({ class: 'panel-head' }, H2({}, 'Tasks'), Button({ class: 'btn btn-ghost btn-sm' }, '+ Add task')),
+        Div({ class: 'chip-set task-filter-row' }, For(TASK_FILTERS, (f) =>
+          Span({ class: 'chip chip-ghost' + (f === state.taskFilter ? ' is-active' : '') }, f)(() => setFilter('taskFilter', f))
+        )),
+        Ul({ class: 'task-list' }, For(visibleTasks, (t) =>
+          Li({ class: 'task-row' + (t.done ? ' task-row--done' : '') },
+            Span({ class: 'task-check' + (t.done ? ' is-checked' : '') }, t.done ? '✓' : ''),
+            Div({ class: 'task-body' },
+              Div({ class: 'task-text-row' },
+                Span({ class: 'task-text' }, t.text),
+                Span({ class: 'task-freq task-freq--' + t.frequency }, t.frequencyLabel)
+              ),
+              Span({ class: 'task-meta' }, t.assignee + ' · ' + t.due)
+            )
+          )
+        ))
+      )
+    )
+  );
+}
+
+// ---------------------------------------------------------------
+// Website builder page
+// ---------------------------------------------------------------
+const WEBSITE_STATS = [
+  { label: 'Pages live', value: '3' },
+  { label: 'Visits this week', value: '1,860', note: '+9%', tone: 'sage' },
+  { label: 'Domain', value: 'Connected', note: 'secondwindthrift.com', tone: 'sage' },
+  { label: 'Last published', value: '2 days ago' }
+];
+const SITE_PAGES = [
+  { name: 'Home', status: 'Published', updated: 'Editing now', isActive: true },
+  { name: 'About', status: 'Published', updated: 'Updated 1 wk ago' },
+  { name: 'Shop', status: 'Published', updated: 'Auto-synced from Inventory' },
+  { name: 'Contact', status: 'Draft', updated: 'Editing — Devon' }
+];
+const PAGE_BLOCKS = [
+  { type: 'hero', label: 'Hero — Business Info', data: { name: 'Second Wind Thrift', tagline: 'One-of-a-kind finds, every week.' } },
+  { type: 'hours', label: 'Hours Widget', data: { rows: [{ day: 'Mon – Fri', time: '10am – 7pm' }, { day: 'Saturday', time: '10am – 5pm' }, { day: 'Sunday', time: 'Closed' }] } },
+  { type: 'showcase', label: 'Item Showcase', data: { items: [{ icon: '🧥', price: '$18', tint: 'a' }, { icon: '🪑', price: '$32', tint: 'b' }, { icon: '💿', price: '$9', tint: 'c' }, { icon: '📿', price: '$28', tint: 'd' }] } },
+  { type: 'testimonial', label: 'Testimonial Block', data: { quote: 'Best thrift shop in town — I find something new every visit.', author: 'Priya N., regular customer' } },
+  { type: 'booking', label: 'Booking Widget', data: { label: 'Schedule a consignment drop-off' } },
+  { type: 'map', label: 'Map & Directions', data: { address: '412 Main St — 3 min from downtown' } }
+];
+const LIBRARY_PICKS = [
+  { icon: '💬', label: 'Testimonial' }, { icon: '🖼', label: 'Gallery' }, { icon: '✦', label: 'New Drop Alert' },
+  { icon: '⟳', label: 'Consignor Credit' }, { icon: '🏷', label: 'Price Tag Banner' }
+];
+
+function blockPreview(block) {
+  switch (block.type) {
+    case 'hero':
+      return Div({ class: 'cv-hero' },
+        Span({ class: 'cv-hero-mark' }, 'SW'),
+        Div({}, Strong({}, block.data.name), P({}, block.data.tagline)),
+        Button({ class: 'btn btn-sm' }, 'Visit shop')
+      );
+    case 'hours':
+      return Div({ class: 'cv-hours' }, For(block.data.rows, (r) =>
+        Div({ class: 'cv-hours-row' }, Span({}, r.day), Span({ class: 'mono-cell' }, r.time))
+      ));
+    case 'showcase':
+      return Div({ class: 'cv-showcase' }, For(block.data.items, (it) =>
+        Div({ class: 'cv-showcase-item item-photo--' + it.tint }, Span({}, it.icon), Span({ class: 'cv-showcase-price' }, it.price))
+      ));
+    case 'testimonial':
+      return Div({ class: 'cv-testimonial' }, P({}, '\u201C' + block.data.quote + '\u201D'), Span({ class: 'cv-testimonial-author' }, '— ' + block.data.author));
+    case 'booking':
+      return Div({ class: 'cv-booking' }, Span({}, block.data.label), Button({ class: 'btn btn-sm' }, 'Book now'));
+    case 'map':
+      return Div({ class: 'cv-map' }, Span({}, '📍'), Span({}, block.data.address));
+    default:
+      return Div({}, '');
+  }
+}
+
+function WebsitePage() {
+  return Section({ class: 'library' },
+    PageHead('Website', 'Built from your component library. Edit a block here or manage the source in Components.'),
+    StatRow(WEBSITE_STATS),
+    Div({ class: 'dash-grid dash-grid--site' },
+      Div({ class: 'panel panel--pages' },
+        Div({ class: 'panel-head' }, H2({}, 'Pages'), Button({ class: 'btn btn-ghost btn-sm' }, '+ Page')),
+        Ul({ class: 'page-list' }, For(SITE_PAGES, (p) =>
+          Li({ class: 'page-row' + (p.isActive ? ' is-active' : '') },
+            Div({ class: 'page-row-main' }, Span({ class: 'page-name' }, p.name), Span({ class: 'page-updated' }, p.updated)),
+            Span({ class: 'pill ' + (p.status === 'Draft' ? 'pill-warn' : 'pill-good') }, p.status)
+          )
+        ))
+      ),
+      Div({ class: 'panel panel--canvas' },
+        Div({ class: 'panel-head' },
+          Div({}, H2({}, 'Editing: Home'), Span({ class: 'panel-sub' }, 'Drag blocks from the Component Library to add more')),
+          Div({ class: 'canvas-mode-toggle' }, Button({ class: 'mode-btn is-active' }, '✎ Edit'), Button({ class: 'mode-btn' }, '◎ Preview'))
+        ),
+        Div({ class: 'site-canvas' },
+          For(PAGE_BLOCKS, (block) =>
+            Div({ class: 'cv-block' },
+              Div({ class: 'cv-block-tab' },
+                Span({ class: 'cv-block-drag' }, '⠿'),
+                Span({ class: 'cv-block-label' }, block.label),
+                Div({ class: 'cv-block-actions' }, Button({ class: 'tag-action', title: 'Edit' }, '✎'), Button({ class: 'tag-action', title: 'Remove' }, '✕'))
+              ),
+              Div({ class: 'cv-block-preview' }, blockPreview(block))
+            )
+          ),
+          Div({ class: 'add-component-zone' },
+            Span({ class: 'add-component-label' }, '+ Add a component from your library'),
+            Div({ class: 'block-chip-row' }, For(LIBRARY_PICKS, (b) =>
+              Div({ class: 'block-chip' }, Span({ class: 'block-chip-icon' }, b.icon), Span({}, b.label))
+            ))
+          )
+        )
+      )
+    )
+  );
+}
+
+// ---------------------------------------------------------------
+// Router + boot
+// ---------------------------------------------------------------
+function App() {
+  const pages = {
+    dashboard: DashboardPage, website: WebsitePage, components: ComponentsPage,
+    inventory: InventoryPage, pos: POSPage, crm: CRMPage, blog: BlogPage, team: TeamPage
+  };
+  return Div({ class: 'shell' },
+    Sidebar(),
+    Main({ class: 'canvas' },
+      Topbar(),
+      Case(state.view, pages)
+    )
+  );
+}
+
+start(App, document.getElementById('root'));
+
+</script>
+</body>
+</html>
