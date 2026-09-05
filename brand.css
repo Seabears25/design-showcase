@@ -457,7 +457,6 @@ h1, h2, h3, .display {
 /* ------------------------------------------------------------------ */
 
 .cta-band {
-    padding-block: var(--lyht-space-16);
     display: flex;
     align-items: center;
     justify-content: space-between;
