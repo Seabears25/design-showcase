@@ -7,18 +7,86 @@
 <link rel="stylesheet" href="lyht-ui.css">
 <link rel="stylesheet" href="brand.css">
 <style>
-  .container {
-    padding-top: var(--lyht-space-20);
-    padding-bottom: var(--lyht-space-20);
+  body {
+    max-width: 100%;
+    overflow-x: hidden;
   }
-  #features {
+  .checkers {
+    background: var(--lyht-bg);
+    background-image: linear-gradient(var(--lyht-border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--lyht-border) 1px, transparent 1px);
+    background-size: 32px 32px;
+    color: var(--paper)
+  }
+  .container {
+    padding-top: var(--lyht-space-24);
+    padding-bottom: var(--lyht-space-24);
+  }
+  .section-ink {
+    border-bottom: var(--nx-citrine) 3px solid;
+  }
+  #features, #hero {
     padding-top: 0;
   }
+  #hero {
+    padding-bottom: 0;
+  }
+  .site-nav {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 2rem;
+}
+
+.site-nav-links {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2rem;
+}
+
+.site-nav-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 1rem;
+}
+
+.pb {
+  padding-bottom: var(--lyht-space-6);
+}
+
+.ecosystem {
+  position: relative;
+  background: transparent;
+    background-image:
+      linear-gradient(var(--lyht-border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--lyht-border) 1px, transparent 1px);
+    background-size: 32px 32px;
+}
+.ecosystem div {
+  position: relative;
+  z-index: 2;
+}
+.ecosystem::before {
+  content: "";
+  position: absolute;
+  top:0;
+  bottom:33%;
+  right:33%;
+  left:0;
+  z-index: -0;
+  background: var(--lyht-border);
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  border: solid 3px var(--nx-citrine);
+  border-top: 0px;
+  border-left: 0px;
+}
 </style>
 </head>
 <body>
-
-<div class="page">
 
   <!-- NAV -->
   <header class="navbar" style="background:var(--nx-paper);">
@@ -40,7 +108,7 @@
   <main class="page-main">
 
     <!-- HERO -->
-    <section class="container">
+    <section class="container" id="hero">
       <div class="hero">
         <div>
           <h1>Every customer relationship, one core record.</h1>
@@ -53,70 +121,12 @@
         </div>
 
         <div class="hero-visual">
-          <svg viewBox="0 0 520 480" width="100%" height="100%" role="img" aria-label="Diagram of a central customer record connected to Sales, Support, Marketing, Billing, Automation, and API modules">
-            <!-- connecting lines -->
-            <g stroke="var(--nx-line)" stroke-width="1.5" fill="none">
-              <path d="M260,240 C230,190 190,150 150,110" />
-              <path d="M260,240 C300,190 340,150 380,105" />
-              <path d="M260,240 C210,240 160,240 90,235" />
-              <path d="M260,240 C310,240 370,240 440,245" />
-              <path d="M260,240 C240,290 210,330 170,375" />
-              <path d="M260,240 C285,290 320,330 365,378" />
-            </g>
-
-            <!-- rotating faint orbit ring with two data-packet dots -->
-            <g class="orbit-ring">
-              <circle cx="260" cy="240" r="150" fill="none" stroke="var(--nx-line)" stroke-width="1" stroke-dasharray="2 6" />
-              <circle cx="410" cy="240" r="4" fill="var(--nx-citrine)" />
-            </g>
-            <g class="orbit-ring-slow">
-              <circle cx="260" cy="240" r="205" fill="none" stroke="var(--nx-line)" stroke-width="1" stroke-dasharray="2 6" />
-              <circle cx="260" cy="35" r="4" fill="var(--nx-indigo)" />
-            </g>
-
-            <!-- satellite nodes -->
-            <g font-family="var(--lyht-font)">
-              <!-- Sales -->
-              <circle cx="150" cy="110" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
-              <text x="150" y="106" text-anchor="middle" class="orbit-label">Sales</text>
-              <text x="150" y="121" text-anchor="middle" class="orbit-label-sub">pipeline</text>
-
-              <!-- Marketing -->
-              <circle cx="380" cy="105" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
-              <text x="380" y="101" text-anchor="middle" class="orbit-label">Marketing</text>
-              <text x="380" y="116" text-anchor="middle" class="orbit-label-sub">campaigns</text>
-
-              <!-- Support -->
-              <circle cx="90" cy="235" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
-              <text x="90" y="231" text-anchor="middle" class="orbit-label">Support</text>
-              <text x="90" y="246" text-anchor="middle" class="orbit-label-sub">tickets</text>
-
-              <!-- API -->
-              <circle cx="440" cy="245" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
-              <text x="440" y="241" text-anchor="middle" class="orbit-label">API</text>
-              <text x="440" y="256" text-anchor="middle" class="orbit-label-sub">webhooks</text>
-
-              <!-- Billing -->
-              <circle cx="170" cy="375" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
-              <text x="170" y="371" text-anchor="middle" class="orbit-label">Billing</text>
-              <text x="170" y="386" text-anchor="middle" class="orbit-label-sub">invoices</text>
-
-              <!-- Automation -->
-              <circle cx="365" cy="378" r="34" fill="#fff" stroke="var(--nx-indigo)" stroke-width="1.5" />
-              <text x="365" y="374" text-anchor="middle" class="orbit-label">Automation</text>
-              <text x="365" y="389" text-anchor="middle" class="orbit-label-sub">workflows</text>
-            </g>
-
-            <!-- central node -->
-            <circle cx="260" cy="240" r="52" fill="var(--nx-ink)" />
-            <text x="260" y="235" text-anchor="middle" fill="#fff" font-family="var(--font-display)" font-size="14">Customer</text>
-            <text x="260" y="252" text-anchor="middle" fill="#C7CCC3" font-size="11">record</text>
-          </svg>
+          <img src="01.jpg" style="max-width: 100%;" />
         </div>
       </div>
 
       <p class="strip-label">Nucleus fits into the tools your teams already run their day on.</p>
-      <div class="category-strip">
+      <div class="category-strip flex flex-wrap">
         <span class="category-chip">Email &amp; calendar</span>
         <span class="category-chip">Chat</span>
         <span class="category-chip">Billing</span>
@@ -129,7 +139,7 @@
 
     <!-- FEATURES -->
     <section class="container" id="features">
-      <div class="feature-row">
+      <div class="feature-row dash grid-3">
         <div class="feature">
           <h3>Sales</h3>
           <p>Pipeline stages, quotes, and forecasts pull from the same record support and billing already see. No duplicate entry, no stale spreadsheet.</p>
@@ -148,7 +158,7 @@
     <!-- STAT BAND -->
     <section class="section-ink">
       <div class="container">
-        <div class="stat-row">
+        <div class="stat-row dash grid-3">
           <div class="stat-block">
             <div class="num">1 record</div>
             <p>Shared by every team and updated in real time, instead of four exports that all disagree.</p>
@@ -165,46 +175,151 @@
       </div>
     </section>
 
-    <!-- ECOSYSTEM -->
-    <section class="container ecosystem" id="ecosystem">
-      <div class="ecosystem-intro">
+<!-- ECOSYSTEM -->
+<section class="ecosystem" id="ecosystem">
+  <div class="container">
+
+    <div class="split split-1-1 pb">
+      
+      <div class="stack stack-lg">
+        <span class="badge primary">ONE SHARED RECORD</span>
+
         <div>
-          <h2>Build on the same core.</h2>
+          <h2>Everything revolves around the customer.</h2>
+          <p>
+            Nucleus gives every team the same view of the customer.
+            Sales, support, billing, and operations stay connected
+            without forcing your team to jump between systems.
+          </p>
         </div>
-        <p>Nucleus opens the customer record to a developer API and a growing marketplace of modules. Anyone on the team can add a capability without asking IT to stitch together another point-to-point integration.</p>
+
+        <a href="#" class="btn primary">
+          Explore the platform →
+        </a>
       </div>
 
-      <div class="cluster">
-        <div class="tile">
-          <h4>Automation</h4>
-          <p>Trigger workflows when a deal, ticket, or invoice changes stage.</p>
+      <div class="card card-lg">
+
+        <div class="card-header">
+          <div>
+            <small>Customer</small>
+            <h3>Acme Corporation</h3>
+          </div>
+
+          <span class="badge success">Active</span>
         </div>
-        <div class="tile">
-          <h4>Billing</h4>
-          <p>Sync invoices and payment status straight onto the customer timeline.</p>
+
+        <div class="dash grid-2 responsive-2">
+
+          <div class="stat">
+            <span class="stat-label">Pipeline</span>
+            <strong class="stat-value">$42K</strong>
+            <span class="stat-description">3 active deals</span>
+          </div>
+
+          <div class="stat">
+            <span class="stat-label">Support</span>
+            <strong class="stat-value">12</strong>
+            <span class="stat-description">4 open tickets</span>
+          </div>
+
+          <div class="stat">
+            <span class="stat-label">Billing</span>
+            <strong class="stat-value">$8.4K</strong>
+            <span class="stat-description">2 invoices</span>
+          </div>
+
+          <div class="stat">
+            <span class="stat-label">Orders</span>
+            <strong class="stat-value">18</strong>
+            <span class="stat-description">6 in fulfillment</span>
+          </div>
+
         </div>
-        <div class="tile">
-          <h4>Support desk</h4>
-          <p>Bring ticket history into the same view sales and success use daily.</p>
-        </div>
-        <div class="tile">
-          <h4>Warehouse &amp; inventory</h4>
-          <p>Check stock and fulfillment status without leaving a customer's record.</p>
-        </div>
-        <div class="tile">
-          <h4>Field service</h4>
-          <p>Schedule and track on-site visits tied to the account that requested them.</p>
-        </div>
-        <div class="tile">
-          <h4>Reporting</h4>
-          <p>Build dashboards straight from the shared record — no separate warehouse to maintain.</p>
-        </div>
+
       </div>
-    </section>
+
+    </div>
+
+
+    <div class="dash grid-4 responsive-4 pb">
+
+      <div class="card">
+        <span class="badge">01</span>
+        <h4>Sales</h4>
+        <p>
+          Deals, contacts, notes, and activity stay attached
+          to the account.
+        </p>
+      </div>
+
+      <div class="card">
+        <span class="badge">02</span>
+        <h4>Support</h4>
+        <p>
+          Conversations and tickets appear alongside the
+          customer's history.
+        </p>
+      </div>
+
+      <div class="card">
+        <span class="badge">03</span>
+        <h4>Billing</h4>
+        <p>
+          Invoices, payments, and account status are part
+          of the same record.
+        </p>
+      </div>
+
+      <div class="card">
+        <span class="badge">04</span>
+        <h4>Operations</h4>
+        <p>
+          Orders, inventory, scheduling, and fulfillment
+          stay connected.
+        </p>
+      </div>
+
+    </div>
+
+
+    <div class="card card-lg">
+
+      <div class="dash grid-3 responsive-3">
+
+        <div>
+          <small>ONE CUSTOMER</small>
+          <h3>One complete history.</h3>
+        </div>
+
+        <div>
+          <small>ONE PLATFORM</small>
+          <p>
+            Your teams work from the same information instead
+            of maintaining separate systems.
+          </p>
+        </div>
+
+        <div>
+          <small>ONE SOURCE OF TRUTH</small>
+          <p>
+            Every interaction adds context instead of creating
+            another disconnected data silo.
+          </p>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
 
     <!-- TESTIMONIAL -->
-    <section class="container">
-      <div class="testimonial">
+    <section class="testy">
+      <div class="testimonial container">
         <blockquote>"We used to have four versions of the same customer. Now support, sales, and billing look at the same record, and it actually stays true."</blockquote>
         <cite><strong>Priya Nandan</strong>Head of Revenue Operations, Alder &amp; Finch</cite>
       </div>
@@ -213,7 +328,7 @@
     <!-- PRICING -->
     <section class="container pricing" id="pricing">
       <h2>Plans that grow with the team, not against it.</h2>
-      <div class="plans">
+      <div class="plans dash grid-3">
         <div class="plan">
           <div class="plan-name">Starter</div>
           <div class="plan-price">$29</div>
@@ -272,7 +387,7 @@
   <!-- FOOTER -->
   <footer class="page-footer site-footer">
     <div class="container">
-      <div class="footer-grid">
+      <div class="footer-grid grid">
         <div>
           <span class="wordmark">Nucleus</span>
           <p>One customer record for sales, support, marketing, and billing — and a platform to build on top of it.</p>
@@ -319,8 +434,6 @@
       </div>
     </div>
   </footer>
-
-</div>
 
 </body>
 </html>

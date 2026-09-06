@@ -711,6 +711,10 @@ samp {
     text-decoration: none;
 }
 
+.navbar .container {
+    padding: 0!important;
+}
+
 .sticky-top {
     position: sticky;
 }
