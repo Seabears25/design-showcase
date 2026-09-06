@@ -289,7 +289,8 @@ h2 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.05; }
     gap: clamp(1.5rem, 4vw, 4.5rem);
     padding-bottom: clamp(4rem, 8vw, 7rem);
 }
-.feature { border-top: 2px solid var(--nx-ink); padding-top: 1.2rem; }
+.feature { border-top: 2px solid var(--nx-ink); padding-top: 1.2rem; transition: all ease-in-out 0.2s; }
+.feature:hover { border-top: 2px solid var(--nx-citrine); padding-top: 1.2rem; }
 .feature h3 { margin-bottom: .75rem; font-size: 1.4rem; }
 .feature p { color: var(--nx-slate); line-height: 1.7; }
 
@@ -310,7 +311,7 @@ h2 { font-size: clamp(2rem, 4vw, 3.2rem); line-height: 1.05; }
     height: 500px;
     top: -300px;
     right: -80px;
-    border: 1px solid rgba(255,255,255,.1);
+    border: 1px solid var(--nx-citrine);
     border-radius: 50%;
     box-shadow: 0 0 0 55px rgba(255,255,255,.025), 0 0 0 110px rgba(255,255,255,.018);
 }
