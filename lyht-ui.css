@@ -230,6 +230,19 @@ samp {
     --lyht-space-20: 5rem;
     --lyht-space-24: 6rem;
 
+    --lyht-spx-1: 3px;
+    --lyht-spx-2: 6px;
+    --lyht-spx-3: 9px;
+    --lyht-spx-4: 12px;
+    --lyht-spx-5: 15px;
+    --lyht-spx-6: 30px;
+    --lyht-spx-7: 60px;
+    --lyht-spx-8: 90px;
+    --lyht-spx-9: 120px;
+    --lyht-spx-10: 150px;
+    --lyht-spx-11: 190px;
+    --lyht-spx-12: 220px;
+
 
     /* -------------------------------------------------------------- */
     /* TYPOGRAPHY                                                      */
@@ -847,6 +860,14 @@ samp {
 
 }
 
+/* ================================================================== */
+/* Titles                                                            */
+/* ================================================================== */
+
+.app-header h1 {
+    margin-left: var(--lyht-spx-3);
+    margin-bottom: 0;
+}
 
 /* ================================================================== */
 /* Graphs                                                            */
@@ -1150,7 +1171,7 @@ samp {
 
 .btn {
     min-height: 2.25rem;
-
+    margin-bottom: var(--lyht-spx-3);
     display: inline-flex;
 
     align-items: center;
@@ -2403,7 +2424,7 @@ select:disabled {
 .mt-0 { margin-top: 0; }
 .mt-1 { margin-top: var(--lyht-space-1); }
 .mt-2 { margin-top: var(--lyht-space-2); }
-.mt-3 { margin-top: var(--lyht-space-3); }
+.mt-3 { margin-top: var(--lyht-spx-3); }
 .mt-4 { margin-top: var(--lyht-space-4); }
 .mt-6 { margin-top: var(--lyht-space-6); }
 .mt-8 { margin-top: var(--lyht-space-8); }
@@ -2415,6 +2436,8 @@ select:disabled {
 .mb-4 { margin-bottom: var(--lyht-space-4); }
 .mb-6 { margin-bottom: var(--lyht-space-6); }
 .mb-8 { margin-bottom: var(--lyht-space-8); }
+
+.mr-3 { margin-right: var(--lyht-spx-3); }
 
 .ml-auto {
     margin-left: auto;

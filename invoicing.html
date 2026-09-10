@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indego Invoicing — Invoicing</title>
+<link rel="stylesheet" href="lyht-ui.css">
+</head>
+<body>
+<div id="app"></div>
+<script>
+/* ============================================================
+   elment.js
+   A dependency-free JS framework: no HTML strings, no build step.
+
+   Core call shape:
+     Tag(attrs, ...children)(events)
+
+     - attrs: a plain object of props (class, style, value, etc.)
+     - children: passed as trailing args, NOT wrapped in []
+     - the whole thing returns a callable; calling it again attaches
+       events / render methods and returns the finalized vnode
+     - a bare function instead of an events object is shorthand
+       for { onclick: fn }
+
+   Example:
+     Button({ class: 'btn' }, 'Click me')(() => console.log('hi'))
+
+   Multiple top-level nodes go through Html(...), not bare parens
+   — JS's comma operator would silently drop all but the last value:
+     Html(
+       Div({}, 'first'),
+       Div({}, 'second')
+     )
+
+   Load this file with a plain <script src="elment.js"> tag, closed
+   normally, before your app code; it defines its API as ordinary
+   globals (Div, Button, If, For, start, etc.) so nothing else to wire up.
+   ============================================================ */
+
+(function (global) {
+
+  function isVNode(x) {
+    return typeof x === 'function' && x.__isVNode === true;
+  }
+
+  function makeTag(tagName) {
+    return function (attrs, ...rest) {
+      let props = {};
+      let children;
+
+      // Detect whether the first arg is a props object or actually a child
+      // (a plain object that isn't itself a vnode counts as props)
+      if (attrs && typeof attrs === 'object' && !isVNode(attrs)) {
+        props = attrs;
+        children = rest;
+      } else {
+        children = attrs === undefined ? rest : [attrs, ...rest];
+      }
+
+      const vnode = { tag: tagName, props, children, events: {} };
+
+      function finalize(eventsOrHandler) {
+        if (typeof eventsOrHandler === 'function') {
+          vnode.events = { onclick: eventsOrHandler };
+        } else if (eventsOrHandler && typeof eventsOrHandler === 'object') {
+          vnode.events = eventsOrHandler;
+        }
+        // keep the callable in sync so it can still be read as a vnode
+        finalize.events = vnode.events;
+        return finalize;
+      }
+
+      // Make the callable itself readable as a vnode (covers the case
+      // where a child is never "finalized" with a second call)
+      finalize.__isVNode = true;
+      finalize.tag = vnode.tag;
+      finalize.props = vnode.props;
+      finalize.children = vnode.children;
+      finalize.events = vnode.events;
+
+      return finalize;
+    };
+  }
+
+  // A fragment wrapper — holds multiple top-level nodes, since JS's
+  // comma operator can't (Html = (Div(...), Div(...)) would just
+  // discard everything but the last value).
+  function Html(...children) {
+    return { tag: '__fragment__', props: {}, children, events: {} };
+  }
+
+  /* ============================================================
+     Control-flow render methods.
+     Plain functions (not tags) — they return vnodes, arrays of
+     vnodes, or null, and slot directly into a children list.
+     The renderer flattens arrays and skips null/undefined/false.
+     ============================================================ */
+
+  // If(condition, thenBranch, elseBranch)
+  // Branches can be a vnode or a zero-arg function returning one
+  // (use a function when the branch does work you don't want to
+  // pay for — or that would throw — unless it's actually taken).
+  function If(condition, thenBranch, elseBranch) {
+    const branch = condition ? thenBranch : elseBranch;
+    if (branch === undefined) return null;
+    return typeof branch === 'function' ? branch() : branch;
+  }
+
+  // Else(x) — pure syntactic sugar, just returns what you pass it.
+  // Lets If(cond, Div(...), Else(Div(...))) read the way you'd expect.
+  function Else(branch) {
+    return branch;
+  }
+
+  // For(array, mapFn) — maps data to vnodes. mapFn gets (item, index).
+  function For(array, mapFn) {
+    return (array || []).map(mapFn);
+  }
+
+  // While(conditionFn, bodyFn) — builds a list by repeatedly calling
+  // bodyFn() while conditionFn() is true. bodyFn is responsible for
+  // advancing whatever state conditionFn checks, or this loops forever.
+  // Capped as a safety net against runaway loops during development.
+  function While(conditionFn, bodyFn, safetyLimit = 10000) {
+    const results = [];
+    let i = 0;
+    while (conditionFn() && i < safetyLimit) {
+      results.push(bodyFn());
+      i++;
+    }
+    return results;
+  }
+
+  // Case(value, { key: branch, ..., default: branch })
+  // Branches can be a vnode or a zero-arg function returning one.
+  function Case(value, cases) {
+    const branch = Object.prototype.hasOwnProperty.call(cases, value)
+      ? cases[value]
+      : cases.default;
+    if (branch === undefined) return null;
+    return typeof branch === 'function' ? branch() : branch;
+  }
+
+  // Auto-generate tag functions for every standard HTML content element.
+  // Excluded on purpose: document-structure tags (html, head, body, meta,
+  // link, base, title) and raw-text tags (script, style) — these don't
+  // fit the vnode/children model and aren't things a component tree
+  // builds. Add more here if a real one is still missing.
+  const tagNames = [
+    // text content
+    'div', 'span', 'p', 'a', 'br', 'hr', 'blockquote', 'q', 'pre', 'code',
+    'kbd', 'samp', 'var', 'cite', 'abbr', 'address', 'time', 'mark',
+    'small', 'strong', 'em', 'b', 'i', 'u', 's', 'sub', 'sup', 'del',
+    'ins', 'wbr',
+    // headings
+    'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hgroup',
+    // lists
+    'ul', 'ol', 'li', 'dl', 'dt', 'dd',
+    // sections
+    'header', 'footer', 'nav', 'main', 'article', 'aside', 'section',
+    // forms
+    'form', 'input', 'label', 'select', 'option', 'optgroup', 'textarea',
+    'button', 'fieldset', 'legend', 'datalist', 'output', 'progress',
+    'meter',
+    // tables
+    'table', 'thead', 'tbody', 'tfoot', 'tr', 'td', 'th', 'caption',
+    'colgroup', 'col',
+    // media / embedded
+    'img', 'audio', 'video', 'source', 'track', 'canvas', 'svg', 'iframe',
+    'embed', 'object', 'param', 'picture', 'figure', 'figcaption', 'map',
+    'area',
+    // interactive
+    'details', 'summary', 'dialog', 'menu',
+    // misc containers
+    'template', 'slot', 'noscript'
+  ];
+  const el = {};
+  tagNames.forEach(t => { el[t] = makeTag(t); });
+
+  function flattenChildren(children) {
+    const out = [];
+    (children || []).forEach(child => {
+      if (Array.isArray(child)) {
+        out.push(...flattenChildren(child));
+      } else if (child !== null && child !== undefined && child !== false) {
+        out.push(child);
+      }
+    });
+    return out;
+  }
+
+  function isText(v) {
+    return typeof v === 'string' || typeof v === 'number';
+  }
+
+  /* ============================================================
+     Diff/patch renderer.
+     Builds real DOM once, then on re-render walks old vnode vs
+     new vnode and only touches what actually changed, instead of
+     tearing everything down and recreating it.
+
+     Form fields get special handling: value/checked are set as
+     live DOM properties, not attributes, and only touched when
+     they actually differ from what's already in the field — so
+     typing doesn't get clobbered by the render that its own
+     keystroke triggered.
+     ============================================================ */
+
+  function createDom(vnode) {
+    if (vnode === null || vnode === undefined || vnode === false) {
+      return document.createComment('');
+    }
+    if (isText(vnode)) {
+      return document.createTextNode(String(vnode));
+    }
+    const dom = document.createElement(vnode.tag);
+    applyProps(dom, {}, vnode.props || {});
+    applyEvents(dom, {}, vnode.events || {});
+    flattenChildren(vnode.children).forEach(child => {
+      dom.appendChild(createDom(child));
+    });
+    // <select>'s value only "sticks" once its <option> children exist,
+    // so it's set again here, after they're appended.
+    if (vnode.tag === 'select' && vnode.props && 'value' in vnode.props) {
+      dom.value = vnode.props.value;
+    }
+    dom.__vnode = vnode;
+    return dom;
+  }
+
+  function applyProps(dom, oldProps, newProps) {
+    Object.keys(oldProps).forEach(key => {
+      if (!(key in newProps)) {
+        if (key === 'class') dom.className = '';
+        else if (key === 'value') dom.value = '';
+        else if (key === 'checked') dom.checked = false;
+        else dom.removeAttribute(key);
+      }
+    });
+    Object.keys(newProps).forEach(key => {
+      const val = newProps[key];
+      if (oldProps[key] === val) return;
+      if (key === 'class') {
+        dom.className = val;
+      } else if (key === 'style' && typeof val === 'object') {
+        Object.assign(dom.style, val);
+      } else if (key === 'value') {
+        // Only touch .value if it actually differs — this is what
+        // stops a controlled <input> from jumping the cursor on
+        // every keystroke-triggered re-render.
+        if (dom.value !== val) dom.value = val;
+      } else if (key === 'checked') {
+        dom.checked = !!val;
+      } else {
+        dom.setAttribute(key, val);
+      }
+    });
+  }
+
+  function applyEvents(dom, oldEvents, newEvents) {
+    Object.keys(oldEvents).forEach(evt => {
+      if (evt === 'onmount' || evt === 'onupdate') return;
+      if (newEvents[evt] !== oldEvents[evt]) {
+        dom.removeEventListener(evt.replace(/^on/, ''), oldEvents[evt]);
+      }
+    });
+    Object.keys(newEvents).forEach(evt => {
+      if (evt === 'onmount') {
+        if (!oldEvents.onmount) queueMicrotask(() => newEvents.onmount(dom));
+        return;
+      }
+      if (evt === 'onupdate') {
+        queueMicrotask(() => newEvents.onupdate(dom));
+        return;
+      }
+      if (newEvents[evt] !== oldEvents[evt]) {
+        dom.addEventListener(evt.replace(/^on/, ''), newEvents[evt]);
+      }
+    });
+  }
+
+  // Diffs a single slot: oldVNode/newVNode against the DOM node
+  // currently occupying that slot in parentDom.
+  function diffNode(parentDom, oldVNode, newVNode, domNode) {
+    if (newVNode === undefined) {
+      if (domNode) parentDom.removeChild(domNode);
+      return;
+    }
+    if (oldVNode === undefined || domNode === undefined) {
+      parentDom.appendChild(createDom(newVNode));
+      return;
+    }
+
+    const oldText = isText(oldVNode);
+    const newText = isText(newVNode);
+
+    if (oldText && newText) {
+      if (String(oldVNode) !== String(newVNode)) domNode.textContent = String(newVNode);
+      return;
+    }
+    if (oldText !== newText || (!oldText && !newText && oldVNode.tag !== newVNode.tag)) {
+      parentDom.replaceChild(createDom(newVNode), domNode);
+      return;
+    }
+
+    // Same tag in the same slot — update it in place instead of
+    // replacing it, so the actual DOM node (and its focus state)
+    // survives the re-render.
+    applyProps(domNode, oldVNode.props || {}, newVNode.props || {});
+    applyEvents(domNode, oldVNode.events || {}, newVNode.events || {});
+    diffChildren(domNode, flattenChildren(oldVNode.children), flattenChildren(newVNode.children));
+    if (newVNode.tag === 'select' && newVNode.props && 'value' in newVNode.props) {
+      domNode.value = newVNode.props.value;
+    }
+    domNode.__vnode = newVNode;
+  }
+
+  function diffChildren(parentDom, oldChildren, newChildren) {
+    const max = Math.max(oldChildren.length, newChildren.length);
+    // Index-based reconciliation — simple, and fine for lists that
+    // don't reorder. A reordering list would want key-based matching
+    // instead; worth adding if/when list output gets sorted/shuffled.
+    for (let i = max - 1; i >= 0; i--) {
+      if (oldChildren[i] === undefined && newChildren[i] !== undefined) {
+        parentDom.appendChild(createDom(newChildren[i]));
+      }
+    }
+    for (let i = 0; i < max; i++) {
+      if (newChildren[i] === undefined && oldChildren[i] !== undefined) {
+        const doomed = parentDom.childNodes[i];
+        if (doomed) parentDom.removeChild(doomed);
+      }
+    }
+    for (let i = 0; i < Math.min(oldChildren.length, newChildren.length); i++) {
+      diffNode(parentDom, oldChildren[i], newChildren[i], parentDom.childNodes[i]);
+    }
+  }
+
+  let __rootVNode = null;
+  let __rootContainer = null;
+
+  function mount(vnode, container) {
+    __rootContainer = container;
+    __rootVNode = vnode;
+    container.innerHTML = '';
+    const roots = vnode && vnode.tag === '__fragment__' ? flattenChildren(vnode.children) : [vnode];
+    roots.forEach(child => container.appendChild(createDom(child)));
+  }
+
+  function update(vnode) {
+    if (!__rootContainer) return;
+    const oldRoots = __rootVNode && __rootVNode.tag === '__fragment__'
+      ? flattenChildren(__rootVNode.children) : [__rootVNode];
+    const newRoots = vnode && vnode.tag === '__fragment__'
+      ? flattenChildren(vnode.children) : [vnode];
+    __rootVNode = vnode;
+    diffChildren(__rootContainer, oldRoots, newRoots);
+  }
+
+  /* ============================================================
+     App runner — remembers "how to rebuild the whole tree" so
+     anything (a click handler, a resolved Fetch) can trigger a
+     diffed re-render without passing callbacks around everywhere.
+     ============================================================ */
+  let rerender = () => {};
+
+  function start(appFn, container) {
+    rerender = () => update(appFn());
+    mount(appFn(), container);
+  }
+
+  /* ============================================================
+     Fetch — an async render method.
+     Fetch(key, loaderFn, renderFn)
+       key       — cache key; the same key won't re-fetch every render
+       loaderFn  — () => Promise<data>  (e.g. () => fetch(url).then(r => r.json()))
+       renderFn  — ({status, data, error}) => vnode
+     First render returns renderFn's "loading" branch immediately;
+     when the promise settles, it stores the result and calls
+     rerender() so the tree rebuilds with real data.
+     ============================================================ */
+  const __fetchCache = new Map();
+
+  function Fetch(key, loaderFn, renderFn) {
+    if (!__fetchCache.has(key)) {
+      const entry = { status: 'loading', data: null, error: null };
+      __fetchCache.set(key, entry);
+      Promise.resolve()
+        .then(loaderFn)
+        .then(data => {
+          entry.status = 'done';
+          entry.data = data;
+          rerender();
+        })
+        .catch(err => {
+          entry.status = 'error';
+          entry.error = err;
+          rerender();
+        });
+    }
+    return renderFn(__fetchCache.get(key));
+  }
+
+  /* ============================================================
+     Helper injection — provide(key, value) / use(key)
+     A tiny service locator so shared helpers (formatters, API
+     clients, config) don't have to be threaded through every
+     function as arguments. Provide once at startup, pull anywhere.
+     ============================================================ */
+  const __registry = new Map();
+
+  function provide(key, value) {
+    __registry.set(key, value);
+  }
+
+  function use(key) {
+    if (!__registry.has(key)) {
+      throw new Error(`elment: no helper injected for "${key}" — call provide('${key}', ...) first`);
+    }
+    return __registry.get(key);
+  }
+
+  /* ============================================================
+     Public API — exposed as plain globals so a bare <script> tag
+     is enough to use them, matching the rest of elment's
+     no-build-step philosophy.
+
+     A few tag names, capitalized, collide with real JS/DOM globals
+     (div -> Div is fine, but object -> Object and map -> Map would
+     silently overwrite the built-in Object and Map constructors —
+     which this very file depends on internally via Object.keys,
+     Object.assign, and new Map()). Those tags are still buildable,
+     just via el.object(...) / el.map(...) instead of a bare global,
+     so nothing on the page — including elment.js itself — gets its
+     built-ins clobbered.
+     ============================================================ */
+  const RESERVED_GLOBALS = new Set([
+    'Object', 'Map', 'Set', 'Array', 'Function', 'Date', 'Boolean',
+    'Number', 'String', 'Symbol', 'Promise', 'RegExp', 'Error', 'Proxy',
+    'Reflect', 'JSON', 'Math', 'Node', 'Text', 'Event', 'Document', 'Window'
+  ]);
+
+  const tagGlobals = Object.fromEntries(
+    Object.entries(el)
+      .map(([tag, fn]) => [tag.charAt(0).toUpperCase() + tag.slice(1), fn])
+      .filter(([capName]) => !RESERVED_GLOBALS.has(capName))
+  );
+
+  const api = {
+    // tag functions, capitalized (Div, Button, H1, ...) — minus the
+    // handful reserved above, which stay reachable via el.<tag>
+    ...tagGlobals,
+    Html, If, Else, For, While, Case,
+    start, mount, update, rerender: () => rerender(),
+    Fetch, provide, use,
+    // escape hatch: the raw lowercase tag map, and isVNode for advanced use
+    el, isVNode
+  };
+
+  Object.assign(global, api);
+  global.elment = api;
+
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+/* ============================================================
+   Lawson Family Reps — IndegoInvoicing
+   Recoded on top of two of your own frameworks:
+     - elment.js   -> builds/updates the DOM (Tag(attrs, children)(events))
+     - lyht-ui.css -> supplies every class used below (.app, .card,
+                      .btn, .form, .table, .modal, .nav, spacing
+                      utilities, etc.) — there is NO custom CSS here.
+
+   Persistence is unchanged: window.storage (personal, per-user).
+   ============================================================ */
+
+/* ------------------------------------------------------------
+   STATE
+   Everything the UI depends on lives in these module-level vars.
+   elment has no built-in state container — you mutate plain JS,
+   then call rerender() and the diffing renderer figures out what
+   actually needs to touch the DOM.
+   ------------------------------------------------------------ */
+const STORAGE_PREFIX = 'invoice:';
+const INDEX_KEY = 'invoice-index';
+
+let invoices = {};          // id -> invoice object, our "table"
+let activeId = null;        // which invoice is open in the main pane
+let searchQuery = '';       // sidebar search box
+let deleteTargetId = null;  // set while the delete-confirm modal is open
+let saveStatusText = 'Saved';
+let saveTimer = null;       // debounce handle for autosave
+
+/* ------------------------------------------------------------
+   DATA HELPERS
+   Pure functions / storage plumbing — no DOM, no elment.
+   ------------------------------------------------------------ */
+function uid() {
+  return 'inv_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+}
+
+function money(n) {
+  const v = parseFloat(n);
+  return isNaN(v) ? '0.00' : v.toFixed(2);
+}
+
+function computeTotal(inv) {
+  return inv.items.reduce((sum, it) => sum + (parseFloat(it.price) || 0), 0);
+}
+
+function blankInvoice() {
+  return {
+    id: uid(),
+    invoiceNumber: '',
+    projectNumber: '',
+    client: '',
+    date: new Date().toISOString().slice(0, 10),
+    summary: '',
+    items: [{ description: '', price: '' }],
+    createdAt: Date.now()
+  };
+}
+
+function sortedIds() {
+  return Object.keys(invoices).sort((a, b) => invoices[b].createdAt - invoices[a].createdAt);
+}
+
+function matchesSearch(inv, q) {
+  if (!q) return true;
+  q = q.toLowerCase();
+  return (inv.invoiceNumber || '').toLowerCase().includes(q)
+    || (inv.projectNumber || '').toLowerCase().includes(q)
+    || (inv.client || '').toLowerCase().includes(q);
+}
+
+/* ------------------------------------------------------------
+   STORAGE (window.storage — persistent, per-user)
+   Same shape as before: an index (list of ids) + one key per
+   invoice, so we don't have to read/write one giant blob.
+   ------------------------------------------------------------ */
+async function getIndex() {
+  try {
+    const r = await window.storage.get(INDEX_KEY, false);
+    if (r && r.value) {
+      const arr = JSON.parse(r.value);
+      if (Array.isArray(arr)) return arr;
+    }
+  } catch (e) { /* key doesn't exist yet — start empty */ }
+  return [];
+}
+
+async function saveIndex(ids) {
+  try {
+    await window.storage.set(INDEX_KEY, JSON.stringify(ids), false);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function saveInvoice(inv) {
+  try {
+    await window.storage.set(STORAGE_PREFIX + inv.id, JSON.stringify(inv), false);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+async function loadAll() {
+  const ids = await getIndex();
+  for (const id of ids) {
+    try {
+      const r = await window.storage.get(STORAGE_PREFIX + id, false);
+      if (r && r.value) {
+        const inv = JSON.parse(r.value);
+        invoices[inv.id] = inv;
+      }
+    } catch (e) { /* invoice missing on disk — skip it */ }
+  }
+  const ids2 = sortedIds();
+  if (ids2.length) activeId = ids2[0];
+  rerender(); // elment global — repaints using the appFn passed to start()
+}
+
+/* ------------------------------------------------------------
+   MUTATIONS
+   Every one of these follows the same shape: mutate `invoices`
+   (and/or other state vars), kick off any storage write, then
+   call rerender(). elment's diffing means re-rendering on every
+   keystroke is cheap and won't steal focus/cursor position.
+   ------------------------------------------------------------ */
+function scheduleSave(inv) {
+  saveStatusText = 'Saving…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    const ok = await saveInvoice(inv);
+    saveStatusText = ok ? 'Saved' : 'Not saved — storage unavailable';
+    rerender();
+  }, 400);
+}
+
+function newInvoice() {
+  const inv = blankInvoice();
+  invoices[inv.id] = inv;
+  activeId = inv.id;
+  searchQuery = ''; // so the new invoice isn't hidden by a stale filter
+  saveInvoice(inv);
+  getIndex().then(ids => { ids.push(inv.id); saveIndex(ids); });
+  rerender();
+}
+
+function selectInvoice(id) {
+  activeId = id;
+  rerender();
+}
+
+function onSearch(value) {
+  searchQuery = value;
+  rerender();
+}
+
+function updateField(id, field, value) {
+  const inv = invoices[id];
+  inv[field] = value;
+  scheduleSave(inv);
+  rerender();
+}
+
+function updateItem(id, idx, field, value) {
+  const inv = invoices[id];
+  inv.items[idx][field] = value;
+  scheduleSave(inv);
+  rerender();
+}
+
+function addLine(id) {
+  invoices[id].items.push({ description: '', price: '' });
+  scheduleSave(invoices[id]);
+  rerender();
+}
+
+function removeLine(id, idx) {
+  const inv = invoices[id];
+  if (inv.items.length === 1) {
+    inv.items[0] = { description: '', price: '' }; // keep at least one row
+  } else {
+    inv.items.splice(idx, 1);
+  }
+  scheduleSave(inv);
+  rerender();
+}
+
+/* Delete flow goes through a confirm modal instead of window.confirm() —
+   native confirm() dialogs get silently blocked inside sandboxed
+   preview iframes, so a real modal (built from lyht's .modal /
+   .modal-backdrop classes) is the more reliable choice here. */
+function requestDelete(id) {
+  deleteTargetId = id;
+  rerender();
+}
+
+function cancelDelete() {
+  deleteTargetId = null;
+  rerender();
+}
+
+async function confirmDelete() {
+  const id = deleteTargetId;
+  deleteTargetId = null;
+  try { await window.storage.delete(STORAGE_PREFIX + id, false); } catch (e) { /* wasn't saved yet — fine */ }
+  delete invoices[id];
+  const ids = await getIndex();
+  await saveIndex(ids.filter(x => x !== id));
+  const remaining = sortedIds();
+  activeId = remaining.length ? remaining[0] : null;
+  rerender();
+}
+
+/* ------------------------------------------------------------
+   PRINTING
+   Unrelated to elment/lyht — opens a small standalone, print-only
+   HTML document in a new tab. Kept separate on purpose so the
+   printed sheet is stable and doesn't depend on the app's own
+   stylesheet or component tree.
+   ------------------------------------------------------------ */
+function escapeHtml(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function printInvoice() {
+  const inv = activeId ? invoices[activeId] : null;
+  if (!inv) return;
+  const total = money(computeTotal(inv));
+  const rowsHtml = inv.items.map(it => `
+    <tr>
+      <td>${escapeHtml(it.description)}</td>
+      <td class="price-col">$${money(it.price)}</td>
+    </tr>
+  `).join('');
+
+  // Colors/fonts here echo lyht's tokens (--lyht-primary, --lyht-border,
+  // --lyht-font-mono) as plain values, since this popup can't reach the
+  // parent document's CSS variables.
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Invoice ${escapeHtml(inv.invoiceNumber)} — Indego Invoicing</title>
+<style>
+  :root{ --primary:#0969da; --ink:#1f2328; --muted:#656d76; --border:#d0d7de; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#fff;color:var(--ink);
+       font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+       padding:48px;}
+  .sheet{max-width:700px;margin:0 auto;}
+  .sheet-head{display:flex;justify-content:space-between;align-items:flex-start;
+              border-bottom:2px solid var(--primary);padding-bottom:22px;margin-bottom:26px;}
+  .sheet-head h2{font-size:26px;font-weight:600;margin:0 0 4px 0;}
+  .company-sub{font-size:12px;color:var(--muted);}
+  .meta{text-align:right;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;line-height:1.9;}
+  .meta .label{color:var(--muted);margin-right:6px;}
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:22px;}
+  .field label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;}
+  .field div{font-size:14.5px;padding:6px 0;border-bottom:1px solid var(--border);}
+  .summary-block{margin-bottom:22px;}
+  .summary-block label{display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;}
+  .summary-block p{font-size:14px;line-height:1.5;margin:0;padding-bottom:6px;border-bottom:1px solid var(--border);white-space:pre-wrap;}
+  table{width:100%;border-collapse:collapse;margin-bottom:8px;}
+  thead th{text-align:left;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);padding:0 0 8px 0;border-bottom:1px solid var(--primary);}
+  thead th.price-col{text-align:right;}
+  td{padding:10px 0;border-bottom:1px solid var(--border);font-size:14px;}
+  td.price-col{text-align:right;font-family:ui-monospace,Menlo,Consolas,monospace;width:130px;}
+  .totals{display:flex;justify-content:flex-end;margin-top:20px;padding-top:16px;border-top:2px solid var(--primary);}
+  .total-box{text-align:right;font-family:ui-monospace,Menlo,Consolas,monospace;}
+  .total-label{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:4px;}
+  .total-amt{font-size:24px;font-weight:700;color:var(--primary);}
+  @media print{ body{padding:0;} }
+</style>
+</head>
+<body>
+  <div class="sheet">
+    <div class="sheet-head">
+      <div><h2>Invoice</h2><div class="company-sub">Indego Invoicing</div></div>
+      <div class="meta">
+        <div><span class="label">Invoice #</span>${escapeHtml(inv.invoiceNumber || '—')}</div>
+        <div><span class="label">Date</span>${escapeHtml(inv.date || '—')}</div>
+      </div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Client</label><div>${escapeHtml(inv.client || '—')}</div></div>
+      <div class="field"><label>Project Number</label><div>${escapeHtml(inv.projectNumber || '—')}</div></div>
+    </div>
+    ${inv.summary ? `<div class="summary-block"><label>Summary</label><p>${escapeHtml(inv.summary)}</p></div>` : ''}
+    <table>
+      <thead><tr><th>Description</th><th class="price-col">Price</th></tr></thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+    <div class="totals">
+      <div class="total-box"><div class="total-label">Total Due</div><div class="total-amt">$${total}</div></div>
+    </div>
+  </div>
+  <script>window.onload = function(){ window.print(); };<\/script>
+</body>
+</html>`;
+
+  const blob = new Blob([html], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.target = '_blank'; a.rel = 'noopener';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 30000);
+}
+
+/* ============================================================
+   VIEW LAYER
+   Everything below returns elment vnodes. No HTML strings, no
+   innerHTML — this is the part that replaces the old
+   render()/mainHtml()/sidebarListHtml() string-templating.
+   Every class referenced (app, sidebar, card, btn, table, form,
+   modal, badge…) comes straight from lyht-ui.css.
+   ============================================================ */
+
+// One row in the sidebar ledger list.
+function invoiceRow(inv) {
+  const total = money(computeTotal(inv));
+  const cls = 'w-full mt-3' + (inv.id === activeId ? ' active' : '');
+  return Button({ class: cls },
+    Div({ class: 'flex justify-between items-center gap-2', style: { width: '100%' } },
+      Div({ class: 'stack-xs', style: { minWidth: 0 } },
+        Code({ class: 'text-xs' }, inv.invoiceNumber || 'Untitled'),
+        Small({ class: 'text-muted text-truncate', style: { display: 'block' } }, inv.client || 'No client')
+      ),
+      Small({ class: 'text-subtle' }, '$' + total)
+    )
+  )(() => selectInvoice(inv.id));
+}
+
+// The whole left-hand ledger: brand mark, new-invoice button,
+// search box, and the filtered/sorted list of invoices.
+function sidebar() {
+  const allIds = sortedIds();
+  const shownIds = allIds.filter(id => matchesSearch(invoices[id], searchQuery));
+
+  let listBody;
+  if (allIds.length === 0) {
+    listBody = Div({ class: 'text-sm text-subtle p-2' }, 'No invoices yet. Click "New Invoice" to create your first one.');
+  } else if (shownIds.length === 0) {
+    listBody = Div({ class: 'text-sm text-subtle p-2' }, 'No invoices match your search.');
+  } else {
+    listBody = Div({ class: 'nav' }, For(shownIds, id => invoiceRow(invoices[id])));
+  }
+
+  return Div({ class: 'app-sidebar no-print' },
+    Div({ class: 'sidebar' },
+      Div({ class: 'sidebar-header' },
+        Div({ class: 'flex items-center gap-2' },
+          Div({ class: 'avatar', style: { background: 'var(--lyht-primary-soft)', color: 'var(--lyht-primary)' } }, 'LF'),
+        )
+      ),
+      Div({ class: 'sidebar-body stack-sm' },
+        Button({ class: 'btn primary block' }, '+ New Invoice')(newInvoice),
+        Input({ type: 'text', placeholder: 'Search project, client, invoice #', value: searchQuery })
+          ({ oninput: e => onSearch(e.target.value) }),
+        listBody
+      ),
+      Div({ class: 'sidebar-footer' },
+        Small({ class: 'text-subtle' }, 'Saved automatically to this device.')
+      )
+    )
+  );
+}
+
+// Editable line-items table for the open invoice.
+function itemsTable(inv) {
+  return Div({ class: 'table mt-3' },
+    Table({},
+      Thead({}, Tr({},
+        Th({}, 'Description'),
+        Th({ class: 'text-right' }, 'Price'),
+        Th({}, '')
+      )),
+      Tbody({}, For(inv.items, (it, idx) => Tr({},
+        Td({}, Input({ type: 'text', value: it.description, placeholder: 'Line item description' })
+          ({ oninput: e => updateItem(inv.id, idx, 'description', e.target.value) })),
+        Td({ class: 'text-right' }, Input({ type: 'text', inputmode: 'decimal', value: it.price, placeholder: '0.00' })
+          ({ oninput: e => updateItem(inv.id, idx, 'price', e.target.value) })),
+        Td({}, Button({ class: 'btn icon sm ghost', title: 'Remove line' }, '×')(() => removeLine(inv.id, idx)))
+      )))
+    )
+  );
+}
+
+// The invoice "sheet" itself — the .card that holds every field.
+function invoiceCard(inv) {
+  const total = money(computeTotal(inv));
+  return Div({ class: 'card' },
+    Div({ class: 'card-header' },
+      Div({},
+        H2({ class: 'm-0' }, 'Invoice'),
+        Small({ class: 'text-muted' }, 'Indego Invoicing')
+      ),
+      Small({ class: 'text-subtle' }, saveStatusText)
+    ),
+
+    // .form is required here purely for lyht's ".form label" rule
+    // (stacks label text above its input) — it's just a <div>, not
+    // an actual <form>, so there's no submit behavior to fight.
+    Div({ class: 'form stack-lg' },
+      Div({ class: 'dash grid-2 responsive-2' },
+        Label({}, 'Invoice #', Input({ value: inv.invoiceNumber, placeholder: '0001' })
+          ({ oninput: e => updateField(inv.id, 'invoiceNumber', e.target.value) })),
+        Label({}, 'Date', Input({ type: 'date', value: inv.date })
+          ({ oninput: e => updateField(inv.id, 'date', e.target.value) })),
+        Label({}, 'Client', Input({ value: inv.client, placeholder: 'Client name' })
+          ({ oninput: e => updateField(inv.id, 'client', e.target.value) })),
+        Label({}, 'Project Number', Input({ value: inv.projectNumber, placeholder: 'PRJ-000' })
+          ({ oninput: e => updateField(inv.id, 'projectNumber', e.target.value) }))
+      ),
+      Label({}, 'Summary', Textarea({ value: inv.summary, placeholder: 'Brief overview of the work covered by this invoice' })
+        ({ oninput: e => updateField(inv.id, 'summary', e.target.value) })),
+      itemsTable(inv),
+      Button({ class: 'btn sm ghost' }, '+ Add line item')(() => addLine(inv.id))
+    ),
+
+    Div({ class: 'card-footer flex justify-between items-center' },
+      Small({ class: 'text-muted' }, 'Total Due'),
+      Div({ class: 'stat-value' }, '$' + total)
+    ),
+
+    Button({ class: 'btn danger' }, 'Delete')(() => requestDelete(inv.id))
+  );
+}
+
+function emptyState() {
+  return Div({ class: 'card text-center', style: { maxWidth: '480px', margin: '80px auto' } },
+    H3({}, 'No invoice selected'),
+    P({ class: 'text-muted' }, 'Start a new invoice, or select one from the ledger on the left.'),
+    Button({ class: 'btn primary mt-4' }, '+ New Invoice')(newInvoice)
+  );
+}
+
+// Top bar above the sheet: title + New/Print/Delete actions.
+function header(inv) {
+  return Div({ class: 'app-header no-print' },
+    Div({ class: 'page-content flex justify-between items-center', style: { width: '100%' } },
+      H1({ class: 'text-lg title' }, inv ? (inv.invoiceNumber ? 'Invoice ' + inv.invoiceNumber : 'New Invoice') : 'Indego Invoicing'),
+      Div({ class: 'flex gap-2' },
+        Button({ class: 'btn primary mr-3' }, '+ New Invoice')(newInvoice),
+        inv && Button({ class: 'btn mr-3' }, 'Print / Save PDF')(printInvoice),
+      )
+    )
+  );
+}
+
+// Confirmation modal shown while deleteTargetId is set.
+// Built from lyht's .modal-backdrop / .modal — a real, focusable
+// dialog rather than window.confirm(), which sandboxed previews
+// tend to block silently.
+function deleteModal() {
+  const inv = invoices[deleteTargetId];
+  if (!inv) return null;
+  return Div({ class: 'modal-backdrop' },
+    Div({ class: 'modal' },
+      Div({}, H3({ class: 'm-0' }, 'Delete invoice?')),
+      Div({}, P({ class: 'm-0 text-muted' },
+        'This will permanently delete invoice ' + (inv.invoiceNumber || 'Untitled') + '. This cannot be undone.')),
+      Div({ class: 'flex justify-end gap-2' },
+        Button({ class: 'btn' }, 'Cancel')(cancelDelete),
+        Button({ class: 'btn danger' }, 'Delete')(confirmDelete)
+      )
+    )({ onclick: e => e.stopPropagation() }) // don't let clicks inside the modal bubble to the backdrop
+  )(cancelDelete); // clicking the dimmed backdrop cancels, same as Cancel
+}
+
+// The root component. elment calls this on every rerender() and
+// diffs the result against what's already on screen.
+function App() {
+  const inv = activeId ? invoices[activeId] : null;
+  return Div({ class: 'app' },
+    sidebar(),
+    Div({ class: 'app-main' },
+      header(inv),
+      Div({ class: 'page-content' }, inv ? invoiceCard(inv) : emptyState())
+    ),
+    If(deleteTargetId, deleteModal)
+  );
+}
+
+/* ------------------------------------------------------------
+   BOOT
+   Mount immediately (renders the empty state instantly), then
+   fill in real data once storage responds and rerender().
+   ------------------------------------------------------------ */
+start(App, document.getElementById('app'));
+loadAll();
+
+</script>
+</body>
+</html>
