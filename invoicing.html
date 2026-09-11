@@ -710,7 +710,7 @@ function printInvoice() {
 <meta charset="UTF-8">
 <title>Invoice ${escapeHtml(inv.invoiceNumber)} — Indego Invoicing</title>
 <style>
-  :root{ --primary:#0969da; --ink:#1f2328; --muted:#656d76; --border:#d0d7de; }
+  :root{ --primary:#0969da; --ink:#1f2328; --muted:#656d76; --border:#d0d7de; --navy: #152b49; }
   *{box-sizing:border-box;}
   body{margin:0;background:#fff;color:var(--ink);
        font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -815,7 +815,7 @@ function sidebar() {
     listBody = Div({ class: 'nav' }, For(shownIds, id => invoiceRow(invoices[id])));
   }
 
-  return Div({ class: 'app-sidebar no-print' },
+  return Div({ class: 'app-sidebar no-print', style: { backgroundColor: '#152b49' }},
     Div({ class: 'sidebar' },
       Div({ class: 'sidebar-header' },
         Div({ class: 'flex items-center gap-2' },
@@ -858,7 +858,7 @@ function itemsTable(inv) {
 // The invoice "sheet" itself — the .card that holds every field.
 function invoiceCard(inv) {
   const total = money(computeTotal(inv));
-  return Div({ class: 'card' },
+  return Div({ class: 'card shadow' },
     Div({ class: 'card-header' },
       Div({},
         H2({ class: 'm-0' }, 'Invoice'),
@@ -897,7 +897,7 @@ function invoiceCard(inv) {
 }
 
 function emptyState() {
-  return Div({ class: 'card text-center', style: { maxWidth: '480px', margin: '80px auto' } },
+  return Div({ class: 'card text-center shadow', style: { maxWidth: '480px', margin: '80px auto' } },
     H3({}, 'No invoice selected'),
     P({ class: 'text-muted' }, 'Start a new invoice, or select one from the ledger on the left.'),
     Button({ class: 'btn primary mt-4' }, '+ New Invoice')(newInvoice)
@@ -906,9 +906,9 @@ function emptyState() {
 
 // Top bar above the sheet: title + New/Print/Delete actions.
 function header(inv) {
-  return Div({ class: 'app-header no-print' },
+  return Div({ class: 'app-header no-print shadow', style: { backgroundColor: '#152b49' } },
     Div({ class: 'page-content flex justify-between items-center', style: { width: '100%' } },
-      H1({ class: 'text-lg title' }, inv ? (inv.invoiceNumber ? 'Invoice ' + inv.invoiceNumber : 'New Invoice') : 'Indego Invoicing'),
+      H1({ class: 'text-lg title', style: { color: '#ffffff' } }, inv ? (inv.invoiceNumber ? 'Invoice ' + inv.invoiceNumber : 'New Invoice') : 'Indego Invoicing'),
       Div({ class: 'flex gap-2' },
         Button({ class: 'btn primary mr-3' }, '+ New Invoice')(newInvoice),
         inv && Button({ class: 'btn mr-3' }, 'Print / Save PDF')(printInvoice),
