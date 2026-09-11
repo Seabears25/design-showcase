@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#17362e">
+<title>Franklin County Landscapers — Rooted in place</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root{--green:#17362e;--deep:#102a23;--cream:#f3efe6;--sage:#dce2d0;--orange:#d6774f;--gold:#e2ad5b;--muted:#64715f}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--cream);color:var(--green);font-family:Manrope,sans-serif;line-height:1.6}button,input,textarea{font:inherit}button{border:0;background:none;color:inherit;cursor:pointer}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--orange);outline-offset:4px}.hero{min-height:760px;display:grid;grid-template-columns:.84fr 1.16fr;background:var(--green)}.hero-panel{position:relative;display:flex;flex-direction:column;min-height:760px;padding:28px 7vw 36px;color:#f8f4eb;overflow:hidden}
+.nav-container {
+    position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 1000;
+  color: var(--nav-text);
+  transition:
+    background-color var(--nav-transition),
+    box-shadow var(--nav-transition),
+    backdrop-filter var(--nav-transition);
+}
+.nav{
+    display:flex;align-items:center;justify-content:space-between;gap:30px;position:relative;z-index:2
+}
+.nav {
+    width: min(1200px, calc(100% - 48px));
+  height: 88px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  transition:
+    height var(--nav-transition),
+    padding var(--nav-transition);
+}
+.nav-container.scrolled {
+    background: var(--green);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.14);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+.nav-container.scrolled .nav {
+  height: 64px;
+}
+
+.brand,.footer-brand{display:inline-flex;align-items:center;gap:10px;padding:0;text-align:left}.brand-mark{display:inline-flex;align-items:end;gap:2px;height:22px;width:26px;transform:skewX(-13deg)}.brand-mark span{display:block;width:6px;background:var(--orange);border-radius:5px 5px 1px 1px}.brand-mark span:nth-child(1){height:12px;opacity:.75}.brand-mark span:nth-child(2){height:19px}.brand-mark span:nth-child(3){height:15px;opacity:.55}.brand-name,.footer-brand>span:last-child{font-size:10px;line-height:1.08;letter-spacing:.13em;text-transform:uppercase;font-weight:800}.brand-name em,.footer-brand em{font-family:'DM Serif Display',serif;font-size:13px;text-transform:none;letter-spacing:.03em;font-weight:400}.nav-links{display:flex;gap:26px;margin-left:auto}.nav-links button{color:rgba(248,244,235,.7);font-size:11px;letter-spacing:.1em;text-transform:uppercase}.menu-button{display:none;color:#f8f4eb}.hero-copy{margin:auto 0;padding:62px 0 45px;max-width:560px}.eyebrow,.kicker{display:flex;align-items:center;gap:10px;color:#71815e;font-size:10px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}.eyebrow{color:var(--orange)}.eyebrow:before{content:'';width:28px;height:1px;background:currentColor}.hero h1,h2,h3,p{margin-top:0}.hero h1{margin:22px 0 26px;font:400 clamp(55px,6.2vw,88px)/.94 'DM Serif Display',serif;letter-spacing:-.045em}.hero h1 em,h2 em{color:var(--orange);font-weight:400}.hero-intro{max-width:400px;color:rgba(248,244,235,.67);font-size:14px;line-height:1.85}.arrow-link,.text-link{display:inline-flex;align-items:center;gap:13px;padding:0;font-weight:800;font-size:11px;letter-spacing:.12em;text-transform:uppercase}.light-link{margin-top:34px;color:#f8f4eb}.hero-footer{display:flex;align-items:center;gap:31px}.hero-stat{display:flex;align-items:center;gap:9px;border-left:1px solid rgba(248,244,235,.28);padding-left:12px}.hero-stat strong{color:var(--gold);font:400 30px/1 'DM Serif Display',serif}.hero-stat span{color:rgba(248,244,235,.54);font-size:9px;line-height:1.3;letter-spacing:.1em;text-transform:uppercase}.scroll-cue{margin-left:auto;color:rgba(248,244,235,.48);font-size:10px;letter-spacing:.11em;text-transform:uppercase;writing-mode:vertical-rl;transform:rotate(180deg)}.hero-image{min-height:760px;background:url('03.jpg') center/cover;position:relative}.hero-image:after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,rgba(23,54,46,.22),transparent 30%),linear-gradient(0deg,rgba(23,54,46,.42),transparent 28%)}.image-caption{position:absolute;bottom:33px;left:38px;z-index:1;color:rgba(255,250,242,.8);font-size:9px;letter-spacing:.13em;text-transform:uppercase}.section{padding:110px 9vw}.intro{background:var(--cream)}.intro-grid{display:grid;grid-template-columns:1fr .72fr;gap:8vw;padding:55px 0 80px}.intro h2,.project h2,.contact h2{font:400 clamp(46px,5.5vw,78px)/.96 'DM Serif Display',serif;letter-spacing:-.045em;margin:0}.lede{font:400 25px/1.3 'DM Serif Display',serif;color:#345449}.intro-copy{max-width:415px}.intro-copy p:not(.lede),.project p,.contact p{color:#6d7468;font-size:14px;line-height:1.9}.services{background:var(--green);color:#f6f1e7}.section-head{display:flex;justify-content:space-between;align-items:start;margin-bottom:62px}.section-aside{text-align:right;color:rgba(246,241,231,.52);font-size:12px}.light{color:var(--orange)}.services-grid,.notes-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px}.service{min-height:350px;padding:25px 27px;background:#20453a;position:relative}.service-number{color:var(--orange);font-size:10px;font-weight:800}.service-art{height:135px;margin:13px -27px 20px;position:relative;overflow:hidden;background:linear-gradient(175deg,#285344,#20453a)}.hill{position:absolute;bottom:-42px;border-radius:50% 50% 0 0}.hill.one{left:-10%;width:80%;height:100px;background:#536d4e}.hill.two{right:-15%;width:85%;height:80px;background:#77905e}.sun{position:absolute;top:25px;right:35px;height:38px;width:38px;border-radius:50%;background:var(--gold)}.service h3{margin-bottom:12px;font:400 27px/1.05 'DM Serif Display',serif}.service p{color:rgba(246,241,231,.6);font-size:12px;line-height:1.75}.project{display:grid;grid-template-columns:1.08fr .92fr;background:var(--sage);padding:0}.project-image{min-height:590px;background:url('03.jpg') center/cover}.project-copy{padding:110px 8vw;display:flex;flex-direction:column;justify-content:center}.project-copy p{max-width:355px}.notes{background:var(--cream)}.notes-grid{grid-template-columns:1fr 1fr;max-width:950px}.note{min-height:318px;padding:28px 31px;display:flex;flex-direction:column}.note:first-child{background:#d4dfc4}.note:last-child{background:#e7d1bd}.note h3{margin:auto 0 15px;font:400 42px/.98 'DM Serif Display',serif}.note p{font-size:12px;line-height:1.75;color:rgba(23,54,46,.65)}.contact{display:grid;grid-template-columns:.98fr .75fr;gap:10vw;background:var(--green);color:#f7f3e9}.contact h2{color:#f7f3e9;margin:47px 0 27px}.contact p{color:rgba(247,243,233,.65);max-width:380px}.contact-meta{display:block;margin-top:34px;color:rgba(247,243,233,.47);font-size:10px;letter-spacing:.12em;text-transform:uppercase}.contact-form{align-self:center;display:flex;flex-direction:column;gap:26px}.contact-form label{display:flex;flex-direction:column;gap:7px}.contact-form label span{color:rgba(247,243,233,.5);font-size:10px;letter-spacing:.13em;text-transform:uppercase}.contact-form input,.contact-form textarea{width:100%;resize:vertical;border:0;border-bottom:1px solid rgba(247,243,233,.3);padding:6px 0 11px;background:transparent;color:#f7f3e9}.submit{display:inline-flex;align-items:center;justify-content:center;padding:15px 19px;background:var(--orange);color:#fffaf2;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.success{color:#d6e0c2;font-size:11px}.footer{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:29px 9vw;background:var(--deep);color:#f7f3e9}.footer p{margin:0;color:rgba(247,243,233,.4);font:italic 400 17px 'DM Serif Display',serif}.footer button{color:var(--orange);font-size:10px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}@media(max-width:900px){.hero,.project{grid-template-columns:1fr}.hero-panel{min-height:690px}.hero-image{min-height:460px}.project-image{min-height:440px}.contact{gap:5vw}}@media(max-width:650px){.hero-panel,.section{padding-left:7vw;padding-right:7vw}.hero-panel{min-height:670px}.nav-links{display:none;position:absolute;top:48px;left:0;right:0;padding:18px 0;flex-direction:column;gap:15px;background:var(--green)}.nav-links.open{display:flex}.menu-button{display:block}.hero h1{font-size:57px}.scroll-cue{display:none}.intro-grid,.services-grid,.notes-grid,.contact{grid-template-columns:1fr}.intro-grid{gap:38px;padding-top:42px}.section-head{gap:25px;flex-direction:column;margin-bottom:42px}.section-aside{text-align:left}.project-copy{padding:75px 7vw 85px}.contact{gap:35px}.footer{align-items:flex-start;flex-direction:column;padding:30px 7vw}}
+
+.brand-name {
+    color: #ffffff!important;
+}
+</style>
+</head>
+<body>
+    <div class="nav-container">
+    <nav class="nav">
+        <button class="brand" onclick="go('top')">
+            <span class="brand-mark"><span></span>
+            <span></span><span></span></span>
+            <span class="brand-name">Franklin County<br><em>Landscapers</em></span>
+        </button>
+        <div class="nav-links" id="nav">
+            <button onclick="go('work')">Our work</button>
+            <button onclick="go('approach')">Approach</button>
+            <button onclick="go('contact')">Contact</button>
+        </div>
+        <button class="menu-button" onclick="document.getElementById('nav').classList.toggle('open')">☰</button>
+    </nav>
+    </div>
+<main>
+<section class="hero" id="top"><div class="hero-panel">
+    
+    <div class="hero-copy"><p class="eyebrow">Rooted in Franklin County, MA</p><h1>Shape a <em>softer</em><br>edge to home.</h1><p class="hero-intro">Landscapes with a sense of place—considered, seasonal, and made to settle beautifully into the rolling hills of the Pioneer Valley.</p><button class="arrow-link light-link" onclick="go('contact')">Begin a conversation ↘</button></div><div class="hero-footer"><div class="hero-stat"><strong>12</strong><span>seasons<br>in the field</span></div><div class="hero-stat"><strong>MA</strong><span>designed for<br>this place</span></div><span class="scroll-cue">Scroll to explore ↘</span></div></div><div class="hero-image"><div class="image-caption">01 / 04　—　Broad valley, late summer</div></div></section>
+<section class="section intro" id="approach"><div class="kicker">02　—　Our point of view</div><div class="intro-grid"><h2>Good landscapes<br><em>feel inevitable.</em></h2><div class="intro-copy"><p class="lede">The best gardens don’t announce themselves. They hold a home in place, make room for weather, and grow more generous with time.</p><p>We design and care for residential landscapes across Greenfield, Northampton, Deerfield, and the surrounding valley—using honest materials, resilient plants, and a close read of the land.</p><button class="text-link" onclick="go('work')">Our approach ↗</button></div></div></section>
+<section class="section services" id="work"><div class="section-head"><div class="kicker light">03　—　What we do</div><p class="section-aside">A smaller, more attentive practice<br>for properties with something to say.</p></div><div class="services-grid"><article class="service"><span class="service-number">01</span><div class="service-art"><span class="hill one"></span><span class="hill two"></span><span class="sun"></span></div><h3>Landscape design</h3><p>Thoughtful plans that follow the land, from a single border to a full property transformation.</p></article><article class="service"><span class="service-number">02</span><div class="service-art"><span class="hill one"></span><span class="hill two"></span><span class="sun"></span></div><h3>Seasonal care</h3><p>A steady, considered rhythm of pruning, planting, cleanup, and upkeep across every season.</p></article><article class="service"><span class="service-number">03</span><div class="service-art"><span class="hill one"></span><span class="hill two"></span><span class="sun"></span></div><h3>Stone & structure</h3><p>Hand-finished patios, paths, walls, and quiet details that feel like they belong here.</p></article></div></section>
+<section class="project"><div class="project-image"></div><div class="project-copy"><div class="kicker">04　—　A sense of arrival</div><h2>Quietly<br><em>transformative.</em></h2><p>A gravel walk, a line of hornbeam, a low wall that catches the evening light. Small gestures can change the way a property feels from the road all the way to the kitchen door.</p><button class="arrow-link">See the work ↗</button></div></section>
+<section class="section notes"><div class="section-head"><div class="kicker">05　—　From the field</div><p class="section-aside">A few things we’ve learned<br>by paying attention.</p></div><div class="notes-grid"><article class="note"><span class="kicker">Field note 01</span><h3>Let the long view lead.</h3><p>We begin by walking the property slowly—seeing what wants to stay, what wants to soften, and where the land is already telling its story.</p></article><article class="note"><span class="kicker">Field note 02</span><h3>Plant for the fourth season.</h3><p>Structure matters after the blooms fade. We layer evergreens, bark, seed heads, and shadow so a garden keeps its shape all year.</p></article></div></section>
+<section class="section contact" id="contact"><div><div class="kicker light">06　—　Let’s make room for it</div><h2>Ready to make<br><em>something grow?</em></h2><p>Tell us a little about your property, your wish list, or the feeling you want to come home to.</p><span class="contact-meta">Franklin County &amp; the Pioneer Valley<br>Monday–Friday · 8:00–5:00</span></div><form class="contact-form" onsubmit="submitForm(event)"><label><span>Your name</span><input required placeholder="Jane Smith"></label><label><span>Email address</span><input required type="email" placeholder="jane@email.com"></label><label><span>What are you imagining?</span><textarea required rows="3" placeholder="A garden that feels like it has always been here..."></textarea></label><button class="submit">Request a site visit ↗</button><span class="success" id="success" hidden>Thanks — we’ll be in touch soon.</span></form></section>
+<footer class="footer"><div class="footer-brand"><span class="brand-mark"><span></span><span></span><span></span></span><span>Franklin County<br><em>Landscapers</em></span></div><p>Thoughtful landscapes for a place worth staying.</p><button onclick="go('top')">Back to top ↗</button></footer>
+</main>
+<script>function go(id){document.getElementById(id).scrollIntoView({behavior:'smooth'});document.getElementById('nav').classList.remove('open')}function submitForm(e){e.preventDefault();document.querySelector('.submit').textContent='Message received ✓';document.getElementById('success').hidden=false}</script>
+<script>
+  const header = document.querySelector(".nav-container");
+
+  let lastScrollY = window.scrollY;
+  let ticking = false;
+
+  function updateNavbar() {
+    const currentScrollY = window.scrollY;
+
+    // Add the scrolled style
+    header.classList.toggle("scrolled", currentScrollY > 24);
+
+    // Optional: hide while scrolling down, show while scrolling up
+    const scrollingDown =
+      currentScrollY > lastScrollY && currentScrollY > 160;
+
+    const scrollingUp = currentScrollY < lastScrollY;
+
+    if (scrollingDown) {
+      header.classList.add("is-hidden");
+    } else if (scrollingUp || currentScrollY <= 24) {
+      header.classList.remove("is-hidden");
+    }
+
+    lastScrollY = currentScrollY;
+    ticking = false;
+  }
+
+  window.addEventListener(
+    "scroll",
+    () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateNavbar);
+        ticking = true;
+      }
+    },
+    { passive: true }
+  );
+</script>
+</body>
+</html>

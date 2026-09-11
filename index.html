@@ -252,15 +252,51 @@
      tags        (optional) array of short strings
      link        (optional) URL — makes the whole card clickable
    ============================================================ */
-  const projects = [
+   const greenfield = [
+    {
+      title: 'Franklin County Landscapers',
+      category: 'Template',
+      description: 'A landing page for a landscaping company. Web Template Design',
+      image: '04.png',
+      tags: ['Website', 'Template', 'Design', 'Franklin County'],
+      link: 'https://seabears25.github.io/design-showcase/franklin.html'
+    },
+    {
+      title: 'Franklin County Renovations',
+      category: 'Template',
+      description: 'A landing page for a contracting company. Web Template Design',
+      image: '05.png',
+      tags: ['Website', 'Template', 'Design', 'Franklin County'],
+      link: 'https://seabears25.github.io/design-showcase/renovations.html'
+    },
+    {
+      title: 'Greenfield Auto',
+      category: 'Template',
+      description: 'A landing page for a auto body company. Web Template Design',
+      image: '06.png',
+      tags: ['Website', 'Template', 'Design', 'Franklin County'],
+      link: 'https://seabears25.github.io/design-showcase/auto.html'
+    },
+    {
+      title: 'The Corner Cup',
+      category: 'Template',
+      description: 'A landing page for a cafe company. Web Template Design',
+      image: '07.png',
+      tags: ['Website', 'Template', 'Design', 'Franklin County'],
+      link: 'https://seabears25.github.io/design-showcase/corner.html'
+    },
+   ]
+   const template = [
     {
       title: 'Tech landing',
       category: 'Template',
       description: 'A landing page for a tech company. Web Template Design',
-      image: '',
+      image: '08.png',
       tags: ['Website', 'Template', 'Design'],
       link: 'https://seabears25.github.io/design-showcase/tech.html'
-    },
+    }
+   ]
+   const design = [
     {
       title: 'Basic Dash',
       category: 'Design',
@@ -285,6 +321,8 @@
       tags: ['JavaScript', 'App', 'Design'],
       link: 'https://seabears25.github.io/design-showcase/invoicing.html'
     },
+   ]
+  const development = [
     {
       title: 'elment.js',
       category: 'Development',
@@ -323,11 +361,13 @@
 
     const media = item.image
       ? Div({
-          class: 'card-media',
+          class: 'card-media card-mark',
           style: {
             backgroundImage: 'url(' + item.image + ')',
             backgroundSize: 'cover',
-            backgroundPosition: 'center'
+            backgroundPosition: 'center',
+            borderBottomColor: color,
+            borderBottomWidth: '2px'
           }
         })
       : Div(
@@ -353,17 +393,32 @@
       Header(
         { class: 'wrap hero' },
         H1({ class: 'hero-name' }, 'Joey Lawson'),
-        P({ class: 'hero-tagline' }, 'Code, design, and story — usually all three on the same project.'),
+        P({ class: 'hero-tagline' }, 'Code, design, and websites — usually all three on the same project.'),
         P(
           { class: 'hero-intro' },
-          'A working selection of development, interface design, and long-form fiction.'
+          'A working selection of development, interface design, and website development.'
         ),
         Hr({ class: 'hero-rule' })
       ),
       Section(
         { class: 'wrap section' },
-        H2({ class: 'section-title' }, 'Selected Work'),
-        Div({ class: 'grid' }, For(projects, p => ProjectCard(p)))
+        H2({ class: 'section-title' }, 'Franklin County Examples'),
+        Div({ class: 'grid' }, For(greenfield, p => ProjectCard(p)))
+      ),
+      Section(
+        { class: 'wrap section' },
+        H2({ class: 'section-title' }, 'Templates'),
+        Div({ class: 'grid' }, For(template, p => ProjectCard(p)))
+      ),
+    Section(
+        { class: 'wrap section' },
+        H2({ class: 'section-title' }, 'App Design'),
+        Div({ class: 'grid' }, For(design, p => ProjectCard(p)))
+      ),
+      Section(
+        { class: 'wrap section' },
+        H2({ class: 'section-title' }, 'Frameworks & Dev'),
+        Div({ class: 'grid' }, For(development, p => ProjectCard(p)))
       ),
       Footer(
         { class: 'wrap site-footer' },
