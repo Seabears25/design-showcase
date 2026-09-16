@@ -296,6 +296,16 @@
       link: 'https://seabears25.github.io/design-showcase/tech.html'
     }
    ]
+   const games = [
+    {
+      title: 'Hexfront - Idle Blaster',
+      category: 'Template',
+      description: 'HTML idle game.',
+      image: '',
+      tags: ['Video Games', 'Dev', 'Design'],
+      link: 'https://seabears25.github.io/design-showcase/hexfront.html'
+    }
+   ]
    const design = [
     {
       title: 'Basic Dash',
@@ -306,7 +316,7 @@
       link: 'https://seabears25.github.io/design-showcase/dash.html'
     },
     {
-      title: 'Lyht Styled Dash',
+      title: 'Lyht Styled Dash - Working-Progress',
       category: 'Design',
       description: 'A Basic Dashboard Design using the Elment.js and Lyht.css Front-End',
       image: '',
@@ -314,9 +324,9 @@
       link: 'https://seabears25.github.io/design-showcase/dash-lyht.html'
     },
     {
-      title: 'Single Paged Invoicing',
+      title: 'Indego Invoicing App',
       category: 'Design',
-      description: 'A Basic Invoicing App that is only on the Front-End. Lyht.css and Elment.js',
+      description: 'A Basic Invoicing App that is only on the Front-End. Lyht.css and Elment.js.',
       image: '',
       tags: ['JavaScript', 'App', 'Design'],
       link: 'https://seabears25.github.io/design-showcase/invoicing.html'
@@ -400,21 +410,39 @@
         ),
         Hr({ class: 'hero-rule' })
       ),
+      //
+      // Franklin County Examples
+      //
       Section(
         { class: 'wrap section' },
         H2({ class: 'section-title' }, 'Franklin County Examples'),
         Div({ class: 'grid' }, For(greenfield, p => ProjectCard(p)))
       ),
+      //
+      // Regular Web Templates
+      //
       Section(
         { class: 'wrap section' },
         H2({ class: 'section-title' }, 'Templates'),
         Div({ class: 'grid' }, For(template, p => ProjectCard(p)))
       ),
+      //
+      // Video Games
+      //
+      Section(
+        { class: 'wrap section' },
+        H2({ class: 'section-title' }, 'Templates'),
+        Div({ class: 'grid' }, For(games, p => ProjectCard(p)))
+      ),
+      //
+      // Some random App Boilers
+      //
     Section(
         { class: 'wrap section' },
-        H2({ class: 'section-title' }, 'App Design'),
+        H2({ class: 'section-title' }, 'App Design Boilers'),
         Div({ class: 'grid' }, For(design, p => ProjectCard(p)))
       ),
+      // Frameworks and Dev stuff
       Section(
         { class: 'wrap section' },
         H2({ class: 'section-title' }, 'Frameworks & Dev'),
