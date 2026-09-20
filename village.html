@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ashhollow — A Village Grows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Cinzel+Decorative:wght@700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0f0d0a;
+    --ink-2:#171310;
+    --panel:#1c1712;
+    --panel-2:#241d16;
+    --line: rgba(201,162,74,0.18);
+    --parchment:#e7d9b8;
+    --parchment-dim:#a99a7c;
+    --gold:#c9a24a;
+    --gold-bright:#e8c473;
+    --forest:#5d8156;
+    --rust:#a8492f;
+    --steel:#4d7091;
+    --violet:#8267a8;
+    --stone-c:#8b8578;
+    --danger:#b3402c;
+    --mana:#6fa0c9;
+    --legendary:#e8c473;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;background:var(--ink);}
+  body{
+    font-family:'EB Garamond', serif;
+    color:var(--parchment);
+    background:
+      radial-gradient(ellipse at 50% -10%, rgba(201,162,74,0.10), transparent 55%),
+      radial-gradient(ellipse at 50% 110%, rgba(93,129,86,0.08), transparent 55%),
+      var(--ink);
+    min-height:100%;
+    overflow-x:hidden;
+  }
+  ::selection{background:var(--gold); color:var(--ink);}
+
+  .app{
+    max-width:1280px;
+    margin:0 auto;
+    padding:22px 18px 60px;
+  }
+
+  /* ---------- Header ---------- */
+  header.title{
+    text-align:center;
+    margin-bottom:18px;
+    position:relative;
+  }
+  header.title h1{
+    font-family:'Cinzel Decorative', serif;
+    font-weight:700;
+    font-size:clamp(28px,4vw,44px);
+    letter-spacing:0.04em;
+    margin:0;
+    color:var(--gold-bright);
+    text-shadow:0 0 18px rgba(232,196,115,0.35), 0 2px 0 #000;
+  }
+  header.title .sub{
+    font-family:'Cinzel',serif;
+    font-size:12px;
+    letter-spacing:0.35em;
+    text-transform:uppercase;
+    color:var(--parchment-dim);
+    margin-top:4px;
+  }
+  header.title .rule{
+    width:220px;
+    height:1px;
+    margin:12px auto 0;
+    background:linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity:0.6;
+  }
+
+  /* ---------- Resource bar ---------- */
+  .resbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    margin:18px 0 22px;
+  }
+  .res-chip{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:8px 14px;
+    min-width:108px;
+  }
+  .res-chip svg{width:20px;height:20px;flex-shrink:0;}
+  .res-chip .val{
+    font-family:'Space Mono', monospace;
+    font-size:16px;
+    font-weight:700;
+    color:var(--parchment);
+    line-height:1;
+  }
+  .res-chip .lbl{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.12em;
+    color:var(--parchment-dim);
+    display:block;
+    margin-top:2px;
+  }
+  .res-chip.pop .val{color:var(--gold-bright);}
+
+  /* ---------- Layout ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:minmax(0,1.55fr) minmax(300px,1fr);
+    gap:20px;
+    align-items:start;
+  }
+  @media (max-width:880px){
+    .layout{grid-template-columns:1fr;}
+  }
+
+  .mapwrap{
+    position:relative;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:8px;
+    box-shadow:inset 0 0 60px rgba(0,0,0,0.55), 0 12px 30px rgba(0,0,0,0.4);
+  }
+  #mapSvg{
+    width:100%;
+    height:auto;
+    display:block;
+    border-radius:8px;
+    background:
+      radial-gradient(ellipse at 50% 45%, rgba(93,73,42,0.28), transparent 60%),
+      #14100b;
+  }
+
+  .plot-empty polygon{
+    fill:rgba(255,255,255,0.02);
+    stroke:var(--line);
+    stroke-width:1.5;
+    stroke-dasharray:4 5;
+    transition:fill 0.2s;
+  }
+
+  .plot-locked polygon{
+    fill:rgba(0,0,0,0.35);
+    stroke:rgba(255,255,255,0.06);
+    stroke-width:1;
+  }
+  .plot-locked{cursor:not-allowed;}
+  .plot-empty, .plot-built{cursor:pointer;}
+  .plot-built polygon.base{
+    stroke:var(--gold);
+    stroke-width:1.5;
+    transition:filter 0.2s;
+  }
+
+  .plot-selected polygon.base{
+    stroke:var(--gold-bright);
+    stroke-width:3;
+  }
+  .icon-glyph{
+    fill:none;
+    stroke:var(--parchment);
+    stroke-width:2;
+    stroke-linecap:round;
+    stroke-linejoin:round;
+  }
+  .icon-glyph.filled{fill:var(--parchment); stroke:none;}
+  .plot-label{
+    font-family:'Cinzel',serif;
+    font-size:9px;
+    fill:var(--parchment-dim);
+    text-anchor:middle;
+    letter-spacing:0.04em;
+  }
+  .plot-lvl{
+    font-family:'Space Mono',monospace;
+    font-size:10px;
+    fill:var(--ink);
+    text-anchor:middle;
+    font-weight:700;
+  }
+  .plot-lvl-bg{fill:var(--gold);}
+  .upgrade-pulse{
+    fill:none;
+    stroke:var(--gold-bright);
+    stroke-width:2;
+    opacity:0;
+    animation:pulseRing 2.2s ease-out infinite;
+  }
+  @keyframes pulseRing{
+    0%{opacity:0.75; stroke-width:2;}
+    75%{opacity:0; stroke-width:8;}
+    100%{opacity:0;}
+  }
+  .ember{
+    fill:var(--gold-bright);
+    opacity:0;
+    animation:emberRise 4.5s ease-in infinite;
+  }
+  @keyframes emberRise{
+    0%{opacity:0; transform:translateY(0);}
+    15%{opacity:0.85;}
+    100%{opacity:0; transform:translateY(-90px);}
+  }
+  .torch-glow{
+    fill:url(#glowGrad);
+    animation:flicker 3.4s ease-in-out infinite;
+  }
+  @keyframes flicker{
+    0%,100%{opacity:0.55;}
+    35%{opacity:0.75;}
+    50%{opacity:0.45;}
+    72%{opacity:0.7;}
+  }
+
+  .maphint{
+    text-align:center;
+    font-size:12.5px;
+    color:var(--parchment-dim);
+    font-style:italic;
+    margin-top:8px;
+    min-height:16px;
+  }
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:14px;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+    max-height:none;
+  }
+  .tabs{
+    display:flex;
+    flex-wrap:wrap;
+    border-bottom:1px solid var(--line);
+  }
+  .tab{
+    flex:1 1 33%;
+    text-align:center;
+    padding:10px 4px;
+    font-family:'Cinzel',serif;
+    font-size:10.8px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--parchment-dim);
+    background:var(--panel-2);
+    cursor:pointer;
+    border:none;
+    border-right:1px solid var(--line);
+    border-bottom:1px solid var(--line);
+  }
+  .tab:last-child{border-right:none;}
+  .tab.active{
+    color:var(--gold-bright);
+    background:var(--panel);
+    box-shadow:inset 0 -2px 0 var(--gold);
+  }
+  .panel{
+    padding:16px;
+    min-height:340px;
+  }
+  .panel h2{
+    font-family:'Cinzel',serif;
+    font-size:15px;
+    letter-spacing:0.04em;
+    color:var(--gold-bright);
+    margin:0 0 10px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .panel p.desc{
+    font-size:14px;
+    color:var(--parchment-dim);
+    line-height:1.5;
+    margin:0 0 12px;
+  }
+
+  .stat-row{
+    display:flex;
+    justify-content:space-between;
+    font-size:13.5px;
+    padding:6px 0;
+    border-bottom:1px dashed var(--line);
+  }
+  .stat-row span:last-child{font-family:'Space Mono',monospace; color:var(--parchment);}
+
+  .cost-list{display:flex; gap:12px; flex-wrap:wrap; margin:8px 0 12px;}
+  .cost-item{
+    display:flex; align-items:center; gap:5px;
+    font-family:'Space Mono',monospace;
+    font-size:13px;
+  }
+  .cost-item.short{color:var(--danger);}
+  .cost-item svg{width:14px;height:14px;}
+
+  button.action{
+    font-family:'Cinzel',serif;
+    letter-spacing:0.05em;
+    font-size:12.5px;
+    text-transform:uppercase;
+    background:linear-gradient(180deg,#3a2f1e,#241c12);
+    color:var(--gold-bright);
+    border:1px solid var(--gold);
+    border-radius:6px;
+    padding:9px 14px;
+    cursor:pointer;
+    width:100%;
+    transition:filter 0.15s, transform 0.1s;
+  }
+
+  button.action:active:not(:disabled){transform:translateY(1px);}
+  button.action:disabled{
+    opacity:0.35;
+    cursor:not-allowed;
+    filter:grayscale(0.4);
+  }
+  button.action.secondary{
+    background:transparent;
+    color:var(--parchment-dim);
+    border-color:var(--line);
+  }
+  button.action.small{padding:6px 10px; font-size:11px; width:auto;}
+  button.action.danger{border-color:var(--danger); color:#e08a76;}
+
+  .build-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+  }
+  .build-opt{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:9px 8px;
+    text-align:left;
+    cursor:pointer;
+    color:var(--parchment);
+  }
+
+  .build-opt:disabled{opacity:0.3; cursor:not-allowed;}
+  .build-opt .bo-name{
+    font-family:'Cinzel',serif;
+    font-size:12px;
+    color:var(--gold-bright);
+    display:block;
+    margin-bottom:4px;
+  }
+  .build-opt .bo-cost{font-size:11.5px; color:var(--parchment-dim); font-family:'Space Mono',monospace;}
+
+  .slot-row{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin:8px 0 14px;
+  }
+  .slot{
+    width:52px; height:52px;
+    border-radius:50%;
+    border:1.5px dashed var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-size:10px; color:var(--parchment-dim);
+    cursor:pointer;
+    position:relative;
+    text-align:center;
+  }
+  .slot.filled{
+    border-style:solid;
+  }
+  .slot .vname{
+    position:absolute;
+    top:56px;
+    font-size:9.5px;
+    white-space:nowrap;
+    color:var(--parchment-dim);
+    left:50%;
+    transform:translateX(-50%);
+  }
+
+  .villager-card{
+    display:flex;
+    flex-wrap:wrap;
+    align-items:center;
+    gap:8px 10px;
+    padding:9px 8px;
+    border:1px solid var(--line);
+    border-radius:8px;
+    margin-bottom:7px;
+    background:var(--panel-2);
+  }
+  .vbadge{
+    width:34px;height:34px;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+    border:2px solid var(--gold);
+  }
+  .vbadge svg{width:18px;height:18px;}
+  .vinfo{flex:1; min-width:0;}
+  .vinfo .vn{font-size:13.5px; color:var(--parchment); font-family:'Cinzel',serif;}
+  .vinfo .vc{font-size:11px; color:var(--parchment-dim);}
+  .vwhere{font-size:10.5px; color:var(--parchment-dim); text-align:right; max-width:70px;}
+  .vactions{display:flex; gap:6px; flex-wrap:wrap; margin-left:auto;}
+
+  .recruit-classes{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px;
+    margin-top:6px;
+  }
+  .rc-opt{
+    display:flex; align-items:center; gap:7px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:7px;
+    padding:8px;
+    cursor:pointer;
+    color:var(--parchment);
+    font-family:'Cinzel',serif;
+    font-size:11.5px;
+  }
+
+  .rc-opt.selected{border-color:var(--gold-bright); background:rgba(201,162,74,0.14);}
+  .rc-opt svg{width:16px;height:16px; flex-shrink:0;}
+
+  .log{
+    margin-top:10px;
+    max-height:120px;
+    overflow-y:auto;
+    font-size:12px;
+    color:var(--parchment-dim);
+    border-top:1px solid var(--line);
+    padding-top:8px;
+  }
+  .log div{margin-bottom:4px; line-height:1.4;}
+  .log div span{color:var(--gold);}
+
+  .empty-note{
+    text-align:center;
+    color:var(--parchment-dim);
+    font-style:italic;
+    font-size:13.5px;
+    padding:30px 10px;
+  }
+
+  .footer-actions{
+    padding:10px 16px 16px;
+    border-top:1px solid var(--line);
+    display:flex;
+    gap:8px;
+  }
+
+  @media (max-width:520px){
+    .res-chip{min-width:90px; padding:7px 10px;}
+    .panel{padding:12px;}
+  }
+
+  /* ---------- Status bar ---------- */
+  .statusbar{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    justify-content:center;
+    margin-bottom:6px;
+  }
+  .status-badge{
+    display:flex; align-items:center; gap:6px;
+    font-family:'Cinzel',serif;
+    font-size:11px;
+    letter-spacing:0.04em;
+    color:var(--parchment-dim);
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:5px 12px;
+  }
+  .status-badge.night{color:#9fb3d8; border-color:rgba(159,179,216,0.35);}
+  .status-badge.day{color:var(--gold-bright);}
+  .status-badge.storm{color:#8fb0c9; border-color:rgba(143,176,201,0.4);}
+  .status-badge.raid{color:#e08a76; border-color:rgba(224,138,118,0.4);}
+  .status-badge.ward{color:var(--violet); border-color:rgba(130,103,168,0.4);}
+
+  .night-overlay{
+    fill:#05060c;
+    mix-blend-mode:multiply;
+    pointer-events:none;
+    transition:opacity 1.2s ease;
+  }
+
+  .res-chip.mana .val{color:var(--mana);}
+
+  /* ---------- Villagers: level + legendary + expeditions ---------- */
+  .vinfo .vlvl{
+    font-size:10px;
+    color:var(--gold);
+    font-family:'Space Mono',monospace;
+  }
+  .villager-card.legendary{
+    border-color:var(--legendary);
+    box-shadow:0 0 10px rgba(232,196,115,0.25);
+  }
+  .villager-card.legendary .vbadge{border-color:var(--legendary); box-shadow:0 0 8px rgba(232,196,115,0.5);}
+  .villager-card.busy{opacity:0.55;}
+
+  .expedition-row{
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:12.5px; color:var(--parchment-dim);
+    padding:6px 0; border-bottom:1px dashed var(--line);
+  }
+  .expedition-row span:last-child{font-family:'Space Mono',monospace; color:var(--parchment);}
+
+  /* ---------- Market ---------- */
+  .market-row{
+    display:flex; align-items:center; gap:8px;
+    padding:8px 0; border-bottom:1px dashed var(--line);
+  }
+  .market-row .mr-name{flex:1; font-family:'Cinzel',serif; font-size:12.5px;}
+  .market-row .mr-rate{font-size:11px; color:var(--parchment-dim); font-family:'Space Mono',monospace; min-width:70px; text-align:right;}
+  button.action.tiny{
+    width:auto; padding:5px 10px; font-size:10.5px;
+  }
+
+  /* ---------- Spells ---------- */
+  .spell-card{
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:10px;
+    margin-bottom:10px;
+    background:var(--panel-2);
+  }
+  .spell-card h3{
+    font-family:'Cinzel',serif;
+    font-size:13px;
+    color:var(--mana);
+    margin:0 0 4px;
+  }
+  .spell-card p{
+    font-size:12.5px; color:var(--parchment-dim); margin:0 0 8px; line-height:1.4;
+  }
+
+  /* ---------- Achievements ---------- */
+  .ach-row{
+    display:flex; align-items:center; gap:8px;
+    font-size:12.5px;
+    padding:5px 0;
+    color:var(--parchment-dim);
+  }
+  .ach-row.done{color:var(--gold-bright);}
+  .ach-dot{
+    width:8px; height:8px; border-radius:50%;
+    background:var(--line); flex-shrink:0;
+  }
+  .ach-row.done .ach-dot{background:var(--gold-bright); box-shadow:0 0 6px rgba(232,196,115,0.6);}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="title">
+    <h1>Ashhollow</h1>
+    <div class="sub">a village grows in the hollow</div>
+    <div class="rule"></div>
+  </header>
+
+  <div class="statusbar" id="statusbar"></div>
+  <div class="resbar" id="resbar"></div>
+
+  <div class="layout">
+    <div class="mapwrap">
+      <svg id="mapSvg" viewBox="0 0 900 560" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="glowGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#e8c473" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#e8c473" stop-opacity="0"/>
+          </radialGradient>
+
+          <!-- building glyphs -->
+          <symbol id="ic-townhall" viewBox="0 0 40 40">
+            <path class="icon-glyph" d="M5 20 L20 7 L35 20"/>
+            <rect class="icon-glyph" x="7" y="20" width="26" height="14"/>
+            <line class="icon-glyph" x1="20" y1="7" x2="20" y2="1"/>
+            <path class="icon-glyph filled" d="M20 1 L28 4 L20 7 Z"/>
+            <line class="icon-glyph" x1="20" y1="34" x2="20" y2="24"/>
+          </symbol>
+          <symbol id="ic-dwelling" viewBox="0 0 40 40">
+            <path class="icon-glyph" d="M6 20 L20 7 L34 20"/>
+            <rect class="icon-glyph" x="9" y="20" width="22" height="13"/>
+            <rect class="icon-glyph filled" x="17" y="24" width="6" height="9"/>
+          </symbol>
+          <symbol id="ic-farm" viewBox="0 0 40 40">
+            <g class="icon-glyph">
+              <line x1="20" y1="34" x2="20" y2="9"/>
+              <line x1="20" y1="14" x2="11" y2="7"/>
+              <line x1="20" y1="14" x2="29" y2="7"/>
+              <line x1="20" y1="21" x2="11" y2="14"/>
+              <line x1="20" y1="21" x2="29" y2="14"/>
+              <line x1="20" y1="28" x2="11" y2="21"/>
+              <line x1="20" y1="28" x2="29" y2="21"/>
+            </g>
+          </symbol>
+          <symbol id="ic-lumbercamp" viewBox="0 0 40 40">
+            <path class="icon-glyph filled" d="M20 5 L28 17 H12 Z"/>
+            <path class="icon-glyph filled" d="M20 13 L30 27 H10 Z"/>
+            <rect class="icon-glyph filled" x="18" y="27" width="4" height="8"/>
+          </symbol>
+          <symbol id="ic-quarry" viewBox="0 0 40 40">
+            <polygon class="icon-glyph" points="6,32 13,13 19,20 26,9 34,32"/>
+          </symbol>
+          <symbol id="ic-barracks" viewBox="0 0 40 40">
+            <line class="icon-glyph" x1="8" y1="8" x2="30" y2="30"/>
+            <line class="icon-glyph" x1="6" y1="14" x2="14" y2="6"/>
+            <line class="icon-glyph" x1="32" y1="8" x2="10" y2="30"/>
+            <line class="icon-glyph" x1="34" y1="14" x2="26" y2="6"/>
+          </symbol>
+          <symbol id="ic-school" viewBox="0 0 40 40">
+            <path class="icon-glyph" d="M5 11 Q20 4 35 11 V30 Q20 23 5 30 Z"/>
+            <line class="icon-glyph" x1="20" y1="8" x2="20" y2="27"/>
+          </symbol>
+          <symbol id="ic-tower" viewBox="0 0 40 40">
+            <rect class="icon-glyph" x="14" y="17" width="12" height="17"/>
+            <path class="icon-glyph" d="M11 17 L20 4 L29 17"/>
+            <circle class="icon-glyph filled" cx="20" cy="10" r="2.6"/>
+          </symbol>
+          <symbol id="ic-tradingpost" viewBox="0 0 40 40">
+            <path class="icon-glyph" d="M4 14 L20 6 L36 14"/>
+            <line class="icon-glyph" x1="8" y1="14" x2="8" y2="32"/>
+            <line class="icon-glyph" x1="32" y1="14" x2="32" y2="32"/>
+            <line class="icon-glyph" x1="8" y1="24" x2="32" y2="24"/>
+            <line class="icon-glyph" x1="8" y1="32" x2="32" y2="32"/>
+          </symbol>
+
+          <!-- class glyphs -->
+          <symbol id="ic-warrior" viewBox="0 0 24 24">
+            <line class="icon-glyph" x1="4" y1="20" x2="17" y2="7"/>
+            <line class="icon-glyph" x1="13" y1="3" x2="20" y2="10"/>
+            <line class="icon-glyph" x1="3" y1="15" x2="8" y2="20"/>
+          </symbol>
+          <symbol id="ic-forester" viewBox="0 0 24 24">
+            <path class="icon-glyph" d="M12 3 C4 8 4 17 12 20 C20 17 20 8 12 3 Z"/>
+            <line class="icon-glyph" x1="12" y1="3" x2="12" y2="20"/>
+          </symbol>
+          <symbol id="ic-builder" viewBox="0 0 24 24">
+            <rect class="icon-glyph" x="10.5" y="8" width="2.6" height="14"/>
+            <rect class="icon-glyph" x="5" y="2.5" width="13" height="6"/>
+          </symbol>
+          <symbol id="ic-politician" viewBox="0 0 24 24">
+            <circle class="icon-glyph" cx="12" cy="12" r="9.2"/>
+            <circle class="icon-glyph filled" cx="12" cy="12" r="2.8"/>
+          </symbol>
+          <symbol id="ic-teacher" viewBox="0 0 24 24">
+            <path class="icon-glyph" d="M3 6 Q12 1.5 21 6 V18 Q12 13.5 3 18 Z"/>
+            <line class="icon-glyph" x1="12" y1="4" x2="12" y2="16.5"/>
+          </symbol>
+          <symbol id="ic-wizard" viewBox="0 0 24 24">
+            <path class="icon-glyph filled" d="M12 1 L14.2 8.6 L21.8 8.6 L15.6 13.2 L17.8 20.8 L12 16.2 L6.2 20.8 L8.4 13.2 L2.2 8.6 L9.8 8.6 Z"/>
+          </symbol>
+          <symbol id="ic-scout" viewBox="0 0 24 24">
+            <path class="icon-glyph" d="M12 2 L4 21 L12 16.5 L20 21 Z"/>
+            <line class="icon-glyph" x1="12" y1="2" x2="12" y2="16.5"/>
+          </symbol>
+
+          <!-- resource glyphs -->
+          <symbol id="ic-wood" viewBox="0 0 24 24">
+            <path class="icon-glyph filled" d="M12 1 L16 9 H8 Z"/>
+            <path class="icon-glyph filled" d="M12 7 L18 17 H6 Z"/>
+          </symbol>
+          <symbol id="ic-stone" viewBox="0 0 24 24">
+            <polygon class="icon-glyph" points="3,18 8,7 12,12 16,5 21,18"/>
+          </symbol>
+          <symbol id="ic-food" viewBox="0 0 24 24">
+            <g class="icon-glyph">
+              <line x1="12" y1="20" x2="12" y2="5"/>
+              <line x1="12" y1="9" x2="7" y2="4"/>
+              <line x1="12" y1="9" x2="17" y2="4"/>
+              <line x1="12" y1="14" x2="7" y2="9"/>
+              <line x1="12" y1="14" x2="17" y2="9"/>
+            </g>
+          </symbol>
+          <symbol id="ic-gold" viewBox="0 0 24 24">
+            <circle class="icon-glyph" cx="12" cy="12" r="9"/>
+            <text x="12" y="16.5" text-anchor="middle" font-size="10" font-family="Cinzel" fill="currentColor" stroke="none">G</text>
+          </symbol>
+          <symbol id="ic-pop" viewBox="0 0 24 24">
+            <circle class="icon-glyph" cx="8.5" cy="8" r="3.4"/>
+            <circle class="icon-glyph" cx="16" cy="9.5" r="2.7"/>
+            <path class="icon-glyph" d="M2.5 20 C2.5 14.5 6 12.5 8.5 12.5 C11 12.5 14.5 14.5 14.5 20"/>
+            <path class="icon-glyph" d="M13.5 13 C16 13 19.5 15 19.5 20"/>
+          </symbol>
+          <symbol id="ic-mana" viewBox="0 0 24 24">
+            <path class="icon-glyph filled" d="M12 1.5 L18.5 12 L12 22.5 L5.5 12 Z"/>
+          </symbol>
+          <symbol id="ic-research" viewBox="0 0 24 24">
+            <path class="icon-glyph" d="M4 4 H15 A4 4 0 0 1 20 8 V20 H9 A4 4 0 0 1 4 16 Z"/>
+            <line class="icon-glyph" x1="8" y1="9" x2="15" y2="9"/>
+            <line class="icon-glyph" x1="8" y1="13" x2="15" y2="13"/>
+          </symbol>
+        </defs>
+
+        <circle class="torch-glow" cx="450" cy="290" r="130"></circle>
+        <g id="embers"></g>
+        <g id="plotsLayer"></g>
+        <rect class="night-overlay" id="nightOverlay" x="0" y="0" width="900" height="560" opacity="0"/>
+      </svg>
+      <div class="maphint" id="maphint">Click a hex to build or manage it.</div>
+    </div>
+
+    <div class="sidebar">
+      <div class="tabs">
+        <button class="tab active" data-tab="place">Plot</button>
+        <button class="tab" data-tab="villagers">Villagers</button>
+        <button class="tab" data-tab="recruit">Recruit</button>
+        <button class="tab" data-tab="market">Market</button>
+        <button class="tab" data-tab="spells">Spells</button>
+        <button class="tab" data-tab="world">World</button>
+        <button class="tab" data-tab="tech">Tech</button>
+        <button class="tab" data-tab="chronicle">Chronicle</button>
+      </div>
+      <div class="panel" id="panel"></div>
+      <div class="footer-actions">
+        <button class="action secondary small" id="resetBtn">Reset Village</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+/* ================= DATA ================= */
+
+const CLASS_COLORS = {
+  warrior:'#a8492f', forester:'#5d8156', builder:'#8b8578',
+  politician:'#c9a24a', teacher:'#4d7091', wizard:'#8267a8', scout:'#c98f4a'
+};
+const CLASSES = {
+  warrior:{name:'Warrior', icon:'ic-warrior'},
+  forester:{name:'Forester', icon:'ic-forester'},
+  builder:{name:'Builder', icon:'ic-builder'},
+  politician:{name:'Politician', icon:'ic-politician'},
+  teacher:{name:'Teacher', icon:'ic-teacher'},
+  wizard:{name:'Wizard', icon:'ic-wizard'},
+  scout:{name:'Scout', icon:'ic-scout'}
+};
+const BASE_CLASSES = ['warrior','forester','builder','politician','teacher','wizard'];
+
+const CLASS_ACTIONS = {
+  warrior:{label:'Patrol the Hollow', kind:'busy', duration:3,
+    desc:'Walks the boundary, strengthening defense against the next raid.'},
+  forester:{label:'Forage the Woods', kind:'busy', duration:2,
+    desc:'Gathers wood and food from the wild without needing a camp.'},
+  builder:{label:'Scavenge Ruins', kind:'busy', duration:2,
+    desc:'Salvages stone and wood from old ruins nearby.'},
+  politician:{label:'Broker with Traders', kind:'busy', duration:2,
+    desc:'Trades favors with passing merchants for gold.'},
+  teacher:{label:'Tutor a Villager', kind:'instant-target',
+    desc:'Passes on hard-earned wisdom, granting another villager experience.'},
+  wizard:{label:'Scry the Omens', kind:'instant', cost:{mana:5},
+    desc:'Divines the strength of the next raid before it arrives.'}
+};
+
+const BUILDING_TYPES = {
+  townhall:{
+    name:'Town Hall', icon:'ic-townhall', maxLevel:5, slots:2, preferred:'politician',
+    desc:'The heart of Ashhollow. Governs the village and unlocks new ground to build on.',
+    buildCost:null,
+    upgradeCost:l=>({wood:30*l, stone:25*l, gold:40*l}),
+    produce:{gold:2}
+  },
+  dwelling:{
+    name:'Cottage', icon:'ic-dwelling', maxLevel:5, slots:0, preferred:null,
+    desc:'A humble home. Each level houses more villagers.',
+    buildCost:{wood:20, stone:10},
+    upgradeCost:l=>({wood:14*l, stone:9*l}),
+    housing:l=>2+l
+  },
+  farm:{
+    name:'Farmstead', icon:'ic-farm', maxLevel:5, slots:2, preferred:'forester',
+    desc:'Tilled fields that feed the village.',
+    buildCost:{wood:15},
+    upgradeCost:l=>({wood:12*l, gold:8*l}),
+    produce:{food:3}
+  },
+  lumbercamp:{
+    name:'Lumber Camp', icon:'ic-lumbercamp', maxLevel:5, slots:2, preferred:'forester',
+    desc:'Foresters fell timber from the treeline.',
+    buildCost:{wood:10, gold:10},
+    upgradeCost:l=>({wood:10*l, gold:10*l}),
+    produce:{wood:3}
+  },
+  quarry:{
+    name:'Quarry', icon:'ic-quarry', maxLevel:5, slots:2, preferred:'builder',
+    desc:'Stone cut from the hillside by steady hands.',
+    buildCost:{wood:20, gold:15},
+    upgradeCost:l=>({wood:10*l, gold:15*l}),
+    produce:{stone:3}
+  },
+  barracks:{
+    name:'Barracks', icon:'ic-barracks', maxLevel:5, slots:2, preferred:'warrior',
+    desc:'Warriors train here, raising the village\u2019s strength.',
+    buildCost:{wood:25, stone:20},
+    upgradeCost:l=>({wood:20*l, stone:15*l, gold:10*l}),
+    produce:{strength:2}
+  },
+  school:{
+    name:'School', icon:'ic-school', maxLevel:5, slots:2, preferred:'teacher',
+    desc:'Teachers raise renown, easing recruit costs, and generate research toward new technology.',
+    buildCost:{wood:20, gold:25},
+    upgradeCost:l=>({wood:15*l, gold:20*l}),
+    produce:{research:2}
+  },
+  tower:{
+    name:'Wizard Tower', icon:'ic-tower', maxLevel:5, slots:2, preferred:'wizard',
+    desc:'Arcane workings turn to coin \u2014 and to raw mana \u2014 under a wizard\u2019s hand.',
+    buildCost:{stone:25, gold:30},
+    upgradeCost:l=>({stone:15*l, gold:25*l}),
+    produce:{gold:3, mana:1}
+  },
+  tradingpost:{
+    name:'Trading Post', icon:'ic-tradingpost', maxLevel:5, slots:2, preferred:'politician',
+    desc:'A chartered post that draws merchants, boosting gold and market rates.',
+    buildCost:{wood:25, gold:35},
+    upgradeCost:l=>({wood:15*l, gold:25*l}),
+    produce:{gold:2},
+    requiresTech:'commerce'
+  }
+};
+
+const FIRST_NAMES = ['Alden','Brynn','Cassia','Doran','Elowen','Fenwick','Gilda','Hollis','Ione','Jorah',
+  'Kestrel','Liora','Merek','Nessa','Osric','Perrin','Quenna','Roswen','Sable','Tamsin',
+  'Ulric','Vesna','Wren','Yorick','Zilla','Aldric','Bess','Corin','Dessa','Ewan'];
+
+const LEGENDARY_NAMES = [
+  'Mira Stormcaller','Thane Ironhand','Sela Nightweaver','Baldric Oakenshield',
+  'Ysolde Ashwalker','Corvin the Unbent','Ravenna Goldtongue','Hollis Deepwarden'
+];
+const LEGENDARY_CHANCE = 0.08;
+
+const SEASONS = [
+  {name:'Spring', foodMult:1.0},
+  {name:'Summer', foodMult:1.35},
+  {name:'Autumn', foodMult:1.1},
+  {name:'Winter', foodMult:0.45}
+];
+const DAY_LENGTH = 24;        // ticks per full day/night cycle
+const SEASON_LENGTH_DAYS = 5; // days per season
+const RAID_INTERVAL = 16;     // ticks between raid checks
+const WEATHER_CHANCE = 0.05;  // per-tick chance of a weather event, if none active
+
+const ACHIEVEMENTS = [
+  {id:'pop10', label:'Ten souls call Ashhollow home', check:s=> s.villagers.length>=10},
+  {id:'strength20', label:'Village strength reaches 20', check:s=> strengthTotal()>=20},
+  {id:'wealthy', label:'Coffers hold 500 gold', check:s=> s.resources.gold>=500},
+  {id:'fullVillage', label:'Every plot is built', check:s=> s.buildings.length>=PLOTS.length},
+  {id:'legendary', label:'A legend joins the village', check:s=> s.villagers.some(v=>v.legendary)},
+  {id:'allLvl3', label:'Every building reaches Lv.3', check:s=> s.buildings.length>=6 && s.buildings.every(b=>b.level>=3)},
+  {id:'cartographer', label:'The entire hollow is mapped', check:s=> s.worldTiles.every(t=>t.revealed)},
+  {id:'scholar', label:'Three technologies are unlocked', check:s=> s.unlockedTechs.length>=3}
+];
+
+const VILLAGE_NAMES = ['Fenmoor','Draketh Hollow','Thistlewick','Bramblegate','Wrenfield','Duskmere','Alderwatch','Coldharbor'];
+const WORLD_RADIUS = 2;         // 5x5 grid centered on the home tile
+const WORLD_TILE_SIZE = 46;
+const WORLD_TILE_GAP = 6;
+const RESOURCE_KINDS = ['wood','stone','food','gold'];
+
+const TECHS = [
+  {id:'masonry', tier:1, name:'Masonry', cost:{research:18}, prereq:[],
+    desc:'Practiced stonecutting raises Quarry output by 25%.'},
+  {id:'sylvancraft', tier:1, name:'Sylvancraft', cost:{research:18}, prereq:[],
+    desc:'Better tools raise Lumber Camp output by 25%.'},
+  {id:'ironforming', tier:1, name:'Ironforming', cost:{research:18}, prereq:[],
+    desc:'Tempered arms raise Village Strength from the Barracks by 25%.'},
+  {id:'cartography', tier:1, name:'Cartography', cost:{research:20}, prereq:[],
+    desc:'Charting the hollow unlocks the Scout class and quickens all scouting by a tick.'},
+  {id:'commerce', tier:2, name:'Commerce', cost:{research:45}, prereq:['cartography'],
+    desc:'Unlocks the Trading Post, a building devoted to gold and market trade.'},
+  {id:'engineering', tier:2, name:'Engineering', cost:{research:50}, prereq:['masonry','sylvancraft'],
+    desc:'Raises the maximum level of every building by one.'},
+  {id:'arcane_studies', tier:2, name:'Arcane Studies', cost:{research:45}, prereq:[],
+    desc:'Raises Wizard Tower mana output by 25% and unlocks the Greater Ward spell.'},
+  {id:'grand_alliance', tier:3, name:'Grand Alliance', cost:{research:80}, prereq:['commerce','arcane_studies'],
+    desc:'Pacts with neighboring settlements lower raid threat by 20%.'}
+];
+
+/* ================= STATE ================= */
+
+const RING1 = 150, RING2 = 268, CX = 450, CY = 290;
+function buildPlots(){
+  const plots = [{id:'p0', cx:CX, cy:CY, ring:0}];
+  for(let i=0;i<6;i++){
+    const a = Math.PI/180*(60*i-90);
+    plots.push({id:'p'+(i+1), cx:CX+RING1*Math.cos(a), cy:CY+RING1*Math.sin(a), ring:1});
+  }
+  for(let i=0;i<6;i++){
+    const a = Math.PI/180*(60*i-60);
+    plots.push({id:'p'+(i+7), cx:CX+RING2*Math.cos(a), cy:CY+RING2*Math.sin(a), ring:2});
+  }
+  return plots;
+}
+const PLOTS = buildPlots();
+
+function buildWorldTiles(){
+  const tiles = [];
+  for(let gx=-WORLD_RADIUS; gx<=WORLD_RADIUS; gx++){
+    for(let gy=-WORLD_RADIUS; gy<=WORLD_RADIUS; gy++){
+      if(gx===0 && gy===0){ tiles.push({id:'home', gx, gy, type:'home', revealed:true}); continue; }
+      const dist = Math.max(Math.abs(gx), Math.abs(gy));
+      const roll = Math.random();
+      const tile = {id:'w'+gx+'_'+gy, gx, gy, type:null, revealed:false};
+      if(roll<0.14){
+        tile.type='village';
+        tile.name = VILLAGE_NAMES[Math.floor(Math.random()*VILLAGE_NAMES.length)];
+        tile.disposition = Math.random()<0.7 ? 'friendly' : 'wary';
+      } else if(roll<0.36){
+        tile.type='bandit';
+        tile.threat = 6 + dist*3 + Math.floor(Math.random()*6);
+        tile.cleared = false;
+      } else if(roll<0.68){
+        tile.type='resource';
+        tile.resource = RESOURCE_KINDS[Math.floor(Math.random()*RESOURCE_KINDS.length)];
+        tile.cooldown = 0;
+      } else {
+        tile.type='wild';
+      }
+      tiles.push(tile);
+    }
+  }
+  return tiles;
+}
+
+function freshName(){
+  return FIRST_NAMES[Math.floor(Math.random()*FIRST_NAMES.length)];
+}
+function randomClass(){
+  return BASE_CLASSES[Math.floor(Math.random()*BASE_CLASSES.length)];
+}
+
+function defaultState(){
+  return {
+    resources:{wood:60, stone:40, food:50, gold:35, mana:5, research:0},
+    buildings:[
+      {id:'b1', plotId:'p0', type:'townhall', level:1, workers:[]},
+      {id:'b2', plotId:'p1', type:'dwelling', level:1, workers:[]}
+    ],
+    villagers:[
+      {id:'v1', name:freshName(), cls:randomClass(), assigned:null, lvl:1, xp:0, legendary:false, actionCooldown:0},
+      {id:'v2', name:freshName(), cls:randomClass(), assigned:null, lvl:1, xp:0, legendary:false, actionCooldown:0}
+    ],
+    nextId:3,
+    log:['The first cottage rises in the hollow.'],
+    selectedPlot:null,
+    activeTab:'place',
+    pendingBuildType:null,
+    pendingRecruitClass:null,
+    tickCount:0,
+    weatherEvent:null,
+    wardActive:false,
+    wardMultiplier:2,
+    expeditions:[],
+    classTasks:[],
+    patrolBonus:0,
+    scryPreview:null,
+    achievements:[],
+    worldTiles:buildWorldTiles(),
+    worldTasks:[],
+    banditsCleared:0,
+    unlockedTechs:[],
+    selectedWorldTile:null
+  };
+}
+
+let state = defaultState();
+let uiPicker = null; // transient, not persisted: {type:'assign', buildingId} or {type:'tutor', teacherId}
+
+/* ================= PERSISTENCE ================= */
+
+let storageAvailable = !!(window.storage && typeof window.storage.get==='function' && typeof window.storage.set==='function');
+
+async function loadState(){
+  if(storageAvailable){
+    try{
+      const r = await window.storage.get('ashhollow-save', false);
+      if(r && r.value){
+        const parsed = JSON.parse(r.value);
+        state = Object.assign(defaultState(), parsed);
+        state.resources = Object.assign({wood:0,stone:0,food:0,gold:0,mana:0,research:0}, parsed.resources||{});
+        state.selectedPlot = null;
+        normalizeState();
+      }
+    }catch(e){
+      // No existing save, or storage bridge unavailable in this context — start fresh.
+      storageAvailable = false;
+    }
+  }
+  render();
+}
+let saveTimer = null;
+function saveState(){
+  if(!storageAvailable) return;
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async ()=>{
+    try{
+      await window.storage.set('ashhollow-save', JSON.stringify(state), false);
+    }catch(e){
+      console.warn('Autosave unavailable in this environment; playing without persistence.', e);
+      storageAvailable = false;
+      renderHint();
+    }
+  }, 400);
+}
+
+/* ================= HELPERS ================= */
+
+function normalizeState(){
+  state.tickCount = state.tickCount||0;
+  state.weatherEvent = state.weatherEvent||null;
+  state.wardActive = !!state.wardActive;
+  state.wardMultiplier = state.wardMultiplier||2;
+  state.expeditions = state.expeditions||[];
+  state.classTasks = state.classTasks||[];
+  state.patrolBonus = state.patrolBonus||0;
+  state.scryPreview = (state.scryPreview==null) ? null : state.scryPreview;
+  state.achievements = state.achievements||[];
+  state.worldTiles = (state.worldTiles && state.worldTiles.length) ? state.worldTiles : buildWorldTiles();
+  state.worldTasks = state.worldTasks||[];
+  state.banditsCleared = state.banditsCleared||0;
+  state.unlockedTechs = state.unlockedTechs||[];
+  if(state.selectedWorldTile===undefined) state.selectedWorldTile = null;
+  state.worldTiles.forEach(t=>{
+    if(t.type==='resource' && t.cooldown==null) t.cooldown=0;
+    if(t.type==='bandit' && t.cleared==null) t.cleared=false;
+  });
+  state.villagers.forEach(v=>{
+    if(v.lvl==null) v.lvl=1;
+    if(v.xp==null) v.xp=0;
+    if(v.legendary==null) v.legendary=false;
+    if(v.actionCooldown==null) v.actionCooldown=0;
+  });
+}
+
+function upgradeCostFor(b){
+  const t = BUILDING_TYPES[b.type];
+  const cost = Object.assign({}, t.upgradeCost(b.level));
+  if(b.level>=3) cost.mana = (cost.mana||0) + (b.level-2)*5;
+  return cost;
+}
+function maxLevelFor(type){
+  return BUILDING_TYPES[type].maxLevel + (hasTech('engineering') ? 1 : 0);
+}
+
+/* ---- Technology ---- */
+function hasTech(id){ return state.unlockedTechs.includes(id); }
+function techPrereqMet(tech){ return !tech.prereq || tech.prereq.every(p=>hasTech(p)); }
+function canUnlockTech(id){
+  const tech = TECHS.find(t=>t.id===id);
+  if(!tech || hasTech(id) || !techPrereqMet(tech)) return false;
+  return canAfford(tech.cost);
+}
+function unlockTech(id){
+  if(!canUnlockTech(id)) return;
+  const tech = TECHS.find(t=>t.id===id);
+  pay(tech.cost);
+  state.unlockedTechs.push(id);
+  addLog(`<span>${tech.name}</span> is discovered! ${tech.desc}`);
+  saveState();
+  render();
+}
+
+/* ---- World map ---- */
+function tileLabel(tile){
+  switch(tile.type){
+    case 'home': return 'Ashhollow';
+    case 'village': return tile.name;
+    case 'bandit': return tile.cleared ? 'Cleared Camp' : 'Bandit Camp';
+    case 'resource': return tile.resource[0].toUpperCase()+tile.resource.slice(1)+' Deposit';
+    default: return 'Wilderness';
+  }
+}
+function tileColor(tile){
+  switch(tile.type){
+    case 'home': return '#c9a24a';
+    case 'village': return '#4d7091';
+    case 'bandit': return tile.cleared ? '#5d8156' : '#a8492f';
+    case 'resource': return '#c9a24a';
+    default: return '#8b8578';
+  }
+}
+function isFrontier(tile){
+  return state.worldTiles.some(o=> o.revealed && Math.abs(o.gx-tile.gx)<=1 && Math.abs(o.gy-tile.gy)<=1);
+}
+function frontierTiles(){
+  return state.worldTiles.filter(t=> !t.revealed && isFrontier(t));
+}
+function revealTile(tile){
+  tile.revealed = true;
+  if(tile.type==='wild'){
+    if(Math.random()<0.2){
+      const k = RESOURCE_KINDS[Math.floor(Math.random()*RESOURCE_KINDS.length)];
+      const amt = 6+Math.floor(Math.random()*10);
+      state.resources[k] += amt;
+      addLog(`Scouts find a minor cache while exploring the wilds: +${amt} ${k}.`);
+    } else {
+      addLog(`Scouts map a stretch of quiet wilderness.`);
+    }
+  } else if(tile.type==='village'){
+    addLog(`Scouts discover the settlement of <span>${tile.name}</span>.`);
+  } else if(tile.type==='bandit'){
+    addLog(`Scouts spot a bandit camp lurking nearby.`);
+  } else if(tile.type==='resource'){
+    addLog(`Scouts map a ${tile.resource} deposit.`);
+  }
+}
+function scoutDuration(v){
+  let d = SCOUT_DURATION;
+  if(v && v.cls==='scout') d -= 2;
+  else if(hasTech('cartography')) d -= 1;
+  return Math.max(2, d);
+}
+
+function dayNumber(){ return Math.floor(state.tickCount/DAY_LENGTH)+1; }
+function dayPhase(){ return state.tickCount % DAY_LENGTH; }
+function isNightNow(){ return dayPhase() >= DAY_LENGTH/2; }
+function nightOpacity(){
+  const t = dayPhase()/DAY_LENGTH; // 0..1 across the full cycle
+  // smooth curve peaking at midnight (t=0.75), zero at midday (t=0.25)
+  return Math.max(0, Math.sin((t-0.25)*Math.PI)) * 0.55;
+}
+function seasonInfo(){
+  const idx = Math.floor((dayNumber()-1)/SEASON_LENGTH_DAYS) % SEASONS.length;
+  return SEASONS[idx];
+}
+function ticksUntilRaid(){
+  const m = state.tickCount % RAID_INTERVAL;
+  return m===0 ? RAID_INTERVAL : RAID_INTERVAL-m;
+}
+function computeRaidThreat(){
+  let threat = 5 + dayNumber()*1.4 + population()*0.4;
+  threat -= (state.banditsCleared||0)*0.4;
+  if(hasTech('grand_alliance')) threat *= 0.8;
+  return Math.max(3, Math.round(threat));
+}
+function politicianCount(){
+  const th = state.buildings.find(b=>b.type==='townhall');
+  if(!th) return 0;
+  return th.workers.filter(wid=>{
+    const v = state.villagers.find(x=>x.id===wid);
+    return v && v.cls==='politician';
+  }).length;
+}
+function tradingPostLevels(){
+  return state.buildings.filter(b=>b.type==='tradingpost').reduce((s,b)=>s+b.level,0);
+}
+function marketRates(){
+  const bonus = Math.min(0.3, politicianCount()*0.08 + tradingPostLevels()*0.02);
+  return {
+    sell: +(2*(1+bonus)).toFixed(2),
+    buy: +(3*(1-bonus)).toFixed(2)
+  };
+}
+
+function getBuilding(plotId){ return state.buildings.find(b=>b.plotId===plotId); }
+function getBuildingById(id){ return state.buildings.find(b=>b.id===id); }
+function housingCap(){
+  return state.buildings.reduce((sum,b)=>{
+    const t = BUILDING_TYPES[b.type];
+    return sum + (t.housing ? t.housing(b.level) : 0);
+  }, 4); // base 4 capacity from the hollow itself
+}
+function population(){ return state.villagers.length; }
+function schoolLevels(){
+  return state.buildings.filter(b=>b.type==='school').reduce((s,b)=>s+b.level,0);
+}
+function strengthTotal(){
+  let s = state.buildings.filter(b=>b.type==='barracks').reduce((s,b)=>s+b.level*2,0);
+  if(hasTech('ironforming')) s = Math.round(s*1.25);
+  return s;
+}
+function recruitCost(){
+  const n = state.villagers.length;
+  const discount = Math.min(0.4, schoolLevels()*0.03);
+  const base = {food:14+n*3, gold:8+n*2};
+  return {
+    food:Math.round(base.food*(1-discount)),
+    gold:Math.round(base.gold*(1-discount))
+  };
+}
+function canAfford(cost){
+  return Object.keys(cost).every(k=>(state.resources[k]||0) >= cost[k]);
+}
+function pay(cost){
+  Object.keys(cost).forEach(k=> state.resources[k]-=cost[k]);
+}
+function fmt(n){ return Math.floor(n).toLocaleString(); }
+function addLog(msg){
+  state.log.unshift(msg);
+  if(state.log.length>40) state.log.length = 40;
+}
+
+/* ================= ACTIONS ================= */
+
+function buildAt(plotId, type){
+  const plot = PLOTS.find(p=>p.id===plotId);
+  if(!plot || getBuilding(plotId)) return;
+  if(plot.ring===2){
+    const th = state.buildings.find(b=>b.type==='townhall');
+    if(!th || th.level<2) return;
+  }
+  const t = BUILDING_TYPES[type];
+  if(!canAfford(t.buildCost)) return;
+  pay(t.buildCost);
+  state.buildings.push({id:'b'+(state.nextId++), plotId, type, level:1, workers:[]});
+  addLog(`A new <span>${t.name}</span> is raised.`);
+  state.pendingBuildType = null;
+  saveState();
+  render();
+}
+
+function upgrade(buildingId){
+  const b = getBuildingById(buildingId);
+  if(!b) return;
+  const t = BUILDING_TYPES[b.type];
+  if(b.level>=maxLevelFor(b.type)) return;
+  const cost = upgradeCostFor(b);
+  if(!canAfford(cost)) return;
+  pay(cost);
+  b.level++;
+  addLog(`<span>${t.name}</span> reaches level ${b.level}.`);
+  saveState();
+  render();
+}
+
+function recruit(cls){
+  const cost = recruitCost();
+  if(population() >= housingCap()) return;
+  if(!canAfford(cost)) return;
+  pay(cost);
+  const legendary = Math.random() < LEGENDARY_CHANCE;
+  const name = legendary
+    ? LEGENDARY_NAMES[Math.floor(Math.random()*LEGENDARY_NAMES.length)]
+    : freshName();
+  const v = {id:'v'+(state.nextId++), name, cls, assigned:null, lvl:legendary?2:1, xp:0, legendary};
+  state.villagers.push(v);
+  addLog(legendary
+    ? `<span>${name}</span>, a legend of renown, joins Ashhollow as a ${CLASSES[cls].name}.`
+    : `${v.name} the ${CLASSES[cls].name} joins Ashhollow.`);
+  state.pendingRecruitClass = null;
+  saveState();
+  render();
+}
+
+/* ---- Scouting expeditions ---- */
+const SCOUT_DURATION = 4;
+function sendScouting(villagerId){
+  const v = state.villagers.find(x=>x.id===villagerId);
+  if(!v || v.assigned) return;
+  v.assigned = 'scouting';
+  state.expeditions.push({id:'e'+(state.nextId++), villagerId, ticksLeft:scoutDuration(v)});
+  addLog(`${v.name} sets out to scout beyond the hollow.`);
+  saveState();
+  render();
+}
+function resolveExpeditions(){
+  const done = [];
+  state.expeditions.forEach(ex=>{
+    ex.ticksLeft--;
+    if(ex.ticksLeft<=0) done.push(ex);
+  });
+  done.forEach(ex=>{
+    const v = state.villagers.find(x=>x.id===ex.villagerId);
+    if(v) v.assigned = null;
+    const frontier = frontierTiles();
+    if(frontier.length>0){
+      const count = (v && v.cls==='scout') ? 2 : 1;
+      for(let i=0; i<count && frontier.length; i++){
+        const idx = Math.floor(Math.random()*frontier.length);
+        revealTile(frontier[idx]);
+        frontier.splice(idx,1);
+      }
+    } else {
+      const roll = Math.random();
+      if(roll<0.12 && population()<housingCap()){
+        const nv = {id:'v'+(state.nextId++), name:freshName(), cls:randomClass(), assigned:null, lvl:1, xp:0, legendary:false, actionCooldown:0};
+        state.villagers.push(nv);
+        addLog(`${v?v.name:'A scout'} returns leading ${nv.name}, a wanderer who wishes to settle.`);
+      } else {
+        const keys = ['wood','stone','food','gold'];
+        const k1 = keys[Math.floor(Math.random()*keys.length)];
+        const gain = 8+Math.floor(Math.random()*14);
+        state.resources[k1] += gain;
+        addLog(`${v?v.name:'A scout'} returns with ${gain} ${k1} from the wilds.`);
+      }
+    }
+    state.expeditions = state.expeditions.filter(e=>e.id!==ex.id);
+  });
+}
+
+/* ---- World map tasks (envoy / raid / harvest) ---- */
+function sendWorldTask(villagerId, tileId, kind){
+  const v = state.villagers.find(x=>x.id===villagerId);
+  const tile = state.worldTiles.find(t=>t.id===tileId);
+  if(!v || v.assigned || !tile) return;
+  const duration = kind==='harvest' ? 2 : 3;
+  v.assigned = 'world:'+tileId;
+  state.worldTasks.push({id:'wt'+(state.nextId++), villagerId, tileId, kind, ticksLeft:duration});
+  addLog(`${v.name} sets out toward ${tileLabel(tile)}.`);
+  uiPicker = null;
+  saveState();
+  render();
+}
+function resolveWorldTasks(){
+  const done = [];
+  state.worldTasks.forEach(t=>{
+    t.ticksLeft--;
+    if(t.ticksLeft<=0) done.push(t);
+  });
+  done.forEach(t=>{
+    const v = state.villagers.find(x=>x.id===t.villagerId);
+    if(v) v.assigned = null;
+    const tile = state.worldTiles.find(x=>x.id===t.tileId);
+    if(tile){
+      if(t.kind==='envoy'){
+        const mult = tile.disposition==='friendly' ? 1.3 : 0.9;
+        const gold = Math.round((14+Math.floor(Math.random()*16))*mult);
+        state.resources.gold += gold;
+        addLog(`${v?v.name:'An envoy'} returns from ${tile.name} with ${gold} gold in gifts.`);
+      } else if(t.kind==='raid'){
+        const str = strengthTotal()+state.patrolBonus;
+        state.patrolBonus = 0;
+        if(str >= tile.threat){
+          tile.cleared = true;
+          state.banditsCleared = (state.banditsCleared||0)+1;
+          const loot = 20+Math.floor(Math.random()*20);
+          state.resources.gold += loot;
+          addLog(`${v?v.name:'The warband'} clears the bandit camp, claiming ${loot} gold.`);
+        } else {
+          const lost = Math.min(state.resources.gold, 10+Math.floor(Math.random()*10));
+          state.resources.gold -= lost;
+          addLog(`${v?v.name:'The warband'} is repelled by the bandits, losing ${lost} gold.`);
+        }
+      } else if(t.kind==='harvest'){
+        const amt = 14+Math.floor(Math.random()*10);
+        state.resources[tile.resource] += amt;
+        tile.cooldown = 6;
+        addLog(`${v?v.name:'A gatherer'} returns with ${amt} ${tile.resource} from the field.`);
+      }
+    }
+    state.worldTasks = state.worldTasks.filter(x=>x.id!==t.id);
+  });
+}
+
+/* ---- Class-specific actions ---- */
+
+function startClassTask(villagerId){
+  const v = state.villagers.find(x=>x.id===villagerId);
+  if(!v || v.assigned) return;
+  const action = CLASS_ACTIONS[v.cls];
+  if(!action || action.kind!=='busy') return;
+  v.assigned = 'task:'+v.cls;
+  state.classTasks.push({id:'t'+(state.nextId++), villagerId, cls:v.cls, ticksLeft:action.duration});
+  addLog(`${v.name} sets out to ${action.label.toLowerCase()}.`);
+  saveState();
+  render();
+}
+
+function resolveClassTasks(){
+  const done = [];
+  state.classTasks.forEach(t=>{
+    t.ticksLeft--;
+    if(t.ticksLeft<=0) done.push(t);
+  });
+  done.forEach(t=>{
+    const v = state.villagers.find(x=>x.id===t.villagerId);
+    if(v) v.assigned = null;
+    switch(t.cls){
+      case 'warrior':
+        state.patrolBonus += 4;
+        addLog(`${v?v.name:'A warrior'} returns from patrol, ready to defend the hollow.`);
+        break;
+      case 'forester':
+        state.resources.wood += 12; state.resources.food += 10;
+        addLog(`${v?v.name:'A forester'} returns from foraging with 12 wood and 10 food.`);
+        break;
+      case 'builder':
+        state.resources.stone += 12; state.resources.wood += 10;
+        addLog(`${v?v.name:'A builder'} returns from scavenging with 12 stone and 10 wood.`);
+        break;
+      case 'politician':{
+        const g = 20+Math.floor(Math.random()*12);
+        state.resources.gold += g;
+        addLog(`${v?v.name:'A politician'} brokers a deal worth ${g} gold.`);
+        break;
+      }
+    }
+    state.classTasks = state.classTasks.filter(x=>x.id!==t.id);
+  });
+}
+
+function tutorVillager(teacherId, targetId){
+  const teacher = state.villagers.find(x=>x.id===teacherId);
+  const target = state.villagers.find(x=>x.id===targetId);
+  if(!teacher || !target || teacher.id===target.id) return;
+  if(teacher.assigned) return;
+  if(teacher.actionCooldown>0) return;
+  target.xp += 10;
+  const needed = target.lvl*8;
+  if(target.xp>=needed){
+    target.xp -= needed;
+    target.lvl++;
+    addLog(`${target.name} grows more skilled (Lv.${target.lvl}) after a lesson from ${teacher.name}.`);
+  } else {
+    addLog(`${teacher.name} tutors ${target.name}.`);
+  }
+  teacher.actionCooldown = 3;
+  uiPicker = null;
+  saveState();
+  render();
+}
+
+function scry(villagerId){
+  const v = state.villagers.find(x=>x.id===villagerId);
+  if(!v || v.assigned) return;
+  const action = CLASS_ACTIONS.wizard;
+  if(v.actionCooldown>0) return;
+  if(!canAfford(action.cost)) return;
+  pay(action.cost);
+  state.scryPreview = computeRaidThreat();
+  v.actionCooldown = 4;
+  addLog(`${v.name} scries the omens: raiders will strike with strength ${state.scryPreview}.`);
+  saveState();
+  render();
+}
+
+function handleClassAction(villagerId){
+  const v = state.villagers.find(x=>x.id===villagerId);
+  if(!v) return;
+  const action = CLASS_ACTIONS[v.cls];
+  if(!action) return;
+  if(action.kind==='busy') startClassTask(villagerId);
+  else if(action.kind==='instant') scry(villagerId);
+}
+
+/* ---- Spells ---- */
+function castSpell(name){
+  const hasTower = state.buildings.some(b=>b.type==='tower');
+  if(!hasTower) return;
+  if(name==='bounty'){
+    const cost = {mana:15};
+    if(!canAfford(cost)) return;
+    pay(cost);
+    state.resources.wood += 18; state.resources.stone += 18; state.resources.food += 18;
+    addLog('A <span>Bounty of the Hollow</span> fills the storehouses.');
+  } else if(name==='ward'){
+    const cost = {mana:20};
+    if(!canAfford(cost)) return;
+    if(state.wardActive) return;
+    pay(cost);
+    state.wardActive = true;
+    state.wardMultiplier = 2;
+    addLog('An <span>Arcane Ward</span> is woven to defend against the next raid.');
+  } else if(name==='greaterward'){
+    if(!hasTech('arcane_studies')) return;
+    const cost = {mana:35};
+    if(!canAfford(cost)) return;
+    if(state.wardActive) return;
+    pay(cost);
+    state.wardActive = true;
+    state.wardMultiplier = 3;
+    addLog('A <span>Greater Ward</span> surrounds Ashhollow, tripling its defense for the next raid.');
+  }
+  saveState();
+  render();
+}
+
+/* ---- Market ---- */
+function tradeResource(kind, action){
+  const rates = marketRates();
+  const amount = 10;
+  if(action==='sell'){
+    if((state.resources[kind]||0) < amount) return;
+    state.resources[kind] -= amount;
+    state.resources.gold += Math.round(amount*rates.sell);
+  } else {
+    const cost = Math.round(amount*rates.buy);
+    if(state.resources.gold < cost) return;
+    state.resources.gold -= cost;
+    state.resources[kind] += amount;
+  }
+  saveState();
+  render();
+}
+
+function assign(villagerId, buildingId){
+  const v = state.villagers.find(x=>x.id===villagerId);
+  const b = getBuildingById(buildingId);
+  if(!v || !b) return;
+  const t = BUILDING_TYPES[b.type];
+  if(b.workers.length >= t.slots) return;
+  if(v.assigned) unassign(v.id, false);
+  v.assigned = buildingId;
+  b.workers.push(v.id);
+  uiPicker = null;
+  saveState();
+  render();
+}
+function unassign(villagerId, doRender){
+  const v = state.villagers.find(x=>x.id===villagerId);
+  if(!v || !v.assigned) return;
+  const b = getBuildingById(v.assigned);
+  if(b) b.workers = b.workers.filter(id=>id!==villagerId);
+  v.assigned = null;
+  if(doRender!==false){ saveState(); render(); }
+}
+
+function resetVillage(){
+  if(!confirm('Raze Ashhollow back to its first cottage? This cannot be undone.')) return;
+  state = defaultState();
+  saveState();
+  render();
+}
+
+/* ================= WEATHER ================= */
+
+function rollWeather(){
+  if(state.weatherEvent){
+    state.weatherEvent.ticksLeft--;
+    if(state.weatherEvent.ticksLeft<=0){
+      addLog(`The ${state.weatherEvent.label.toLowerCase()} passes.`);
+      state.weatherEvent = null;
+    }
+    return;
+  }
+  if(Math.random() > WEATHER_CHANCE) return;
+  const roll = Math.random();
+  if(roll<0.34){
+    state.weatherEvent = {type:'storm', label:'Storm', ticksLeft:3};
+    addLog('A <span>storm</span> rolls over Ashhollow, and work slows.');
+  } else if(roll<0.67){
+    const bonus = 12+Math.floor(Math.random()*14);
+    state.resources.food += bonus;
+    addLog(`A <span>bountiful harvest</span> adds ${bonus} food to the stores.`);
+  } else {
+    const bonus = 10+Math.floor(Math.random()*16);
+    state.resources.gold += bonus;
+    addLog(`Traveling merchants pass through, leaving <span>${bonus} gold</span>.`);
+  }
+}
+
+/* ================= RAIDS ================= */
+
+function resolveRaidIfDue(){
+  if(state.tickCount===0 || state.tickCount % RAID_INTERVAL !== 0) return;
+  const threat = computeRaidThreat();
+  let str = strengthTotal() + state.patrolBonus;
+  if(isNightNow()) str = Math.round(str*1.3);
+  if(state.wardActive){ str *= (state.wardMultiplier||2); state.wardActive=false; state.wardMultiplier=1; }
+  state.patrolBonus = 0;
+  state.scryPreview = null;
+  if(str >= threat){
+    const loot = 6+Math.floor(Math.random()*10);
+    state.resources.gold += loot;
+    addLog(`Raiders test the hollow\u2019s defenses (strength ${str} vs ${threat}) and are driven off. <span>+${loot} gold</span> recovered from their camp.`);
+  } else {
+    const lossFood = Math.min(state.resources.food, 10+Math.floor(Math.random()*15));
+    const lossGold = Math.min(state.resources.gold, 6+Math.floor(Math.random()*10));
+    state.resources.food -= lossFood;
+    state.resources.gold -= lossGold;
+    addLog(`Raiders overwhelm the hollow\u2019s defenses (strength ${str} vs ${threat}) and plunder <span>${lossFood} food, ${lossGold} gold</span>.`);
+  }
+}
+
+/* ================= ACHIEVEMENTS ================= */
+
+function checkAchievements(){
+  ACHIEVEMENTS.forEach(a=>{
+    if(state.achievements.includes(a.id)) return;
+    if(a.check(state)){
+      state.achievements.push(a.id);
+      addLog(`<span>Milestone:</span> ${a.label}.`);
+    }
+  });
+}
+
+/* ================= TICK ================= */
+
+function tick(){
+  state.tickCount++;
+  rollWeather();
+
+  const stormMult = (state.weatherEvent && state.weatherEvent.type==='storm') ? 0.5 : 1;
+  const season = seasonInfo();
+  const teacherBonus = 1 + schoolLevels()*0.1;
+  const masonryMult = hasTech('masonry') ? 1.25 : 1;
+  const sylvanMult = hasTech('sylvancraft') ? 1.25 : 1;
+  const arcaneMult = hasTech('arcane_studies') ? 1.25 : 1;
+
+  let woodP=0, stoneP=0, foodP=0, goldP=0, manaP=0, researchP=0;
+  state.buildings.forEach(b=>{
+    const t = BUILDING_TYPES[b.type];
+    if(!t.produce || b.workers.length===0) return;
+    b.workers.forEach(wid=>{
+      const v = state.villagers.find(x=>x.id===wid);
+      if(!v) return;
+      const match = v.cls===t.preferred;
+      const lvlMult = 1 + (v.lvl-1)*0.12;
+      const mult = (match?1:0.5) * b.level * lvlMult * stormMult;
+      if(t.produce.wood) woodP += t.produce.wood*mult*(b.type==='lumbercamp'?sylvanMult:1);
+      if(t.produce.stone) stoneP += t.produce.stone*mult*(b.type==='quarry'?masonryMult:1);
+      if(t.produce.food) foodP += t.produce.food*mult*(b.type==='farm'?season.foodMult:1);
+      if(t.produce.gold) goldP += t.produce.gold*mult;
+      if(t.produce.mana) manaP += t.produce.mana*mult*(b.type==='tower'?arcaneMult:1);
+      if(t.produce.research) researchP += t.produce.research*mult;
+
+      // villager experience
+      v.xp += 1*teacherBonus;
+      const needed = v.lvl*8;
+      if(v.xp>=needed){
+        v.xp -= needed;
+        v.lvl++;
+        addLog(`${v.name} grows more skilled (Lv.${v.lvl}).`);
+      }
+    });
+  });
+  const upkeep = population()*0.4;
+  state.resources.wood += woodP;
+  state.resources.stone += stoneP;
+  state.resources.gold += goldP;
+  state.resources.mana += manaP;
+  state.resources.research += researchP;
+  state.resources.food = Math.max(0, state.resources.food + foodP - upkeep);
+  ['wood','stone','food','gold','mana','research'].forEach(k=> state.resources[k]=Math.round(state.resources[k]*10)/10);
+
+  state.worldTiles.forEach(t=>{ if(t.cooldown>0) t.cooldown--; });
+
+  resolveExpeditions();
+  resolveClassTasks();
+  resolveWorldTasks();
+  state.villagers.forEach(v=>{ if(v.actionCooldown>0) v.actionCooldown--; });
+  resolveRaidIfDue();
+  checkAchievements();
+  saveState();
+
+  renderResources();
+  renderMapDynamic();
+  renderStatusBar();
+  renderPanel();
+}
+
+/* ================= RENDER: MAP ================= */
+
+function hexPoints(cx,cy,r){
+  const pts=[];
+  for(let i=0;i<6;i++){
+    const a = Math.PI/180*(60*i-30);
+    pts.push(`${(cx+r*Math.cos(a)).toFixed(1)},${(cy+r*Math.sin(a)).toFixed(1)}`);
+  }
+  return pts.join(' ');
+}
+
+function plotColor(type){
+  switch(type){
+    case 'townhall': return '#c9a24a';
+    case 'dwelling': return '#a99a7c';
+    case 'farm': return '#5d8156';
+    case 'lumbercamp': return '#5d8156';
+    case 'quarry': return '#8b8578';
+    case 'barracks': return '#a8492f';
+    case 'school': return '#4d7091';
+    case 'tower': return '#8267a8';
+    case 'tradingpost': return '#c98f4a';
+    default: return '#8b8578';
+  }
+}
+
+function renderMap(){
+  const layer = document.getElementById('plotsLayer');
+  const th = state.buildings.find(b=>b.type==='townhall');
+  const ring2Unlocked = th && th.level>=2;
+  let html='';
+
+  PLOTS.forEach(p=>{
+    const b = getBuilding(p.id);
+    const locked = p.ring===2 && !ring2Unlocked;
+    const r = 58;
+    const selected = state.selectedPlot===p.id;
+
+    if(locked){
+      html += `<g class="plot-locked" data-plot="${p.id}">
+        <polygon points="${hexPoints(p.cx,p.cy,r)}"/>
+        <text class="plot-label" x="${p.cx}" y="${p.cy+4}">Town Hall Lv.2</text>
+      </g>`;
+      return;
+    }
+
+    if(!b){
+      html += `<g class="plot-empty" data-plot="${p.id}">
+        <polygon points="${hexPoints(p.cx,p.cy,r)}"/>
+        <text class="plot-label" x="${p.cx}" y="${p.cy+4}">+ build</text>
+      </g>`;
+      return;
+    }
+
+    const t = BUILDING_TYPES[b.type];
+    const color = plotColor(b.type);
+    const canUp = b.level<maxLevelFor(b.type) && canAfford(upgradeCostFor(b));
+    html += `<g class="plot-built ${selected?'plot-selected':''}" data-plot="${p.id}">
+      <polygon class="base" points="${hexPoints(p.cx,p.cy,r)}" fill="${color}22" stroke="${color}"/>
+      ${canUp?`<polygon class="upgrade-pulse" points="${hexPoints(p.cx,p.cy,r-4)}"/>`:''}
+      <use href="#${t.icon}" x="${p.cx-16}" y="${p.cy-24}" width="32" height="32" color="${color==='#c9a24a'?'#f0e2bb':'#e7d9b8'}"/>
+      <circle class="plot-lvl-bg" cx="${p.cx+34}" cy="${p.cy+30}" r="10"/>
+      <text class="plot-lvl" x="${p.cx+34}" y="${p.cy+33.5}">${b.level}</text>
+      <text class="plot-label" x="${p.cx}" y="${p.cy+38}">${t.name}</text>
+    </g>`;
+  });
+
+  layer.innerHTML = html;
+
+  // ambient embers
+  const embers = document.getElementById('embers');
+  if(!embers.dataset.built){
+    let e='';
+    for(let i=0;i<10;i++){
+      const x = CX-40+Math.random()*80;
+      const delay = (Math.random()*4.5).toFixed(2);
+      const r = (1+Math.random()*1.6).toFixed(1);
+      e += `<circle class="ember" cx="${x.toFixed(1)}" cy="${CY+10}" r="${r}" style="animation-delay:${delay}s"/>`;
+    }
+    embers.innerHTML = e;
+    embers.dataset.built='1';
+  }
+
+  const overlay = document.getElementById('nightOverlay');
+  if(overlay) overlay.setAttribute('opacity', nightOpacity().toFixed(2));
+}
+function renderMapDynamic(){ renderMap(); }
+
+/* ================= RENDER: RESOURCE BAR ================= */
+
+function renderResources(){
+  const r = state.resources;
+  const cap = housingCap(), pop = population();
+  document.getElementById('resbar').innerHTML = `
+    <div class="res-chip"><svg><use href="#ic-wood" color="#5d8156"/></svg><div><div class="val">${fmt(r.wood)}</div><span class="lbl">Wood</span></div></div>
+    <div class="res-chip"><svg><use href="#ic-stone" color="#8b8578"/></svg><div><div class="val">${fmt(r.stone)}</div><span class="lbl">Stone</span></div></div>
+    <div class="res-chip"><svg><use href="#ic-food" color="#c9a24a"/></svg><div><div class="val">${fmt(r.food)}</div><span class="lbl">Food</span></div></div>
+    <div class="res-chip"><svg><use href="#ic-gold" color="#e8c473"/></svg><div><div class="val">${fmt(r.gold)}</div><span class="lbl">Gold</span></div></div>
+    <div class="res-chip mana"><svg><use href="#ic-mana" color="#6fa0c9"/></svg><div><div class="val">${fmt(r.mana)}</div><span class="lbl">Mana</span></div></div>
+    <div class="res-chip research"><svg><use href="#ic-research" color="#b48a52"/></svg><div><div class="val">${fmt(r.research)}</div><span class="lbl">Research</span></div></div>
+    <div class="res-chip pop"><svg><use href="#ic-pop" color="#e8c473"/></svg><div><div class="val">${pop}/${cap}</div><span class="lbl">Villagers</span></div></div>
+  `;
+}
+
+/* ================= RENDER: STATUS BAR ================= */
+
+function renderStatusBar(){
+  const bar = document.getElementById('statusbar');
+  if(!bar) return;
+  const night = isNightNow();
+  const season = seasonInfo();
+  const raidIn = ticksUntilRaid();
+  let html = `<div class="status-badge ${night?'night':'day'}">${night?'\u263e Night':'\u2600 Day'} \u00b7 Day ${dayNumber()}</div>`;
+  html += `<div class="status-badge">${season.name}</div>`;
+  html += `<div class="status-badge ${raidIn<=3?'raid':''}">Raid in ${raidIn}</div>`;
+  if(state.weatherEvent){
+    html += `<div class="status-badge storm">${state.weatherEvent.label} \u00b7 ${state.weatherEvent.ticksLeft} left</div>`;
+  }
+  if(state.wardActive){
+    html += `<div class="status-badge ward">Arcane Ward active</div>`;
+  }
+  if(state.scryPreview!=null){
+    html += `<div class="status-badge ward">Scried: raid strength ${state.scryPreview}</div>`;
+  }
+  if(state.expeditions.length || state.classTasks.length){
+    html += `<div class="status-badge">${state.expeditions.length+state.classTasks.length} on task</div>`;
+  }
+  bar.innerHTML = html;
+}
+
+/* ================= RENDER: SIDEBAR PANELS ================= */
+
+function costHtml(cost){
+  const icons = {wood:'ic-wood', stone:'ic-stone', food:'ic-food', gold:'ic-gold', mana:'ic-mana', research:'ic-research'};
+  return `<div class="cost-list">` + Object.keys(cost).map(k=>{
+    const short = (state.resources[k]||0) < cost[k];
+    return `<div class="cost-item ${short?'short':''}"><svg><use href="#${icons[k]}" color="currentColor"/></svg>${cost[k]} ${k}</div>`;
+  }).join('') + `</div>`;
+}
+
+function renderPlacePanel(){
+  const panel = document.getElementById('panel');
+  const p = state.selectedPlot;
+  if(!p){
+    panel.innerHTML = `<h2>The Village Plot</h2><div class="empty-note">Select a hex on the map to build or manage it here.</div>`;
+    return;
+  }
+  const b = getBuilding(p);
+  const plotDef = PLOTS.find(pl=>pl.id===p);
+
+  if(!b){
+    // empty plot -> build options
+    let opts = '';
+    Object.keys(BUILDING_TYPES).forEach(key=>{
+      const t = BUILDING_TYPES[key];
+      if(key==='townhall') return; // only one town hall, pre-placed
+      if(t.requiresTech && !hasTech(t.requiresTech)) return;
+      const affordable = t.buildCost && canAfford(t.buildCost);
+      opts += `<button class="build-opt" data-build="${key}" ${affordable?'':'disabled'}>
+        <span class="bo-name">${t.name}</span>
+        <span class="bo-cost">${Object.keys(t.buildCost).map(k=>`${t.buildCost[k]} ${k}`).join(' \u00b7 ')}</span>
+      </button>`;
+    });
+    panel.innerHTML = `<h2>Empty Plot</h2>
+      <p class="desc">Choose a building to raise here.</p>
+      <div class="build-grid">${opts}</div>`;
+    panel.querySelectorAll('[data-build]').forEach(el=>{
+      el.addEventListener('click', ()=> buildAt(p, el.dataset.build));
+    });
+    return;
+  }
+
+  // built plot -> manage
+  const t = BUILDING_TYPES[b.type];
+  const maxLvl = maxLevelFor(b.type);
+  const upCost = b.level<maxLvl ? upgradeCostFor(b) : null;
+  const affordUp = upCost && canAfford(upCost);
+
+  let statsHtml = '';
+  if(t.produce){
+    statsHtml += Object.keys(t.produce).map(k=>
+      `<div class="stat-row"><span>Produces ${k} / worker</span><span>${t.produce[k]} \u00d7 level</span></div>`
+    ).join('');
+  }
+  if(t.housing){
+    statsHtml += `<div class="stat-row"><span>Housing capacity</span><span>+${t.housing(b.level)}</span></div>`;
+  }
+  if(t.preferred){
+    statsHtml += `<div class="stat-row"><span>Favors class</span><span>${CLASSES[t.preferred].name}</span></div>`;
+  }
+
+  let slotsHtml = '';
+  if(t.slots>0){
+    slotsHtml = `<div class="slot-row">`;
+    for(let i=0;i<t.slots;i++){
+      const wid = b.workers[i];
+      if(wid){
+        const v = state.villagers.find(x=>x.id===wid);
+        const c = CLASS_COLORS[v.cls];
+        slotsHtml += `<div class="slot filled" style="border-color:${c}" data-unassign="${wid}" title="Click to reassign">
+          <svg width="22" height="22"><use href="#${CLASSES[v.cls].icon}" color="${c}"/></svg>
+          <span class="vname">${v.name}</span>
+        </div>`;
+      } else {
+        slotsHtml += `<div class="slot" data-emptyslot="${b.id}">empty</div>`;
+      }
+    }
+    slotsHtml += `</div>`;
+  }
+
+  let pickerHtml = '';
+  if(uiPicker && uiPicker.type==='assign' && uiPicker.buildingId===b.id){
+    pickerHtml = assignPickerHtml(b.id);
+  }
+
+  panel.innerHTML = `
+    <h2><svg width="18" height="18"><use href="#${t.icon}" color="#c9a24a"/></svg> ${t.name} <span style="color:var(--parchment-dim); font-size:12px; font-family:'Space Mono',monospace;">Lv.${b.level}/${maxLvl}</span></h2>
+    <p class="desc">${t.desc}</p>
+    ${statsHtml}
+    ${t.slots>0?`<p class="desc" style="margin-top:12px;">Assigned workers (${b.workers.length}/${t.slots}):</p>${slotsHtml}`:''}
+    ${upCost?`<p class="desc" style="margin-top:6px;">Upgrade cost:</p>${costHtml(upCost)}
+      <button class="action" id="upgradeBtn" ${affordUp?'':'disabled'}>Upgrade to Lv.${b.level+1}</button>`
+      : `<p class="desc" style="color:var(--gold-bright);">Fully upgraded.</p>`}
+    ${pickerHtml}
+  `;
+  const upBtn = document.getElementById('upgradeBtn');
+  if(upBtn) upBtn.addEventListener('click', ()=> upgrade(b.id));
+
+  panel.querySelectorAll('[data-unassign]').forEach(el=>{
+    el.addEventListener('click', ()=> unassign(el.dataset.unassign));
+  });
+  panel.querySelectorAll('[data-emptyslot]').forEach(el=>{
+    el.addEventListener('click', ()=> openAssignPicker(el.dataset.emptyslot));
+  });
+  panel.querySelectorAll('[data-pick]').forEach(el=>{
+    el.addEventListener('click', ()=> assign(el.dataset.pick, uiPicker.buildingId));
+  });
+}
+
+function assignPickerHtml(buildingId){
+  const b = getBuildingById(buildingId);
+  const t = BUILDING_TYPES[b.type];
+  const free = state.villagers.filter(v=>!v.assigned);
+  if(free.length===0){
+    return `<p class="desc" style="color:var(--danger); margin-top:10px; border-top:1px solid var(--line); padding-top:10px;">No idle villagers to assign. Visit the Villagers tab.</p>`;
+  }
+  let html = `<div style="margin-top:10px; border-top:1px solid var(--line); padding-top:10px;">
+    <p class="desc">Assign a villager to ${t.name}:</p>`;
+  free.forEach(v=>{
+    const c = CLASS_COLORS[v.cls];
+    const match = v.cls===t.preferred;
+    html += `<div class="villager-card" data-pick="${v.id}" style="cursor:pointer;">
+      <div class="vbadge" style="border-color:${c}"><svg><use href="#${CLASSES[v.cls].icon}" color="${c}"/></svg></div>
+      <div class="vinfo"><div class="vn">${v.name}</div><div class="vc">${CLASSES[v.cls].name}${match?' \u2014 ideal fit':''}</div></div>
+    </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function openAssignPicker(buildingId){
+  uiPicker = {type:'assign', buildingId};
+  renderPanel();
+}
+
+function renderVillagersPanel(){
+  const panel = document.getElementById('panel');
+  if(state.villagers.length===0){
+    panel.innerHTML = `<h2>Villagers</h2><div class="empty-note">No one lives in Ashhollow yet. Recruit your first villager.</div>`;
+    return;
+  }
+  let html = `<h2>Villagers <span style="font-size:12px; color:var(--parchment-dim); font-family:'Space Mono',monospace;">(${state.villagers.length}/${housingCap()})</span></h2>`;
+
+  if(state.expeditions.length || state.classTasks.length || state.worldTasks.length){
+    html += `<p class="desc" style="margin-top:0;">Away on tasks:</p>`;
+    state.expeditions.forEach(ex=>{
+      const v = state.villagers.find(x=>x.id===ex.villagerId);
+      html += `<div class="expedition-row"><span>${v?v.name:'Scout'} \u2014 Scouting</span><span>${ex.ticksLeft} tick${ex.ticksLeft===1?'':'s'} left</span></div>`;
+    });
+    state.classTasks.forEach(t=>{
+      const v = state.villagers.find(x=>x.id===t.villagerId);
+      const label = CLASS_ACTIONS[t.cls] ? CLASS_ACTIONS[t.cls].label : t.cls;
+      html += `<div class="expedition-row"><span>${v?v.name:'Villager'} \u2014 ${label}</span><span>${t.ticksLeft} tick${t.ticksLeft===1?'':'s'} left</span></div>`;
+    });
+    state.worldTasks.forEach(t=>{
+      const v = state.villagers.find(x=>x.id===t.villagerId);
+      const tile = state.worldTiles.find(x=>x.id===t.tileId);
+      const label = t.kind==='envoy' ? `Envoy to ${tile?tile.name:'a village'}`
+        : t.kind==='raid' ? 'Raiding a bandit camp'
+        : `Harvesting ${tile?tile.resource:'resources'}`;
+      html += `<div class="expedition-row"><span>${v?v.name:'Villager'} \u2014 ${label}</span><span>${t.ticksLeft} tick${t.ticksLeft===1?'':'s'} left</span></div>`;
+    });
+  }
+
+  state.villagers.forEach(v=>{
+    const c = CLASS_COLORS[v.cls];
+    const scouting = v.assigned==='scouting';
+    const onTask = typeof v.assigned==='string' && v.assigned.startsWith('task:');
+    const b = (v.assigned && !scouting && !onTask) ? getBuildingById(v.assigned) : null;
+    const action = CLASS_ACTIONS[v.cls];
+    const where = scouting ? 'Scouting' : onTask ? action.label : (b ? BUILDING_TYPES[b.type].name : 'Idle');
+    const idle = !v.assigned;
+
+    let actionBtn = '';
+    if(idle && action){
+      if(action.kind==='busy'){
+        actionBtn = `<button class="action tiny" data-classaction="${v.id}" title="${action.desc}">${action.label}</button>`;
+      } else if(action.kind==='instant'){
+        const cd = v.actionCooldown>0;
+        const afford = canAfford(action.cost||{});
+        const disabled = cd || !afford;
+        actionBtn = `<button class="action tiny" data-classaction="${v.id}" title="${action.desc}" ${disabled?'disabled':''}>${action.label}${cd?` (${v.actionCooldown})`:''}</button>`;
+      } else if(action.kind==='instant-target'){
+        const cd = v.actionCooldown>0;
+        actionBtn = `<button class="action tiny" data-tutor="${v.id}" title="${action.desc}" ${cd?'disabled':''}>${action.label}${cd?` (${v.actionCooldown})`:''}</button>`;
+      }
+    }
+
+    html += `<div class="villager-card ${v.legendary?'legendary':''} ${(scouting||onTask)?'busy':''}">
+      <div class="vbadge" style="border-color:${c}"><svg><use href="#${CLASSES[v.cls].icon}" color="${c}"/></svg></div>
+      <div class="vinfo"><div class="vn">${v.name}${v.legendary?' \u2605':''}</div><div class="vc">${CLASSES[v.cls].name} <span class="vlvl">Lv.${v.lvl}</span></div></div>
+      <div class="vwhere">${where}</div>
+      <div class="vactions">
+        ${idle ? `<button class="action tiny secondary" data-scout="${v.id}">Scout</button>` : ''}
+        ${actionBtn}
+      </div>
+    </div>`;
+  });
+
+  if(uiPicker && uiPicker.type==='tutor'){
+    html += tutorPickerHtml(uiPicker.teacherId);
+  }
+
+  panel.innerHTML = html;
+  panel.querySelectorAll('[data-scout]').forEach(el=>{
+    el.addEventListener('click', ()=> sendScouting(el.dataset.scout));
+  });
+  panel.querySelectorAll('[data-classaction]').forEach(el=>{
+    el.addEventListener('click', ()=> handleClassAction(el.dataset.classaction));
+  });
+  panel.querySelectorAll('[data-tutor]').forEach(el=>{
+    el.addEventListener('click', ()=> openTutorPicker(el.dataset.tutor));
+  });
+  panel.querySelectorAll('[data-tutortarget]').forEach(el=>{
+    el.addEventListener('click', ()=> tutorVillager(uiPicker.teacherId, el.dataset.tutortarget));
+  });
+}
+
+function tutorPickerHtml(teacherId){
+  const teacher = state.villagers.find(x=>x.id===teacherId);
+  const targets = state.villagers.filter(v=>v.id!==teacherId);
+  if(!teacher || targets.length===0){
+    return `<p class="desc" style="color:var(--danger); margin-top:10px; border-top:1px solid var(--line); padding-top:10px;">No one else to tutor yet.</p>`;
+  }
+  let html = `<div style="margin-top:10px; border-top:1px solid var(--line); padding-top:10px;">
+    <p class="desc">${teacher.name} will tutor:</p>`;
+  targets.forEach(v=>{
+    const c = CLASS_COLORS[v.cls];
+    html += `<div class="villager-card" data-tutortarget="${v.id}" style="cursor:pointer;">
+      <div class="vbadge" style="border-color:${c}"><svg><use href="#${CLASSES[v.cls].icon}" color="${c}"/></svg></div>
+      <div class="vinfo"><div class="vn">${v.name}</div><div class="vc">${CLASSES[v.cls].name} <span class="vlvl">Lv.${v.lvl}</span></div></div>
+    </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function openTutorPicker(teacherId){
+  uiPicker = {type:'tutor', teacherId};
+  renderPanel();
+}
+
+function renderMarketPanel(){
+  const panel = document.getElementById('panel');
+  const rates = marketRates();
+  const pc = politicianCount();
+  let html = `<h2>Market</h2>
+    <p class="desc">Trade goods for gold. ${pc>0?`A politician\u2019s hand at the Town Hall sweetens every deal (${pc} at work).`:'Assign a politician to the Town Hall for better rates.'}</p>`;
+  ['wood','stone','food'].forEach(k=>{
+    const icons = {wood:'ic-wood', stone:'ic-stone', food:'ic-food'};
+    html += `<div class="market-row">
+      <svg width="16" height="16"><use href="#${icons[k]}" color="currentColor"/></svg>
+      <span class="mr-name">${k[0].toUpperCase()+k.slice(1)}</span>
+      <span class="mr-rate">${rates.sell}g / ${rates.buy}g</span>
+      <button class="action tiny" data-sell="${k}">Sell 10</button>
+      <button class="action tiny secondary" data-buy="${k}">Buy 10</button>
+    </div>`;
+  });
+  panel.innerHTML = html;
+  panel.querySelectorAll('[data-sell]').forEach(el=> el.addEventListener('click', ()=> tradeResource(el.dataset.sell,'sell')));
+  panel.querySelectorAll('[data-buy]').forEach(el=> el.addEventListener('click', ()=> tradeResource(el.dataset.buy,'buy')));
+}
+
+function renderSpellsPanel(){
+  const panel = document.getElementById('panel');
+  const hasTower = state.buildings.some(b=>b.type==='tower');
+  if(!hasTower){
+    panel.innerHTML = `<h2>Spells</h2><div class="empty-note">Raise a Wizard Tower to unlock spellcraft.</div>`;
+    return;
+  }
+  const bountyCost = {mana:15};
+  const wardCost = {mana:20};
+  const greaterWardCost = {mana:35};
+  const hasGreater = hasTech('arcane_studies');
+  panel.innerHTML = `
+    <h2>Spellcraft <span style="font-size:12px; color:var(--parchment-dim); font-family:'Space Mono',monospace;">${fmt(state.resources.mana)} mana</span></h2>
+    <div class="spell-card">
+      <h3>Bounty of the Hollow</h3>
+      <p>Conjures 18 wood, 18 stone, and 18 food from the arcane weave.</p>
+      ${costHtml(bountyCost)}
+      <button class="action" id="spellBounty" ${canAfford(bountyCost)?'':'disabled'}>Cast</button>
+    </div>
+    <div class="spell-card">
+      <h3>Arcane Ward</h3>
+      <p>Doubles the village\u2019s effective strength against the next raid.</p>
+      ${costHtml(wardCost)}
+      <button class="action" id="spellWard" ${(canAfford(wardCost)&&!state.wardActive)?'':'disabled'}>${state.wardActive?'Already Woven':'Cast'}</button>
+    </div>
+    ${hasGreater ? `<div class="spell-card">
+      <h3>Greater Ward</h3>
+      <p>Triples the village\u2019s effective strength against the next raid.</p>
+      ${costHtml(greaterWardCost)}
+      <button class="action" id="spellGreaterWard" ${(canAfford(greaterWardCost)&&!state.wardActive)?'':'disabled'}>${state.wardActive?'Already Woven':'Cast'}</button>
+    </div>` : `<p class="desc">Research <span style="color:var(--mana);">Arcane Studies</span> to unlock Greater Ward.</p>`}
+  `;
+  const b1 = document.getElementById('spellBounty'); if(b1) b1.addEventListener('click', ()=>castSpell('bounty'));
+  const b2 = document.getElementById('spellWard'); if(b2) b2.addEventListener('click', ()=>castSpell('ward'));
+  const b3 = document.getElementById('spellGreaterWard'); if(b3) b3.addEventListener('click', ()=>castSpell('greaterward'));
+}
+
+function renderRecruitPanel(){
+  const panel = document.getElementById('panel');
+  const cost = recruitCost();
+  const cap = housingCap(), pop = population();
+  const full = pop>=cap;
+  let classOpts = '';
+  Object.keys(CLASSES).forEach(key=>{
+    if(key==='scout' && !hasTech('cartography')) return;
+    const c = CLASSES[key];
+    const selected = state.pendingRecruitClass===key;
+    classOpts += `<div class="rc-opt ${selected?'selected':''}" data-cls="${key}">
+      <svg><use href="#${c.icon}" color="${CLASS_COLORS[key]}"/></svg>${c.name}
+    </div>`;
+  });
+  panel.innerHTML = `
+    <h2>Recruit a Villager</h2>
+    <p class="desc">${full? 'No housing left \u2014 raise another cottage first.' : 'Choose a calling for the newcomer.'}</p>
+    <div class="recruit-classes">${classOpts}</div>
+    <p class="desc" style="margin-top:12px;">Cost:</p>
+    ${costHtml(cost)}
+    <button class="action" id="recruitBtn" ${(!full && state.pendingRecruitClass && canAfford(cost))?'':'disabled'}>Welcome to Ashhollow</button>
+  `;
+  panel.querySelectorAll('[data-cls]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.pendingRecruitClass = el.dataset.cls;
+      renderRecruitPanel();
+    });
+  });
+  const btn = document.getElementById('recruitBtn');
+  if(btn) btn.addEventListener('click', ()=> recruit(state.pendingRecruitClass));
+}
+
+function renderWorldPanel(){
+  const panel = document.getElementById('panel');
+  const ts = WORLD_TILE_SIZE, gap = WORLD_TILE_GAP;
+  const vb = (WORLD_RADIUS*2+1)*(ts+gap);
+  let svg = `<svg viewBox="0 0 ${vb} ${vb}" style="width:100%; max-width:280px; display:block; margin:0 auto 12px; background:#14100b; border:1px solid var(--line); border-radius:8px;">`;
+  state.worldTiles.forEach(tile=>{
+    const px = (tile.gx+WORLD_RADIUS)*(ts+gap)+gap/2;
+    const py = (tile.gy+WORLD_RADIUS)*(ts+gap)+gap/2;
+    if(!tile.revealed){
+      svg += `<rect x="${px}" y="${py}" width="${ts}" height="${ts}" rx="6" fill="#0d0b08" stroke="rgba(255,255,255,0.05)"/>`;
+      return;
+    }
+    const color = tileColor(tile);
+    const selected = state.selectedWorldTile===tile.id;
+    const clickable = tile.type!=='home';
+    svg += `<rect ${clickable?`data-tile="${tile.id}"`:''} x="${px}" y="${py}" width="${ts}" height="${ts}" rx="6" fill="${color}22" stroke="${selected?'#e8c473':color}" stroke-width="${selected?2.5:1.5}" style="${clickable?'cursor:pointer;':''}"/>`;
+    let iconId;
+    if(tile.type==='home') iconId='ic-townhall';
+    else if(tile.type==='village') iconId='ic-tradingpost';
+    else if(tile.type==='bandit') iconId='ic-barracks';
+    else if(tile.type==='resource') iconId={wood:'ic-wood',stone:'ic-stone',food:'ic-food',gold:'ic-gold'}[tile.resource];
+    else iconId='ic-mana';
+    svg += `<use href="#${iconId}" x="${px+ts/2-11}" y="${py+ts/2-11}" width="22" height="22" color="${color}"/>`;
+  });
+  svg += `</svg>`;
+
+  const sel = state.worldTiles.find(t=>t.id===state.selectedWorldTile);
+  let detail;
+  if(sel && sel.revealed && sel.type!=='home'){
+    detail = worldTileDetailHtml(sel);
+  } else {
+    detail = `<div class="empty-note" style="padding:14px 0;">Select a revealed tile to see details, or send a villager to Scout from the Villagers tab to reveal more of the map.</div>`;
+  }
+
+  panel.innerHTML = `<h2>The Wider Hollow</h2><p class="desc">Scouting from the Villagers tab reveals tiles around Ashhollow.</p>${svg}${detail}`;
+
+  panel.querySelectorAll('[data-tile]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      state.selectedWorldTile = el.dataset.tile;
+      if(!(uiPicker && uiPicker.type==='world' && uiPicker.tileId===el.dataset.tile)) uiPicker = null;
+      renderPanel();
+    });
+  });
+  panel.querySelectorAll('[data-worldaction]').forEach(el=>{
+    el.addEventListener('click', ()=>{
+      uiPicker = {type:'world', tileId:el.dataset.tileid, action:el.dataset.worldaction};
+      renderPanel();
+    });
+  });
+  panel.querySelectorAll('[data-worldpick]').forEach(el=>{
+    el.addEventListener('click', ()=> sendWorldTask(el.dataset.worldpick, uiPicker.tileId, uiPicker.action));
+  });
+}
+
+function worldTileDetailHtml(tile){
+  let html = `<div style="border-top:1px solid var(--line); padding-top:10px; margin-top:4px;">
+    <h3 style="font-family:'Cinzel',serif; font-size:13px; color:var(--gold-bright); margin:0 0 4px;">${tileLabel(tile)}</h3>`;
+  if(tile.type==='village'){
+    html += `<p class="desc">A settlement of ${tile.disposition==='friendly'?'friendly':'wary'} folk beyond the hollow.</p>
+      <button class="action" data-worldaction="envoy" data-tileid="${tile.id}">Send Envoy</button>`;
+  } else if(tile.type==='bandit'){
+    if(tile.cleared){
+      html += `<p class="desc" style="color:var(--gold-bright);">This camp has been cleared and poses no more threat.</p>`;
+    } else {
+      html += `<p class="desc">A bandit camp, threat level ${tile.threat}. Your village strength: ${strengthTotal()+state.patrolBonus}.</p>
+        <button class="action" data-worldaction="raid" data-tileid="${tile.id}">Raid Camp</button>`;
+    }
+  } else if(tile.type==='resource'){
+    const ready = !tile.cooldown || tile.cooldown<=0;
+    html += `<p class="desc">A ${tile.resource} deposit that can be harvested periodically.</p>
+      <button class="action" data-worldaction="harvest" data-tileid="${tile.id}" ${ready?'':'disabled'}>${ready?'Harvest':'Recovering ('+tile.cooldown+')'}</button>`;
+  } else {
+    html += `<p class="desc">Quiet wilderness. Nothing more to find here.</p>`;
+  }
+  if(uiPicker && uiPicker.type==='world' && uiPicker.tileId===tile.id){
+    html += worldPickerHtml(tile.id, uiPicker.action);
+  }
+  html += `</div>`;
+  return html;
+}
+
+function worldPickerHtml(tileId, action){
+  const free = state.villagers.filter(v=>!v.assigned);
+  const label = action==='envoy' ? 'Send as envoy' : action==='raid' ? 'Send to raid' : 'Send to harvest';
+  if(free.length===0){
+    return `<p class="desc" style="color:var(--danger); margin-top:10px; border-top:1px solid var(--line); padding-top:10px;">No idle villagers available.</p>`;
+  }
+  let html = `<div style="margin-top:10px; border-top:1px solid var(--line); padding-top:10px;"><p class="desc">${label}:</p>`;
+  free.forEach(v=>{
+    const c = CLASS_COLORS[v.cls];
+    html += `<div class="villager-card" data-worldpick="${v.id}" style="cursor:pointer;">
+      <div class="vbadge" style="border-color:${c}"><svg><use href="#${CLASSES[v.cls].icon}" color="${c}"/></svg></div>
+      <div class="vinfo"><div class="vn">${v.name}</div><div class="vc">${CLASSES[v.cls].name} <span class="vlvl">Lv.${v.lvl}</span></div></div>
+    </div>`;
+  });
+  html += `</div>`;
+  return html;
+}
+
+function renderTechPanel(){
+  const panel = document.getElementById('panel');
+  let html = `<h2>Technology <span style="font-size:12px; color:var(--parchment-dim); font-family:'Space Mono',monospace;">${fmt(state.resources.research)} research</span></h2>
+    <p class="desc">Schools generate research. Spend it to unlock new knowledge, buildings, and classes.</p>`;
+  [1,2,3].forEach(tier=>{
+    const techs = TECHS.filter(t=>t.tier===tier);
+    if(!techs.length) return;
+    html += `<p class="desc" style="margin-top:14px; color:var(--gold-bright);">Tier ${tier}</p>`;
+    techs.forEach(t=>{
+      const unlocked = hasTech(t.id);
+      const prereqOk = techPrereqMet(t);
+      const afford = canAfford(t.cost);
+      html += `<div class="spell-card" style="${unlocked?'border-color:var(--gold-bright);':''}">
+        <h3 style="color:${unlocked?'var(--gold-bright)':'var(--mana)'}">${t.name}${unlocked?' \u2713':''}</h3>
+        <p>${t.desc}</p>
+        ${unlocked ? '' : (prereqOk ? costHtml(t.cost) : `<p class="desc" style="color:var(--danger);">Requires: ${t.prereq.map(p=>TECHS.find(x=>x.id===p).name).join(', ')}</p>`)}
+        ${(!unlocked && prereqOk) ? `<button class="action" data-tech="${t.id}" ${afford?'':'disabled'}>Research</button>` : ''}
+      </div>`;
+    });
+  });
+  panel.innerHTML = html;
+  panel.querySelectorAll('[data-tech]').forEach(el=>{
+    el.addEventListener('click', ()=> unlockTech(el.dataset.tech));
+  });
+}
+
+function renderChroniclePanel(){
+  const panel = document.getElementById('panel');
+  const night = isNightNow();
+  let html = `
+    <h2>Chronicle</h2>
+    <div class="stat-row"><span>Day</span><span>${dayNumber()} (${night?'Night':'Day'})</span></div>
+    <div class="stat-row"><span>Season</span><span>${seasonInfo().name}</span></div>
+    <div class="stat-row"><span>Population</span><span>${population()} / ${housingCap()}</span></div>
+    <div class="stat-row"><span>Village strength</span><span>${strengthTotal()}${night?' (+30% at night)':''}</span></div>
+    <div class="stat-row"><span>Next raid</span><span>${ticksUntilRaid()} ticks</span></div>
+    <div class="stat-row"><span>Renown (recruit discount)</span><span>${Math.min(40, schoolLevels()*3)}%</span></div>
+    <div class="stat-row"><span>Buildings raised</span><span>${state.buildings.length} / ${PLOTS.length}</span></div>
+    <div class="stat-row"><span>World tiles revealed</span><span>${state.worldTiles.filter(t=>t.revealed).length} / ${state.worldTiles.length}</span></div>
+    <div class="stat-row"><span>Bandit camps cleared</span><span>${state.banditsCleared||0}</span></div>
+    <div class="stat-row"><span>Technologies unlocked</span><span>${state.unlockedTechs.length} / ${TECHS.length}</span></div>
+    <p class="desc" style="margin-top:12px;">Milestones:</p>`;
+  ACHIEVEMENTS.forEach(a=>{
+    const done = state.achievements.includes(a.id);
+    html += `<div class="ach-row ${done?'done':''}"><span class="ach-dot"></span>${a.label}</div>`;
+  });
+  html += `<div class="log">${state.log.map(l=>`<div>${l}</div>`).join('')}</div>`;
+  panel.innerHTML = html;
+}
+
+function renderPanel(){
+  const map = {
+    place: renderPlacePanel,
+    villagers: renderVillagersPanel,
+    recruit: renderRecruitPanel,
+    market: renderMarketPanel,
+    spells: renderSpellsPanel,
+    world: renderWorldPanel,
+    tech: renderTechPanel,
+    chronicle: renderChroniclePanel
+  };
+  (map[state.activeTab]||renderPlacePanel)();
+}
+
+function renderHint(){
+  const hint = document.getElementById('maphint');
+  const th = state.buildings.find(b=>b.type==='townhall');
+  let msg;
+  if(th && th.level<2){
+    msg = 'Upgrade the Town Hall to Lv.2 to unlock the outer ring of plots.';
+  } else {
+    msg = 'Click a hex to build or manage it.';
+  }
+  if(!storageAvailable){
+    msg += ' \u00b7 Autosave unavailable here \u2014 progress won\u2019t persist after reload.';
+  }
+  hint.textContent = msg;
+}
+
+function render(){
+  renderResources();
+  renderStatusBar();
+  renderMap();
+  renderPanel();
+  renderHint();
+}
+
+/* ================= EVENTS ================= */
+
+document.getElementById('mapSvg').addEventListener('click', e=>{
+  const g = e.target.closest('[data-plot]');
+  if(!g) return;
+  if(g.classList.contains('plot-locked')) return;
+  if(state.selectedPlot !== g.dataset.plot) uiPicker = null;
+  state.selectedPlot = g.dataset.plot;
+  state.activeTab = 'place';
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab==='place'));
+  render();
+});
+
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    if(state.activeTab !== tab.dataset.tab) uiPicker = null;
+    state.activeTab = tab.dataset.tab;
+    document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active', t===tab));
+    renderPanel();
+  });
+});
+
+document.getElementById('resetBtn').addEventListener('click', resetVillage);
+
+/* ================= BOOT ================= */
+
+loadState().then(()=>{
+  setInterval(tick, 2200);
+});
+
+})();
+</script>
+</body>
+</html>
