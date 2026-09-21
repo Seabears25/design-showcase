@@ -298,10 +298,21 @@
     // survives the re-render.
     applyProps(domNode, oldVNode.props || {}, newVNode.props || {});
     applyEvents(domNode, oldVNode.events || {}, newVNode.events || {});
-    diffChildren(domNode, flattenChildren(oldVNode.children), flattenChildren(newVNode.children));
-    if (newVNode.tag === 'select' && newVNode.props && 'value' in newVNode.props) {
-      domNode.value = newVNode.props.value;
+    if (newVNode.tag === 'select') {
+      // Option lists can change length when a parent selector changes. An
+      // index diff can retain stale option nodes, so rebuild the list before
+      // applying the controlled value.
+      while (domNode.firstChild) domNode.removeChild(domNode.firstChild);
+      flattenChildren(newVNode.children).forEach(child => {
+        domNode.appendChild(createDom(child));
+      });
+      if (newVNode.props && 'value' in newVNode.props) {
+        domNode.value = newVNode.props.value;
+      }
+      domNode.__vnode = newVNode;
+      return;
     }
+    diffChildren(domNode, flattenChildren(oldVNode.children), flattenChildren(newVNode.children));
     domNode.__vnode = newVNode;
   }
 

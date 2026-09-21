@@ -11,6 +11,7 @@
   --rose: #d7b8aa;
   --night: #233333;
   --shadow: 0 22px 60px rgba(34, 49, 45, .10);
+  --shadow-soft: 0 12px 32px rgba(34, 49, 45, .08);
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
@@ -18,14 +19,16 @@ body { margin: 0; color: var(--ink); background: var(--paper); font: 16px/1.65 I
 button, input, textarea, select { font: inherit; }
 button { cursor: pointer; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid rgba(198,155,82,.45); outline-offset: 2px; }
-.site-header { position: sticky; top: 0; z-index: 10; background: rgba(247,244,238,.88); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(216,216,205,.82); }
+.site-header { position: sticky; top: 0; z-index: 10; background: rgba(247,244,238,.84); backdrop-filter: blur(18px); border-bottom: 1px solid rgba(216,216,205,.82); }
 .header-shell { max-width: 1180px; margin: auto; padding: 18px 30px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
 .brand-button { border: 0; background: none; padding: 0; display: inline-flex; gap: 11px; align-items: center; color: var(--ink); font-weight: 700; letter-spacing: .02em; }
 .icon { display: inline-grid; place-items: center; color: var(--gold); font-size: 1.1em; }
 .brand-wordmark { font-family: Georgia, serif; font-size: 1.15rem; }
+.brand-chip { margin-left: 2px; padding: 3px 7px; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: .58rem; letter-spacing: .13em; }
 .primary-nav { display: flex; gap: 7px; }
 .nav-link { border: 0; background: none; color: var(--muted); padding: 9px 14px; border-radius: 99px; font-size: .78rem; letter-spacing: .08em; text-transform: uppercase; transition: .2s ease; }
 .nav-link:hover, .nav-link.active { color: var(--ink); background: var(--paper-deep); }
+.nav-symbol { display: none; }
 .page { max-width: 1180px; margin: auto; padding: 74px 30px 110px; }
 .hero-grid { min-height: 570px; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 7vw; }
 .eyebrow, .card-kicker, .result-meta { color: var(--sage-dark); font-size: .68rem; letter-spacing: .16em; text-transform: uppercase; font-weight: 700; }
@@ -40,7 +43,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .text-button, .card-link, .result-link, .mark-button { border: 0; background: none; color: var(--sage-dark); font-weight: 700; font-size: .8rem; padding: 0; }
 .hero-note { margin-top: 42px; color: var(--ink-soft); font: italic 1rem/1.5 Georgia, serif; max-width: 500px; }
 .hero-note-ref { display: block; margin: 8px 0 0 24px; color: var(--gold); font: .68rem/1.2 Inter, sans-serif; letter-spacing: .13em; text-transform: uppercase; font-style: normal; }
-.hero-art { position: relative; height: 500px; overflow: hidden; background: linear-gradient(145deg, #e4e8dc, #bbc8b8); border-radius: 48% 48% 8px 8px; box-shadow: var(--shadow); }
+.hero-art { position: relative; height: 500px; overflow: hidden; background: linear-gradient(145deg, rgba(57,70,56,.18), rgba(187,200,184,.08)), url('../assets/bible-hero-editorial.png') center/cover no-repeat; border-radius: 48% 48% 8px 8px; box-shadow: var(--shadow); }
+.hero-art .halo, .hero-art .sun-disc, .hero-art .hill { display: none; }
 .halo { position: absolute; width: 370px; height: 370px; top: 40px; left: 50%; transform: translateX(-50%); border-radius: 50%; background: rgba(255,248,219,.35); }
 .sun-disc { position: absolute; width: 120px; height: 120px; border-radius: 50%; background: #e7c778; top: 120px; left: 50%; transform: translateX(-50%); box-shadow: 0 0 45px rgba(231,199,120,.4); }
 .hill { position: absolute; bottom: -100px; width: 130%; height: 300px; border-radius: 50% 50% 0 0; transform: translateX(-12%); background: #899f8d; }
@@ -51,7 +55,7 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 20px; border-bottom: 1px solid var(--line); padding-bottom: 18px; margin-bottom: 22px; }
 .section-heading h2, .feature-card h3, .daily-prayer h2, .prayer-form-card h2 { margin: 7px 0 0; font: 400 2rem/1.1 Georgia, serif; letter-spacing: -.03em; }
 .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
-.feature-card, .daily-prayer, .prayer-form-card, .result-card, .saved-prayer { padding: 28px; border: 1px solid var(--line); background: rgba(255,255,255,.38); }
+.feature-card, .daily-prayer, .result-card { padding: 28px; border: 1px solid var(--line); background: rgba(255,255,255,.38); }
 .feature-card { min-height: 275px; display: flex; flex-direction: column; }
 .feature-card h3 { font-size: 1.55rem; }
 .feature-card p { color: var(--ink-soft); }
@@ -84,20 +88,11 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
 .result-list { display: grid; gap: 12px; }
 .result-card { position: relative; }
 .result-card p { font: 1.15rem/1.55 Georgia, serif; margin: 12px 0 17px; max-width: 760px; }
-.prayer-layout { display: grid; grid-template-columns: 1.1fr .9fr; gap: 18px; }
-.daily-prayer { background: #e4ece2; border-color: #d2ddce; min-height: 390px; }
+.daily-prayer-screen { display: grid; grid-template-columns: .92fr 1.08fr; min-height: 520px; border: 1px solid var(--line); background: #e4ece2; box-shadow: var(--shadow-soft); overflow: hidden; }
+.prayer-image { min-height: 320px; background: linear-gradient(180deg, rgba(34,51,43,.04), rgba(34,51,43,.2)), url('../assets/bible-hero-landscape.png') center/cover no-repeat; }
+.daily-prayer { background: rgba(244,248,239,.88); border: 0; padding: clamp(28px, 6vw, 70px); display: flex; flex-direction: column; justify-content: center; }
 .daily-prayer h2 { font-size: 2.7rem; max-width: 500px; }
 .reference { color: var(--gold); font-size: .72rem; letter-spacing: .13em; text-transform: uppercase; font-weight: 700; }
 .prayer-prompt { color: var(--ink-soft); max-width: 530px; }
-.prayer-form-card { background: #f1ebe2; }
-.prayer-form-card label { display: block; color: var(--muted); margin: 21px 0 7px; font-size: .74rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
-.prayer-form-card input, .prayer-form-card textarea { width: 100%; resize: vertical; }
-.prayer-history { margin-top: 70px; }
-.prayer-list { display: grid; gap: 10px; }
-.saved-prayer-top { display: flex; justify-content: space-between; align-items: center; }
-.saved-prayer h3 { margin: 12px 0 4px; font: 1.35rem Georgia, serif; }
-.saved-prayer p { margin: 0; color: var(--ink-soft); }
-.mark-button { color: var(--gold); }
-.answered { color: var(--sage-dark); font-size: .74rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
 .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--night); color: white; padding: 12px 18px; border-radius: 4px; box-shadow: var(--shadow); z-index: 20; font-size: .85rem; }
-@media (max-width: 780px) { .header-shell { padding: 15px 18px; align-items: flex-start; flex-direction: column; gap: 10px; } .primary-nav { width: 100%; justify-content: space-between; } .nav-link { padding: 7px 8px; } .page { padding: 52px 18px 80px; } .hero-grid, .prayer-layout { grid-template-columns: 1fr; } .hero-grid { min-height: auto; } .hero-art { height: 350px; order: -1; } .hero-copy h1 { font-size: 3.7rem; } .feature-grid { grid-template-columns: 1fr; } .section-heading { align-items: start; flex-direction: column; } .scripture-sheet { padding: 27px 18px; } .verse { font-size: 1.04rem; gap: 10px; } .reader-footer { flex-direction: column; } .reader-footer .button { width: 100%; } }
+@media (max-width: 780px) { .header-shell { padding: 15px 18px; align-items: center; } .primary-nav { width: auto; justify-content: space-between; gap: 2px; } .nav-link { padding: 8px 9px; } .nav-label { display: none; } .nav-symbol { display: inline; font-size: 1rem; } .page { padding: 52px 18px 80px; } .hero-grid, .daily-prayer-screen { grid-template-columns: 1fr; } .hero-grid { min-height: auto; } .hero-art { height: 350px; order: -1; } .hero-copy h1 { font-size: 3.7rem; } .feature-grid { grid-template-columns: 1fr; } .section-heading { align-items: start; flex-direction: column; } .scripture-sheet { padding: 27px 18px; } .verse { font-size: 1.04rem; gap: 10px; } .reader-footer { flex-direction: column; } .reader-footer .button { width: 100%; } }
