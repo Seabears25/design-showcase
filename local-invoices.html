@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="Builds the exact Lawson Family Reps invoice PDF on your phone. Line items with hours and rates, tax, and totals — saved only on your device." />
+  <title>Local Invoices — Android App | Joey Lawson</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet" />
+  <style>
+    :root{
+      --blue:#006ac6; --blue-deep:#064b82; --gold:#ff9b00; --gold-soft:#f4bd68;
+      --ink:#1d2927; --ink-soft:#41504d; --green:#294b42;
+      --cream:#f7f7f2; --paper:#fffefa; --line:rgba(29,41,39,.14);
+      --serif:'DM Serif Display',Georgia,serif; --sans:'DM Sans','Helvetica Neue',Arial,sans-serif;
+      --shell:1240px; --accent:#9a8fd0;
+    }
+    *,*::before,*::after{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{margin:0;min-width:320px;background:var(--cream);color:var(--ink);font-family:var(--sans);font-size:1rem;line-height:1.65;-webkit-font-smoothing:antialiased}
+    img{display:block;max-width:100%}
+    a{color:inherit;text-decoration:none}
+    a:focus-visible,button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+    .shell{width:min(calc(100% - 3.5rem),var(--shell));margin-inline:auto}
+    section{padding:66px 0}
+    .utility-bar{background:var(--blue-deep);color:#fff;font-size:.8125rem}
+    .utility-bar__inner{min-height:2.55rem;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+    .utility-bar__inner p{margin:0;display:flex;align-items:center;gap:.65rem}
+    .utility-bar__dot{width:.45rem;height:.45rem;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(255,155,0,.14)}
+    .utility-bar a{font-weight:700;letter-spacing:.04em;white-space:nowrap}
+    .site-header{background:rgba(247,247,242,.96);border-bottom:1px solid rgba(29,41,39,.08)}
+    .site-header__inner{min-height:6.1rem;display:flex;align-items:center;justify-content:space-between;gap:2rem}
+    .brand{display:flex;align-items:center;gap:.9rem;font-family:var(--serif);font-size:1.5rem}
+    .brand img{width:3.2rem;height:3.2rem;border-radius:.7rem;object-fit:cover}
+    .button{min-height:3.1rem;display:inline-flex;align-items:center;justify-content:center;gap:.7rem;padding:.78rem 1.25rem;border:1px solid transparent;border-radius:.35rem;background:var(--blue);color:#fff;font:inherit;font-size:.9375rem;font-weight:700;cursor:pointer;transition:background 180ms ease,transform 180ms ease,box-shadow 180ms ease}
+    .button:hover{transform:translateY(-2px);background:var(--blue-deep);box-shadow:0 8px 20px rgba(0,70,130,.18)}
+    .button--gold{background:var(--gold);color:var(--ink)}
+    .button--gold:hover{background:#ffb239;box-shadow:0 9px 26px rgba(255,155,0,.24)}
+    .button--small{min-height:2.75rem;padding:.65rem 1rem;font-size:.875rem}
+    .hero{position:relative;min-height:clamp(30rem,52vw,38rem);display:flex;align-items:center;overflow:hidden;isolation:isolate;background:linear-gradient(135deg,#233c3c 55%,var(--accent) 170%);color:#fff;padding:0}
+    .hero__inner{position:relative;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(19rem,.85fr);align-items:center;gap:clamp(2rem,5vw,5rem);padding-block:6.25rem 7.5rem}
+    .eyebrow{display:flex;align-items:center;gap:.75rem;margin:0 0 1.15rem;color:var(--blue-deep);font-size:.75rem;font-weight:700;letter-spacing:.16em;line-height:1.5;text-transform:uppercase}
+    .eyebrow--light{color:rgba(255,255,255,.86)}
+    .eyebrow__rule{width:2rem;height:1px;flex:0 0 auto;background:var(--gold)}
+    h1,h2{font-family:var(--serif);font-weight:400;letter-spacing:-.035em;text-wrap:balance;margin-top:0}
+    .hero h1{max-width:13ch;margin:0 0 1.25rem;font-size:clamp(3rem,6.5vw,5.5rem);line-height:.98}
+    .hero h1 em{color:var(--gold-soft)}
+    .hero__intro{max-width:34rem;margin:0 0 2rem;color:rgba(255,255,255,.88);font-size:clamp(1rem,1.3vw,1.125rem);line-height:1.75}
+    .hero__actions{display:flex;align-items:center;flex-wrap:wrap;gap:1.3rem 1.75rem}
+    .text-link{display:inline-flex;align-items:center;gap:.65rem;font-size:.9375rem;font-weight:700;color:#fff}
+    .hero-card{width:min(100%,29rem);justify-self:end;padding:clamp(1.4rem,2.6vw,2rem);border:1px solid rgba(255,255,255,.65);border-top:3px solid var(--gold);border-radius:.45rem;background:rgba(247,247,242,.97);color:var(--ink);box-shadow:0 24px 72px rgba(8,24,30,.24)}
+    .hero-card .eyebrow{margin:0;color:var(--blue);font-size:.6875rem;letter-spacing:.14em}
+    .hero-card h2{margin:0 0 .55rem;font-size:clamp(2rem,3vw,2.65rem);line-height:1.05}
+    .hero-card p{margin:0;color:var(--ink-soft);font-size:.9375rem;line-height:1.65}
+    .hero-card__stats{display:flex;flex-wrap:wrap;gap:.5rem;margin:1.15rem 0 0}
+    .hero-card__stats span{padding:.34rem .62rem;border:1px solid rgba(29,41,39,.13);border-radius:99px;background:rgba(255,255,255,.72);color:#54615d;font-size:.6875rem;font-weight:600}
+    .shots-head h2,.features h2{font-size:clamp(2.8rem,5.5vw,4.65rem);line-height:1.02;margin-bottom:1.4rem}
+    .carousel{max-width:26rem;margin:0 auto}
+    .shot-viewport{overflow:hidden;border:1px solid var(--line);border-radius:1rem;background:var(--paper);box-shadow:0 18px 45px rgba(29,41,39,.12)}
+    .shot-track{display:flex;transition:transform .3s ease}
+    .shot{flex:0 0 100%;margin:0}
+    .shot img{width:100%;height:560px;object-fit:cover;object-position:top center}
+    .shot-controls{display:flex;align-items:center;justify-content:center;gap:1rem;margin-top:1.25rem}
+    .shot-arrow{width:2.9rem;height:2.9rem;border-radius:50%;border:1px solid var(--line);background:var(--paper);color:var(--ink);font-size:1.1rem;cursor:pointer}
+    .shot-arrow:hover{border-color:var(--gold);color:var(--blue-deep)}
+    .shot-dots{display:flex;gap:.5rem}
+    .shot-dot{width:.7rem;height:.7rem;border-radius:50%;border:1px solid var(--ink-soft);background:transparent;padding:0;cursor:pointer}
+    .shot-dot.on{background:var(--gold);border-color:var(--gold)}
+    .shot-cap{text-align:center;color:var(--ink-soft);font-size:.9375rem;margin:.9rem 0 0}
+    .feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem}
+    .feature{border:1px solid var(--line);border-radius:.45rem;background:var(--paper);padding:1.5rem}
+    .feature h3{font-family:var(--serif);font-weight:400;font-size:1.5rem;margin:0 0 .5rem}
+    .feature p{margin:0;color:var(--ink-soft);font-size:.9375rem;line-height:1.65}
+    .contact-section{position:relative;overflow:hidden;background:var(--ink);color:#fff;text-align:center}
+    .contact-section__inner{position:relative;z-index:1;display:flex;min-height:24rem;flex-direction:column;align-items:center;justify-content:center;padding-block:5rem}
+    .contact-section .eyebrow{justify-content:center}
+    .contact-section h2{max-width:18ch;margin-bottom:1rem;font-size:clamp(3rem,6vw,5.35rem)}
+    .contact-section h2 em{color:var(--gold-soft)}
+    .contact-section p{margin:0 0 1.8rem;color:rgba(255,255,255,.72);max-width:34rem}
+    .contact-section__note{margin-top:1.2rem;color:rgba(255,255,255,.62);font-size:.8125rem}
+    .site-footer{background:#f0f0e9;color:var(--ink)}
+    .footer-main{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(10rem,.85fr);gap:3rem;padding-block:3.5rem 2.7rem}
+    .footer-brand p{max-width:22rem;margin:1rem 0 0;color:#5b6662;font-size:.875rem}
+    .footer-column{display:flex;flex-direction:column;align-items:flex-start;gap:.35rem;color:#58615f;font-size:.8125rem}
+    .footer-title{margin:0 0 .45rem;color:var(--ink);font-size:.75rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase}
+    .footer-bottom{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding-block:1.05rem;border-top:1px solid var(--line);color:#67716d;font-size:.75rem}
+    .footer-bottom p{margin:0}
+    @media (max-width:900px){
+      .shell{width:min(calc(100% - 2.75rem),var(--shell))}
+      .hero__inner{grid-template-columns:1fr}
+      .hero-card{justify-self:start}
+      .feature-grid{grid-template-columns:1fr}
+      .shot img{height:480px}
+    }
+    @media (max-width:680px){
+      .shell{width:min(calc(100% - 2rem),var(--shell))}
+      .hero h1{font-size:clamp(3rem,13vw,4.5rem)}
+      .footer-main{grid-template-columns:1fr;gap:2.25rem}
+      .footer-bottom{align-items:flex-start;flex-direction:column;gap:.6rem}
+    }
+    @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto !important;transition-duration:.01ms !important}}
+
+  </style>
+</head>
+<body>
+  <div class="utility-bar">
+    <div class="shell utility-bar__inner">
+      <p><span class="utility-bar__dot" aria-hidden="true"></span> 25 Live Studios — Android Apps</p>
+      <a href="index.html">← Back to showcase</a>
+    </div>
+  </div>
+
+  <header class="site-header">
+    <div class="shell site-header__inner">
+      <a class="brand" href="index.html" aria-label="Back to the design showcase">
+        <img src="app-invoices.png" alt="Local Invoices logo" />
+        Local Invoices
+      </a>
+      <a class="button button--small" href="apks/LOCAL-INVOICES-v1.0.apk" download>Download APK ↓</a>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="shell hero__inner">
+        <div>
+          <p class="eyebrow eyebrow--light"><span class="eyebrow__rule"></span> Android app · Local Invoices</p>
+          <h1 id="hero-title">Invoices,<br /><em>on your phone.</em></h1>
+          <p class="hero__intro">Builds the exact Lawson Family Reps invoice PDF on your phone. Line items with hours and rates, tax, and totals — saved only on your device.</p>
+          <div class="hero__actions">
+            <a class="button button--gold" href="apks/LOCAL-INVOICES-v1.0.apk" download>Download the APK ↓</a>
+            <a class="text-link" href="preview-local-invoices.html">Try the web preview ↗</a>
+          </div>
+        </div>
+        <aside class="hero-card" aria-labelledby="hero-card-title">
+          <p class="eyebrow">Local Invoices</p>
+          <h2 id="hero-card-title">At a glance.</h2>
+          <p>The Lawson Family Reps invoice, rebuilt as an app: line items, hours, rates, tax, and a total due that adds itself up.</p>
+          <div class="hero-card__stats" aria-label="App facts">
+            <span>Version 1.0</span><span>245 KB</span><span>Android</span><span>No account · No cloud</span>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section aria-labelledby="shots-title">
+      <div class="shell">
+        <div class="shots-head">
+          <p class="eyebrow"><span class="eyebrow__rule"></span> Screenshots</p>
+          <h2 id="shots-title">See it in action.</h2>
+        </div>
+        <div class="carousel">
+          <div class="shot-viewport">
+            <div class="shot-track">
+              <figure class="shot" data-cap="Your invoices"><img src="shots/invoices-1-list.png" alt="Local Invoices screenshot: Your invoices" /></figure>
+              <figure class="shot" data-cap="The editor"><img src="shots/invoices-2-editor.png" alt="Local Invoices screenshot: The editor" /></figure>
+              <figure class="shot" data-cap="Line items filled in"><img src="shots/invoices-3-filled.png" alt="Local Invoices screenshot: Line items filled in" /></figure>
+            </div>
+          </div>
+          <div class="shot-controls">
+            <button class="shot-arrow shot-prev" type="button" aria-label="Previous screenshot">←</button>
+            <div class="shot-dots"><button class="shot-dot on" type="button" aria-label="Screenshot 1"></button><button class="shot-dot" type="button" aria-label="Screenshot 2"></button><button class="shot-dot" type="button" aria-label="Screenshot 3"></button></div>
+            <button class="shot-arrow shot-next" type="button" aria-label="Next screenshot">→</button>
+          </div>
+          <p class="shot-cap"></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="features" aria-labelledby="features-title">
+      <div class="shell">
+        <p class="eyebrow"><span class="eyebrow__rule"></span> What it does</p>
+        <h2 id="features-title">Made to be useful.</h2>
+        <div class="feature-grid">
+          <article class="feature"><h3>The exact layout</h3><p>Reproduces the Lawson Family Reps invoice page — logo, items table, totals, payment info.</p></article>
+          <article class="feature"><h3>Line items</h3><p>Date, description, hours × rate, tax, and a total due that adds itself up.</p></article>
+          <article class="feature"><h3>PDF export</h3><p>Print to PDF from the app and send it straight to a client.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="contact-section" aria-labelledby="download-title">
+      <div class="shell contact-section__inner">
+        <p class="eyebrow eyebrow--light"><span class="eyebrow__rule"></span> Free · No account</p>
+        <h2 id="download-title">Get Local Invoices on your phone.</h2>
+        <p>Tap download, open the APK, and allow installs from your browser when Android asks. That's it — the app lives on your phone after that.</p>
+        <a class="button button--gold" href="apks/LOCAL-INVOICES-v1.0.apk" download>Download the APK · 245 KB ↓</a>
+        <span class="contact-section__note">APK · v1.0 · 245 KB · Android</span>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-main">
+      <div class="footer-brand">
+        <p>© 2026 Joey Lawson · 25 Live Studios — a product of J. Lawson S&amp;M</p>
+        <p>Android apps that keep your stuff on your phone.</p>
+      </div>
+      <div class="footer-column">
+        <p class="footer-title">More</p>
+        <a href="index.html">Design showcase</a>
+        <a href="preview-local-invoices.html">Web preview of Local Invoices</a>
+      </div>
+    </div>
+    <div class="shell footer-bottom">
+      <p>Free to use. No account, no cloud.</p>
+      <p>25 Live Studios</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var track = document.querySelector('.shot-track');
+      var slides = Array.prototype.slice.call(track.children);
+      var dots = Array.prototype.slice.call(document.querySelectorAll('.shot-dot'));
+      var cap = document.querySelector('.shot-cap');
+      var i = 0;
+      function go(n) {
+        i = (n + slides.length) % slides.length;
+        track.style.transform = 'translateX(-' + (i * 100) + '%)';
+        dots.forEach(function (d, k) { d.classList.toggle('on', k === i); });
+        cap.textContent = slides[i].getAttribute('data-cap');
+      }
+      document.querySelector('.shot-prev').addEventListener('click', function () { go(i - 1); });
+      document.querySelector('.shot-next').addEventListener('click', function () { go(i + 1); });
+      dots.forEach(function (d, k) { d.addEventListener('click', function () { go(k); }); });
+      var x0 = null;
+      track.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+      track.addEventListener('touchend', function (e) {
+        if (x0 === null) return;
+        var dx = e.changedTouches[0].clientX - x0;
+        if (Math.abs(dx) > 40) go(i + (dx < 0 ? 1 : -1));
+        x0 = null;
+      }, { passive: true });
+      go(0);
+    })();
+  </script>
+</body>
+</html>

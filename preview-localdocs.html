@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+.preview-banner{position:fixed;top:0;left:0;right:0;z-index:99999;height:52px;display:block;background:#ff9b00;color:#1d2927;font-family:'DM Sans',Arial,sans-serif;font-size:12px;line-height:1.5;text-align:center;padding:8px 10px;box-sizing:border-box;overflow:hidden}
+.preview-banner b{letter-spacing:.08em}
+.preview-banner a{color:#064b82;font-weight:700;text-decoration:underline}
+body{padding-top:52px!important}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LocalDocs — Web Preview | Joey Lawson</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --blue: #1a73e8; --blue-dark: #1765cc; --ink: #202124; --muted: #5f6368; --line: #dadce0; --bg: #f1f3f4; --card: #fff; }
+  html, body { height: 100%; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--ink); background: var(--bg); -webkit-tap-highlight-color: transparent; }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea { font-family: inherit; }
+  .hidden { display: none !important; }
+
+  /* ---------- Home ---------- */
+  header.topbar { position: sticky; top: 0; z-index: 20; background: #fff; border-bottom: 1px solid var(--line); padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+  .logo { display: flex; align-items: center; gap: 8px; font-size: 20px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+  .logo svg { flex: none; }
+  .logo b { color: var(--ink); font-weight: 500; }
+  .search { flex: 1; display: flex; align-items: center; gap: 8px; background: var(--bg); border-radius: 24px; padding: 9px 14px; min-width: 0; }
+  .search input { border: 0; outline: 0; background: transparent; font-size: 15px; width: 100%; color: var(--ink); }
+  .btn-new { flex: none; background: var(--blue); color: #fff; border: 0; border-radius: 24px; padding: 10px 18px; font-size: 15px; font-weight: 500; }
+  .btn-new:active { background: var(--blue-dark); }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 18px 14px 60px; }
+  .section-title { font-size: 14px; color: var(--muted); margin: 6px 2px 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; text-align: left; padding: 0; position: relative; }
+  .card:active { background: #f8f9fa; }
+  .thumb { height: 120px; padding: 14px 14px 0; overflow: hidden; border-bottom: 1px solid #eef0f2; color: #3c4043; font-size: 11px; line-height: 1.5; background: #fff; }
+  .thumb h1, .thumb h2, .thumb h3 { font-size: 12px; margin-bottom: 4px; }
+  .thumb p { margin-bottom: 4px; }
+  .card-body { padding: 10px 12px 12px; }
+  .card-title { font-size: 14px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-meta { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .card-menu-btn { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border-radius: 50%; border: 0; background: rgba(255,255,255,.92); font-size: 18px; line-height: 1; color: var(--muted); }
+  .empty { text-align: center; padding: 56px 20px; color: var(--muted); }
+  .empty .big { font-size: 48px; margin-bottom: 12px; }
+  .empty h2 { font-size: 18px; color: var(--ink); font-weight: 500; margin-bottom: 6px; }
+  .empty p { font-size: 14px; line-height: 1.5; max-width: 340px; margin: 0 auto 18px; }
+  .local-note { text-align: center; font-size: 12px; color: var(--muted); margin-top: 26px; line-height: 1.6; }
+
+  /* ---------- Editor ---------- */
+  .editor-bar { position: sticky; top: 0; z-index: 20; background: #fff; border-bottom: 1px solid var(--line); }
+  .editor-top { display: flex; align-items: center; gap: 8px; padding: 8px 10px; }
+  .icon-btn { width: 40px; height: 40px; border-radius: 50%; border: 0; background: transparent; font-size: 20px; color: var(--muted); flex: none; }
+  .icon-btn:active { background: #f1f3f4; }
+  .title-wrap { flex: 1; min-width: 0; }
+  #docTitle { width: 100%; border: 0; outline: 0; font-size: 18px; padding: 6px 4px; color: var(--ink); background: transparent; }
+  #docTitle:focus { border-bottom: 2px solid var(--blue); }
+  #saveState { font-size: 12px; color: var(--muted); padding: 0 4px 2px; white-space: nowrap; }
+  .toolbar { display: flex; gap: 2px; padding: 6px 8px; overflow-x: auto; scrollbar-width: none; border-top: 1px solid #eef0f2; }
+  .toolbar::-webkit-scrollbar { display: none; }
+  .tool { flex: none; min-width: 38px; height: 36px; padding: 0 8px; border: 0; border-radius: 6px; background: transparent; font-size: 15px; color: var(--ink); }
+  .tool:active, .tool.active { background: #e8f0fe; color: var(--blue); }
+  .tool b, .tool i, .tool u { font-size: 16px; }
+  .tool-sep { flex: none; width: 1px; background: var(--line); margin: 6px 4px; }
+  .page-wrap { background: var(--bg); padding: 14px 10px 80px; min-height: calc(100vh - 120px); }
+  .page { max-width: 820px; margin: 0 auto; background: #fff; border: 1px solid var(--line); border-radius: 4px; box-shadow: 0 1px 4px rgba(0,0,0,.08); min-height: 60vh; padding: 28px 22px; outline: none; font-size: 16px; line-height: 1.6; color: var(--ink); }
+  .page:empty:before { content: attr(data-placeholder); color: #9aa0a6; }
+  .page h1 { font-size: 28px; line-height: 1.3; margin: 8px 0; }
+  .page h2 { font-size: 22px; line-height: 1.35; margin: 8px 0; }
+  .page h3 { font-size: 18px; line-height: 1.4; margin: 8px 0; }
+  .page p { margin: 6px 0; }
+  .page ul, .page ol { margin: 6px 0 6px 24px; }
+  .page blockquote { border-left: 3px solid var(--blue); margin: 8px 0; padding: 4px 12px; color: var(--muted); }
+  .editor-foot { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; font-size: 12px; color: var(--muted); z-index: 20; }
+  .editor-foot button { border: 1px solid var(--line); background: #fff; border-radius: 18px; padding: 7px 14px; font-size: 13px; color: var(--ink); }
+  .editor-foot button:active { background: #f1f3f4; }
+
+  /* ---------- Menus / dialogs ---------- */
+  .sheet-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 50; display: flex; align-items: flex-end; justify-content: center; }
+  .sheet { background: #fff; width: 100%; max-width: 480px; border-radius: 16px 16px 0 0; padding: 10px 0 20px; }
+  .sheet h3 { font-size: 15px; padding: 10px 20px; border-bottom: 1px solid #eef0f2; margin-bottom: 6px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sheet button { display: block; width: 100%; text-align: left; border: 0; background: transparent; padding: 13px 20px; font-size: 15px; color: var(--ink); }
+  .sheet button:active { background: #f1f3f4; }
+  .sheet button.danger { color: #d93025; }
+  .dialog { background: #fff; width: calc(100% - 40px); max-width: 400px; border-radius: 12px; padding: 20px; margin: auto; }
+  .dialog h3 { font-size: 18px; margin-bottom: 8px; }
+  .dialog p { font-size: 14px; color: var(--muted); line-height: 1.5; margin-bottom: 16px; }
+  .dialog input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; font-size: 15px; outline: none; margin-bottom: 16px; }
+  .dialog input:focus { border-color: var(--blue); }
+  .dialog-row { display: flex; justify-content: flex-end; gap: 8px; }
+  .dialog-row button { border: 0; background: transparent; color: var(--blue); font-size: 15px; font-weight: 500; padding: 9px 14px; border-radius: 8px; }
+  .dialog-row button.solid { background: var(--blue); color: #fff; }
+  .dialog-row button.danger-solid { background: #d93025; color: #fff; }
+  #toast { position: fixed; left: 50%; bottom: 70px; transform: translateX(-50%); background: #202124; color: #fff; font-size: 14px; padding: 10px 18px; border-radius: 24px; z-index: 80; opacity: 0; pointer-events: none; transition: opacity .2s; white-space: nowrap; }
+  #toast.show { opacity: 1; }
+  @media (min-width: 700px) {
+    .page { padding: 48px 56px; }
+    .sheet-backdrop { align-items: center; }
+    .sheet { border-radius: 16px; }
+  }
+</style>
+</head>
+<body>
+<div class="preview-banner"><b>PREVIEW</b> — LocalDocs web preview<br /><a href="localdocs.html">About &amp; download the APK ↗</a> · <a href="index.html">Back to showcase ↗</a></div>
+
+<!-- ============ HOME ============ -->
+<div id="homeView">
+  <header class="topbar">
+    <div class="logo">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M6 2h9l5 5v15H6V2z" fill="#1a73e8"/><path d="M14 2v6h6" fill="#8ab4f8"/><path d="M9 13h8M9 16.5h8M9 9.5h3" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
+      <span><b>Local</b>Docs</span>
+    </div>
+    <label class="search">
+      <span aria-hidden="true">&#128269;</span>
+      <input id="searchInput" type="search" placeholder="Search documents" autocomplete="off">
+    </label>
+    <button class="btn-new" id="newDocBtn">+ New</button>
+  </header>
+  <div class="wrap">
+    <div class="section-title" id="listHeading">Recent documents</div>
+    <div class="grid" id="docGrid"></div>
+    <div class="empty hidden" id="emptyState">
+      <div class="big">&#128196;</div>
+      <h2>No documents yet</h2>
+      <p>Tap <b>+ New</b> to start your first document. Everything is saved on this device only — no account, no cloud.</p>
+      <button class="btn-new" id="emptyNewBtn">Create your first document</button>
+    </div>
+    <p class="local-note">Saved locally on this device.<br>No account. No internet needed. Nothing leaves your phone.</p>
+  </div>
+</div>
+
+<!-- ============ EDITOR ============ -->
+<div id="editorView" class="hidden">
+  <div class="editor-bar">
+    <div class="editor-top">
+      <button class="icon-btn" id="backBtn" title="Back to documents">&#8592;</button>
+      <div class="title-wrap">
+        <input id="docTitle" value="Untitled document" autocomplete="off">
+        <div id="saveState">Saved on this device</div>
+      </div>
+      <button class="icon-btn" id="shareBtn" title="Share / export">&#10548;</button>
+      <button class="icon-btn" id="moreBtn" title="More">&#8942;</button>
+    </div>
+    <div class="toolbar" id="toolbar">
+      <button class="tool" data-cmd="undo" title="Undo">&#8630;</button>
+      <button class="tool" data-cmd="redo" title="Redo">&#8631;</button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-cmd="bold" title="Bold"><b>B</b></button>
+      <button class="tool" data-cmd="italic" title="Italic"><i>I</i></button>
+      <button class="tool" data-cmd="underline" title="Underline"><u>U</u></button>
+      <button class="tool" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-block="H1" title="Heading 1">H1</button>
+      <button class="tool" data-block="H2" title="Heading 2">H2</button>
+      <button class="tool" data-block="H3" title="Heading 3">H3</button>
+      <button class="tool" data-block="P" title="Normal text">T</button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-cmd="insertUnorderedList" title="Bullet list">&#8226; List</button>
+      <button class="tool" data-cmd="insertOrderedList" title="Numbered list">1. List</button>
+      <button class="tool" data-block="BLOCKQUOTE" title="Quote">&ldquo; &rdquo;</button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-cmd="justifyLeft" title="Align left">&#8676;</button>
+      <button class="tool" data-cmd="justifyCenter" title="Align center">&#8596;</button>
+      <button class="tool" data-cmd="justifyRight" title="Align right">&#8677;</button>
+      <span class="tool-sep"></span>
+      <button class="tool" data-cmd="removeFormat" title="Clear formatting">Clear</button>
+    </div>
+  </div>
+  <div class="page-wrap">
+    <div class="page" id="editor" contenteditable="true" data-placeholder="Start typing…" spellcheck="true"></div>
+  </div>
+  <div class="editor-foot">
+    <span id="wordCount">0 words</span>
+    <button id="doneBtn">Done</button>
+  </div>
+</div>
+
+<div id="overlay" class="hidden"></div>
+<div id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+  var LS_KEY = "localdocs.docs.v1";
+  var docs = [];
+  var currentId = null;
+  var saveTimer = null;
+  var menuDocId = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var homeView = $("homeView"), editorView = $("editorView"), grid = $("docGrid"),
+      emptyState = $("emptyState"), searchInput = $("searchInput"), listHeading = $("listHeading"),
+      editor = $("editor"), docTitle = $("docTitle"), saveState = $("saveState"),
+      wordCountEl = $("wordCount"), overlay = $("overlay"), toastEl = $("toast");
+
+  function uid() { return "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  function now() { return Date.now(); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function plainText(html) { var d = document.createElement("div"); d.innerHTML = html || ""; return (d.textContent || "").replace(/\s+/g, " ").trim(); }
+  function wordCount(html) { var t = plainText(html); return t ? t.split(" ").length : 0; }
+  function timeAgo(ts) {
+    var s = Math.floor((Date.now() - ts) / 1000);
+    if (s < 60) return "just now";
+    var m = Math.floor(s / 60); if (m < 60) return m + " min ago";
+    var h = Math.floor(m / 60); if (h < 24) return h + " hr ago";
+    var d = Math.floor(h / 24); if (d < 30) return d + " day" + (d > 1 ? "s" : "") + " ago";
+    return new Date(ts).toLocaleDateString();
+  }
+  function toast(msg) {
+    toastEl.textContent = msg; toastEl.classList.add("show");
+    setTimeout(function () { toastEl.classList.remove("show"); }, 2200);
+  }
+
+  /* ---------- Storage: native file first, localStorage as backup ---------- */
+  function nativeSave(json) {
+    try { if (window.LocalDocs && window.LocalDocs.save) { window.LocalDocs.save(json); return true; } } catch (e) {}
+    return false;
+  }
+  function nativeLoad() {
+    try { if (window.LocalDocs && window.LocalDocs.load) { var s = window.LocalDocs.load(); return s || null; } } catch (e) {}
+    return null;
+  }
+  function persist() {
+    var json = JSON.stringify(docs);
+    try { localStorage.setItem(LS_KEY, json); } catch (e) {}
+    nativeSave(json);
+  }
+  function loadAll() {
+    var raw = nativeLoad();
+    if (!raw) { try { raw = localStorage.getItem(LS_KEY); } catch (e) {} }
+    if (raw) { try { docs = JSON.parse(raw) || []; } catch (e) { docs = []; } }
+    if (!docs.length) {
+      docs = [{
+        id: uid(), title: "Welcome to LocalDocs",
+        html: "<h1>Welcome to LocalDocs</h1><p>This works like Google Docs — but everything stays on your phone. No account, no cloud, no internet needed.</p><p><b>Try it:</b> tap this text, type, use the toolbar above to make text <b>bold</b>, <i>italic</i>, add headings and lists. Your changes save automatically.</p><h2>Your documents</h2><p>Tap the back arrow to see all your documents. Tap <b>+ New</b> to start another one. Long-press the three dots on a document to rename, duplicate, share or delete it.</p>",
+        createdAt: now(), updatedAt: now()
+      }];
+      persist();
+    }
+    docs.sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+  }
+
+  /* ---------- Home list ---------- */
+  function renderList() {
+    var q = (searchInput.value || "").toLowerCase().trim();
+    var list = docs.filter(function (d) {
+      return !q || d.title.toLowerCase().indexOf(q) !== -1 || plainText(d.html).toLowerCase().indexOf(q) !== -1;
+    });
+    listHeading.textContent = q ? list.length + " result" + (list.length === 1 ? "" : "s") + " for \u201C" + searchInput.value + "\u201D" : "Recent documents";
+    grid.innerHTML = "";
+    emptyState.classList.toggle("hidden", docs.length !== 0);
+    grid.classList.toggle("hidden", list.length === 0);
+    list.forEach(function (d) {
+      var card = document.createElement("div");
+      card.className = "card";
+      var snippet = plainText(d.html).slice(0, 140) || "No text yet";
+      card.innerHTML =
+        '<div class="thumb">' + (d.html || "<p>No text yet</p>") + '</div>' +
+        '<div class="card-body"><div class="card-title">' + esc(d.title || "Untitled document") + '</div>' +
+        '<div class="card-meta">' + timeAgo(d.updatedAt) + " &middot; " + wordCount(d.html) + " words</div></div>" +
+        '<button class="card-menu-btn" aria-label="Document options">&#8942;</button>';
+      card.addEventListener("click", function () { openDoc(d.id); });
+      card.querySelector(".card-menu-btn").addEventListener("click", function (ev) {
+        ev.stopPropagation(); showDocMenu(d.id);
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  /* ---------- Editor ---------- */
+  function getDoc(id) { for (var i = 0; i < docs.length; i++) if (docs[i].id === id) return docs[i]; return null; }
+  function openDoc(id) {
+    var d = getDoc(id); if (!d) return;
+    currentId = id;
+    docTitle.value = d.title;
+    editor.innerHTML = d.html || "";
+    updateWordCount();
+    setSaveState("Saved on this device");
+    homeView.classList.add("hidden");
+    editorView.classList.remove("hidden");
+    window.scrollTo(0, 0);
+    setTimeout(updateToolbarState, 50);
+  }
+  function closeEditor() {
+    saveNow();
+    currentId = null;
+    editorView.classList.add("hidden");
+    homeView.classList.remove("hidden");
+    renderList();
+  }
+  function setSaveState(t) { saveState.textContent = t; }
+  function updateWordCount() { wordCountEl.textContent = wordCount(editor.innerHTML) + " words"; }
+  function scheduleSave() {
+    setSaveState("Saving…");
+    updateWordCount();
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNow, 600);
+  }
+  function saveNow() {
+    if (!currentId) return;
+    var d = getDoc(currentId); if (!d) return;
+    d.title = (docTitle.value || "").trim() || "Untitled document";
+    d.html = editor.innerHTML;
+    d.updatedAt = now();
+    docs.sort(function (a, b) { return b.updatedAt - a.updatedAt; });
+    persist();
+    setSaveState("Saved " + new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + " • on this device");
+  }
+  function newDoc() {
+    var d = { id: uid(), title: "Untitled document", html: "", createdAt: now(), updatedAt: now() };
+    docs.unshift(d);
+    persist();
+    renderList();
+    openDoc(d.id);
+    setTimeout(function () { docTitle.focus(); docTitle.select(); }, 100);
+  }
+
+  /* ---------- Toolbar ---------- */
+  var toolbar = document.getElementById("toolbar");
+  var savedRange = null;
+  function saveSelection() {
+    var sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      var r = sel.getRangeAt(0);
+      if (editor.contains(r.commonAncestorContainer) || editor === r.commonAncestorContainer) {
+        savedRange = r.cloneRange();
+      }
+    }
+  }
+  function restoreSelection() {
+    if (!savedRange) return;
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+  }
+  function currentBlock() {
+    var sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    var n = sel.anchorNode;
+    if (!n) return null;
+    if (n.nodeType === 3) n = n.parentElement;
+    while (n && n !== editor) {
+      var t = n.tagName;
+      if (t === "H1" || t === "H2" || t === "H3" || t === "P" || t === "DIV" ||
+          t === "BLOCKQUOTE" || t === "LI" || t === "UL" || t === "OL") return n;
+      n = n.parentElement;
+    }
+    return null;
+  }
+  function currentLine() {
+    var b = currentBlock();
+    if (b) return b;
+    // No block wrapper yet (bare bold run straight in the editor):
+    // the line is the top-level child holding the caret.
+    var sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return null;
+    var n = sel.getRangeAt(0).endContainer;
+    while (n && n.parentNode !== editor) n = n.parentNode;
+    return (n && n !== editor) ? n : null;
+  }
+  function setCaretByTextOffset(root, offset) {
+    var walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, null);
+    var node, acc = 0;
+    while ((node = walker.nextNode())) {
+      var len = node.nodeValue.length;
+      if (acc + len >= offset) {
+        var r = document.createRange();
+        r.setStart(node, offset - acc);
+        r.collapse(true);
+        var s = window.getSelection();
+        s.removeAllRanges();
+        s.addRange(r);
+        return;
+      }
+      acc += len;
+    }
+    var r2 = document.createRange();
+    r2.selectNodeContents(root);
+    r2.collapse(false);
+    var s2 = window.getSelection();
+    s2.removeAllRanges();
+    s2.addRange(r2);
+  }
+  function updateToolbarState() {
+    if (editorView.classList.contains("hidden")) return;
+    var sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    if (!editor.contains(sel.anchorNode) && sel.anchorNode !== editor) return;
+    var cmds = ["bold", "italic", "underline", "strikeThrough",
+      "insertUnorderedList", "insertOrderedList",
+      "justifyLeft", "justifyCenter", "justifyRight"];
+    cmds.forEach(function (c) {
+      var btn = toolbar.querySelector('[data-cmd="' + c + '"]');
+      if (!btn) return;
+      var on = false;
+      try { on = document.queryCommandState(c); } catch (e) {}
+      btn.classList.toggle("active", !!on);
+    });
+    var block = "";
+    try { block = String(document.queryCommandValue("formatBlock") || "").toLowerCase(); } catch (e) {}
+    var blk = currentBlock();
+    if (blk) block = blk.tagName.toLowerCase();
+    ["H1", "H2", "H3", "P", "BLOCKQUOTE"].forEach(function (b) {
+      var btn = toolbar.querySelector('[data-block="' + b + '"]');
+      if (!btn) return;
+      var on = (b === "P") ? (block === "p" || block === "div" || block === "") : (block === b.toLowerCase());
+      btn.classList.toggle("active", !!on);
+    });
+  }
+  // Tapping a toolbar button moves focus off the editor on a phone, which
+  // would lose the caret/selection. Remember it on press, restore it on tap.
+  toolbar.addEventListener("pointerdown", saveSelection);
+  toolbar.addEventListener("mousedown", function (ev) { ev.preventDefault(); saveSelection(); });
+  toolbar.addEventListener("click", function (ev) {
+    var btn = ev.target.closest(".tool"); if (!btn) return;
+    restoreSelection();
+    editor.focus();
+    restoreSelection();
+    var block = btn.getAttribute("data-block");
+    var cmd = btn.getAttribute("data-cmd");
+    if (block) {
+      // Tapping the heading/quote that is already on turns it back into
+      // normal text — the browser does not toggle block formatting itself.
+      var cur = currentBlock();
+      var curTag = cur ? cur.tagName : "";
+      document.execCommand("formatBlock", false, (curTag === block) ? "P" : block);
+    } else if (cmd === "removeFormat") {
+      // Clear strips the whole line: inline styles AND block formatting.
+      // Two browser gotchas, both fixed here:
+      //  - removeFormat only strips bold/italic/etc, never a quote/heading.
+      //  - removeFormat ignores a collapsed caret inside a list item.
+      // So: select the line first, clear it, then put the caret back.
+      var sel = window.getSelection();
+      var line = currentLine();
+      var caretOffset = -1;
+      if (line && sel && sel.rangeCount > 0) {
+        var cr = sel.getRangeAt(0);
+        var pre = cr.cloneRange();
+        pre.selectNodeContents(line);
+        pre.setEnd(cr.endContainer, cr.endOffset);
+        caretOffset = pre.toString().length;
+        var lr = document.createRange();
+        lr.selectNodeContents(line);
+        sel.removeAllRanges();
+        sel.addRange(lr);
+      }
+      document.execCommand("removeFormat", false, null);
+      var blk = currentLine();
+      if (blk && blk.tagName === "LI") {
+        var list = blk.parentElement;
+        document.execCommand((list && list.tagName === "OL") ? "insertOrderedList" : "insertUnorderedList", false, null);
+      }
+      document.execCommand("formatBlock", false, "P");
+      document.execCommand("justifyLeft", false, null);
+      if (caretOffset >= 0) {
+        var blk2 = currentLine();
+        if (blk2) setCaretByTextOffset(blk2, caretOffset);
+      }
+    } else if (cmd) {
+      document.execCommand(cmd, false, null);
+    }
+    savedRange = null;
+    saveSelection();
+    updateToolbarState();
+    scheduleSave();
+  });
+  document.addEventListener("selectionchange", updateToolbarState);
+  editor.addEventListener("keyup", updateToolbarState);
+  editor.addEventListener("click", updateToolbarState);
+
+  /* ---------- Enter: get out of formatting like Google Docs ---------- */
+  editor.addEventListener("keydown", function (ev) {
+    if (ev.key !== "Enter" || ev.shiftKey) return;
+    var blk = currentBlock(); // may be null when the line has no block wrapper yet
+    var tag = blk ? blk.tagName : "";
+    if (tag === "LI") {
+      // Empty bullet/number line + Enter = leave the list, back to normal text.
+      if (plainText(blk.innerHTML) === "") {
+        ev.preventDefault();
+        var list = blk.parentElement;
+        var cmd = (list && list.tagName === "OL") ? "insertOrderedList" : "insertUnorderedList";
+        document.execCommand(cmd, false, null);
+        document.execCommand("formatBlock", false, "P");
+        scheduleSave();
+        updateToolbarState();
+      }
+      return;
+    }
+    if (tag === "H1" || tag === "H2" || tag === "H3" || tag === "BLOCKQUOTE") {
+      // Enter after a heading or quote starts a fresh normal paragraph
+      // below it, carrying any text after the caret into the new line.
+      ev.preventDefault();
+      var sel = window.getSelection();
+      var range = sel.getRangeAt(0);
+      var after = range.cloneRange();
+      after.selectNodeContents(blk);
+      after.setStart(range.endContainer, range.endOffset);
+      var frag = after.extractContents();
+      var p = document.createElement("p");
+      p.appendChild(frag);
+      if (plainText(p.innerHTML) === "") p.innerHTML = "<br>";
+      blk.parentNode.insertBefore(p, blk.nextSibling);
+      var nr = document.createRange();
+      nr.setStart(p, 0);
+      nr.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(nr);
+      scheduleSave();
+      updateToolbarState();
+      return;
+    }
+    // Normal paragraph, caret at the end, with bold/italic/etc on: Enter
+    // starts a fresh clean paragraph instead of carrying the style over.
+    // (Toggling the style off after the fact does not work — the browser
+    // reports the new empty line as unformatted until you start typing.)
+    var sel2 = window.getSelection();
+    if (!sel2 || sel2.rangeCount === 0) return;
+    var inlineOn = false;
+    ["bold", "italic", "underline", "strikeThrough"].forEach(function (c) {
+      try { if (document.queryCommandState(c)) inlineOn = true; } catch (e) {}
+    });
+    if (!inlineOn) return;
+    var r2 = sel2.getRangeAt(0);
+    // Top-level child of the editor holding the caret: the block itself,
+    // or the bare <b>/<i> run when the line has no block wrapper yet.
+    var top = r2.endContainer;
+    while (top && top.parentNode !== editor) top = top.parentNode;
+    if (!top || top === editor) return;
+    var tail = r2.cloneRange();
+    tail.selectNodeContents(top);
+    tail.setStart(r2.endContainer, r2.endOffset);
+    if (tail.toString() !== "") return; // mid-text: let the browser split it
+    ev.preventDefault();
+    var p2 = document.createElement("p");
+    p2.innerHTML = "<br>";
+    top.parentNode.insertBefore(p2, top.nextSibling);
+    var nr2 = document.createRange();
+    nr2.setStart(p2, 0);
+    nr2.collapse(true);
+    sel2.removeAllRanges();
+    sel2.addRange(nr2);
+    scheduleSave();
+    updateToolbarState();
+  });
+  editor.addEventListener("input", scheduleSave);
+  docTitle.addEventListener("input", scheduleSave);
+  $("backBtn").addEventListener("click", closeEditor);
+  $("doneBtn").addEventListener("click", closeEditor);
+  $("newDocBtn").addEventListener("click", newDoc);
+  $("emptyNewBtn").addEventListener("click", newDoc);
+  searchInput.addEventListener("input", renderList);
+
+  /* ---------- Share / export ---------- */
+  function shareCurrent() {
+    saveNow();
+    var d = getDoc(currentId); if (!d) return;
+    var text = d.title + "\n\n" + plainText(d.html);
+    if (window.LocalDocs && window.LocalDocs.share) { try { window.LocalDocs.share(d.title, text); return; } catch (e) {} }
+    if (navigator.share) { navigator.share({ title: d.title, text: text }).catch(function () {}); return; }
+    copyText(text, "Copied — paste it anywhere");
+  }
+  function copyText(text, msg) {
+    function done() { toast(msg || "Copied"); }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(done, function () { fallbackCopy(text); done(); });
+    } else { fallbackCopy(text); done(); }
+  }
+  function fallbackCopy(text) {
+    var ta = document.createElement("textarea");
+    ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand("copy"); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+  $("shareBtn").addEventListener("click", shareCurrent);
+
+  /* ---------- Export as PDF (native Android print-to-PDF) ---------- */
+  function exportPdfDoc(d) {
+    if (!d) return;
+    var title = d.title || "Untitled document";
+    var docHtml = "<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>" + esc(title) +
+      "</title><style>body{font-family:Arial,sans-serif;color:#202124;font-size:14pt;line-height:1.6;margin:48px;}" +
+      "h1{font-size:24pt;line-height:1.3}h2{font-size:19pt}h3{font-size:16pt}" +
+      "blockquote{border-left:3px solid #1a73e8;margin:8px 0;padding:4px 12px;color:#5f6368}" +
+      "ul,ol{margin:6px 0 6px 24px}</style></head><body><h1>" + esc(title) + "</h1>" +
+      (d.html || "<p></p>") + "</body></html>";
+    if (window.LocalDocs && window.LocalDocs.exportPdf) {
+      try { window.LocalDocs.exportPdf(title, docHtml); toast("Pick \u201CSave as PDF\u201D on the print screen"); return; } catch (e) {}
+    }
+    // No Android bridge (browser preview): fall back to the browser print dialog.
+    var w = window.open("", "_blank");
+    if (w) { w.document.write(docHtml); w.document.close(); w.focus(); w.print(); }
+    else { window.print(); }
+  }
+
+  /* ---------- Menus & dialogs ---------- */
+  function closeOverlay() { overlay.classList.add("hidden"); overlay.innerHTML = ""; overlay.className = "hidden"; menuDocId = null; }
+  function showSheet(html) {
+    overlay.className = "sheet-backdrop";
+    overlay.innerHTML = '<div class="sheet">' + html + "</div>";
+    overlay.addEventListener("click", function (ev) { if (ev.target === overlay) closeOverlay(); }, { once: true });
+  }
+  function showDialog(html) {
+    overlay.className = "sheet-backdrop";
+    overlay.innerHTML = '<div class="dialog">' + html + "</div>";
+    overlay.addEventListener("click", function (ev) { if (ev.target === overlay) closeOverlay(); }, { once: true });
+  }
+  function showDocMenu(id) {
+    var d = getDoc(id); if (!d) return;
+    menuDocId = id;
+    showSheet("<h3>" + esc(d.title) + "</h3>" +
+      '<button data-act="open">Open</button>' +
+      '<button data-act="rename">Rename</button>' +
+      '<button data-act="duplicate">Make a copy</button>' +
+      '<button data-act="share">Share / export as text</button>' +
+      '<button data-act="pdf">Export as PDF</button>' +
+      '<button data-act="delete" class="danger">Delete</button>');
+    overlay.querySelectorAll("[data-act]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var act = b.getAttribute("data-act");
+        var doc = getDoc(menuDocId);
+        closeOverlay();
+        if (!doc) return;
+        if (act === "open") openDoc(doc.id);
+        if (act === "rename") showRename(doc);
+        if (act === "duplicate") {
+          var copy = { id: uid(), title: "Copy of " + doc.title, html: doc.html, createdAt: now(), updatedAt: now() };
+          docs.unshift(copy); persist(); renderList(); toast("Copy created");
+        }
+        if (act === "share") {
+          var text = doc.title + "\n\n" + plainText(doc.html);
+          if (window.LocalDocs && window.LocalDocs.share) { try { window.LocalDocs.share(doc.title, text); } catch (e) { copyText(text); } }
+          else copyText(text, "Copied — paste it anywhere");
+        }
+        if (act === "pdf") exportPdfDoc(doc);
+        if (act === "delete") showDelete(doc);
+      });
+    });
+  }
+  function showRename(d) {
+    showDialog("<h3>Rename document</h3>" +
+      '<input id="renameInput" value="' + esc(d.title) + '">' +
+      '<div class="dialog-row"><button id="renameCancel">Cancel</button><button id="renameSave" class="solid">Rename</button></div>');
+    var input = $("renameInput");
+    input.focus(); input.select();
+    $("renameCancel").addEventListener("click", closeOverlay);
+    $("renameSave").addEventListener("click", function () {
+      d.title = (input.value || "").trim() || "Untitled document";
+      d.updatedAt = now(); persist(); closeOverlay(); renderList();
+      if (currentId === d.id) docTitle.value = d.title;
+      toast("Renamed");
+    });
+  }
+  function showDelete(d) {
+    showDialog("<h3>Delete document?</h3><p>\u201C" + esc(d.title) + "\u201D will be permanently deleted from this device. This can\u2019t be undone.</p>" +
+      '<div class="dialog-row"><button id="delCancel">Cancel</button><button id="delOk" class="danger-solid">Delete</button></div>');
+    $("delCancel").addEventListener("click", closeOverlay);
+    $("delOk").addEventListener("click", function () {
+      docs = docs.filter(function (x) { return x.id !== d.id; });
+      persist(); closeOverlay();
+      if (currentId === d.id) { currentId = null; editorView.classList.add("hidden"); homeView.classList.remove("hidden"); }
+      renderList(); toast("Document deleted");
+    });
+  }
+  $("moreBtn").addEventListener("click", function () {
+    var d = getDoc(currentId); if (!d) return;
+    showSheet("<h3>" + esc(d.title) + "</h3>" +
+      '<button data-act="rename">Rename</button>' +
+      '<button data-act="duplicate">Make a copy</button>' +
+      '<button data-act="share">Share / export as text</button>' +
+      '<button data-act="pdf">Export as PDF</button>' +
+      '<button data-act="delete" class="danger">Delete</button>');
+    overlay.querySelectorAll("[data-act]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var act = b.getAttribute("data-act");
+        closeOverlay();
+        var doc = getDoc(currentId); if (!doc) return;
+        if (act === "rename") showRename(doc);
+        if (act === "duplicate") {
+          var copy = { id: uid(), title: "Copy of " + doc.title, html: doc.html, createdAt: now(), updatedAt: now() };
+          docs.unshift(copy); persist(); toast("Copy created — find it in your documents");
+        }
+        if (act === "share") shareCurrent();
+        if (act === "pdf") { saveNow(); exportPdfDoc(getDoc(currentId)); }
+        if (act === "delete") showDelete(doc);
+      });
+    });
+  });
+
+  /* ---------- Android back button: close editor first ---------- */
+  window.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && currentId) closeEditor();
+  });
+
+  loadAll();
+  renderList();
+})();
+</script>
+</body>
+</html>

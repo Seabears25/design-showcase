@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+.preview-banner{position:fixed;top:0;left:0;right:0;z-index:99999;height:52px;display:block;background:#ff9b00;color:#1d2927;font-family:'DM Sans',Arial,sans-serif;font-size:12px;line-height:1.5;text-align:center;padding:8px 10px;box-sizing:border-box;overflow:hidden}
+.preview-banner b{letter-spacing:.08em}
+.preview-banner a{color:#064b82;font-weight:700;text-decoration:underline}
+body{padding-top:52px!important}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Local Tasks — Web Preview | Joey Lawson</title>
+<script>/* Apply the saved/system theme before first paint (no light flash). */
+try{var _t=localStorage.getItem('localtasks.theme');if(_t==='dark'||(_t!=='light'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)){document.documentElement.className+=' dark';}}catch(e){}</script>
+<style>
+/* Local Tasks — Monday-style task manager, single-file app.
+   No external resources, no network calls. Works from file:// in an
+   Android WebView. Saves only on this device (native bridge if present,
+   localStorage mirror otherwise). */
+:root{--bg:#fff;--text:#202124;--muted:#5f6368;--border:#dadce0;--border-soft:#e8eaed;--surface:#fff;--surface-2:#f1f3f4;--accent:#1a73e8;--accent-soft:#e8f0fe;--danger:#d93025;--input-bg:#fff;--overlay:rgba(0,0,0,.45);--row-hover:#f8f9fa;--st-notstarted:#c4c4c4;--st-working:#fdab3d;--st-stuck:#e2445c;--st-waiting:#ffcb00;--st-done:#00c875}
+html.dark{color-scheme:dark;--bg:#121212;--text:#e8eaed;--muted:#9aa0a6;--border:#3c4043;--border-soft:#2d2f31;--surface:#1e1e1e;--surface-2:#2d2f31;--accent:#8ab4f8;--accent-soft:#1e2f4d;--danger:#f28b82;--input-bg:#1e1e1e;--overlay:rgba(0,0,0,.65);--row-hover:#2a2a2a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{font-family:Roboto,Arial,system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.45;overflow-x:hidden}
+button{font-family:inherit;cursor:pointer;color:var(--text)}
+input,select,textarea{font-family:inherit;font-size:15px;color:var(--text);background:var(--input-bg)}
+header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--border)}
+.topbar{display:flex;align-items:center;gap:8px;padding:10px 12px 4px}
+.topbar h1{font-size:20px;font-weight:500;margin:0;flex:1;color:var(--accent);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{min-width:44px;min-height:44px;border:1px solid var(--border);background:var(--surface);border-radius:22px;color:var(--muted);font-size:18px;padding:0 10px}
+.icon-btn:active{background:var(--accent-soft)}
+.boardrow{display:flex;align-items:center;gap:6px;padding:4px 12px 8px;flex-wrap:wrap}
+.boardrow select{flex:1;min-width:140px;min-height:44px;border:1px solid var(--border);border-radius:22px;padding:0 12px;background:var(--surface);font-weight:500}
+.boardrow .mini-btn{min-height:44px;padding:0 12px;border:1px solid var(--border);background:var(--surface);border-radius:22px;white-space:nowrap}
+.boardrow .mini-btn.danger{color:var(--danger);border-color:var(--danger)}
+.searchrow{padding:0 12px 8px}
+.searchrow input{width:100%;min-height:44px;border:1px solid var(--border);border-radius:22px;padding:0 16px;outline:none}
+.searchrow input:focus{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.chips{display:flex;gap:6px;padding:0 12px 10px;overflow-x:auto}
+.chips button{flex:none;min-height:44px;padding:0 14px;border:1px solid var(--border);background:var(--surface);border-radius:22px;color:var(--muted);white-space:nowrap}
+.chips button.active{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+main{padding:12px 12px 110px;max-width:1000px;margin:0 auto}
+.summary{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.stat{flex:1;min-width:110px;border:1px solid var(--border);border-radius:12px;padding:10px 12px;background:var(--surface)}
+.stat .num{font-size:22px;font-weight:600;line-height:1.2}
+.stat .lbl{font-size:13px;color:var(--muted)}
+.stat .num.red{color:var(--danger)}
+.stat .num.green{color:#00c875}
+.group{border:1px solid var(--border);border-radius:12px;margin-bottom:16px;background:var(--surface);overflow:hidden}
+.group-head{display:flex;align-items:center;gap:6px;padding:8px 10px;flex-wrap:wrap}
+.group-head .collapse{min-width:44px;min-height:44px;border:none;background:transparent;font-size:16px;color:var(--muted);border-radius:8px;padding:0}
+.group-head .gname{flex:1;min-width:80px;font-size:17px;font-weight:600;background:none;border:none;text-align:left;padding:0 4px;min-height:44px;border-radius:8px}
+.group-head .gname:active{background:var(--surface-2)}
+.group-head .gcount{font-size:13px;color:var(--muted);white-space:nowrap}
+.group-head .gdel{min-width:44px;min-height:44px;border:none;background:transparent;font-size:18px;color:var(--muted);border-radius:8px}
+.group-head .gdel:active{background:var(--surface-2);color:var(--danger)}
+.progress-wrap{display:flex;align-items:center;gap:8px;padding:0 12px 10px}
+.progress{flex:1;height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.progress .fill{height:100%;background:#00c875;border-radius:4px;transition:width .2s}
+.progress-lbl{font-size:13px;color:var(--muted);white-space:nowrap}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.task-table{min-width:640px;border-top:1px solid var(--border-soft)}
+.trow{display:flex;align-items:stretch;border-bottom:1px solid var(--border-soft);min-height:44px}
+.trow.head{font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.03em}
+.trow.head .cell{padding:8px 10px}
+.trow .cell{padding:4px 6px;display:flex;align-items:center;min-height:44px}
+.trow:not(.head):hover{background:var(--row-hover)}
+.cell-task{flex:1 1 200px;min-width:180px}
+.cell-person{flex:0 0 118px;width:118px}
+.cell-status{flex:0 0 132px;width:132px}
+.cell-priority{flex:0 0 104px;width:104px}
+.cell-due{flex:0 0 132px;width:132px}
+.cell-del{flex:0 0 44px;width:44px;justify-content:center}
+.task-name{flex:1;background:none;border:none;text-align:left;font-size:15px;padding:0 4px;min-height:44px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.task-name:active{background:var(--surface-2)}
+.person-btn{display:flex;align-items:center;gap:6px;width:100%;min-height:44px;border:none;background:none;padding:0 4px;border-radius:6px;text-align:left}
+.person-btn:active{background:var(--surface-2)}
+.avatar{flex:none;width:30px;height:30px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.avatar.empty{background:var(--surface-2);color:var(--muted);font-size:16px}
+.person-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.status-pill{width:100%;min-height:36px;border:none;border-radius:6px;color:#fff;font-weight:600;font-size:13px;padding:0 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status-pill.waiting{color:#333}
+.priority-pill{width:100%;min-height:36px;border:1px solid var(--border);border-radius:6px;background:var(--surface);font-weight:600;font-size:13px;padding:0 6px}
+.priority-pill.low{color:var(--muted)}
+.priority-pill.medium{color:var(--accent)}
+.priority-pill.high{color:#e37400}
+.priority-pill.critical{color:var(--danger)}
+.due-input{width:100%;min-height:44px;border:1px solid transparent;border-radius:6px;background:transparent;padding:0 6px;font-size:14px}
+.due-input:focus{border-color:var(--accent);background:var(--input-bg);outline:none}
+.due-input.overdue{color:var(--danger);font-weight:600}
+.del-btn{min-width:44px;min-height:44px;border:none;background:transparent;font-size:18px;color:var(--muted);border-radius:8px}
+.del-btn:active{color:var(--danger);background:var(--surface-2)}
+.empty-note{padding:16px 12px;color:var(--muted);text-align:center}
+.add-group-btn{width:100%;min-height:48px;border:1px dashed var(--border);border-radius:12px;background:var(--surface);font-weight:500;color:var(--accent);margin-bottom:12px}
+.muted{color:var(--muted);font-size:13px}
+.modal-overlay{position:fixed;inset:0;background:var(--overlay);z-index:50;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.show{display:flex}
+/* Every popup in the app (detail sheet, pickers, person editor, menu,
+   prompt/confirm/alert dialogs) renders inside .modal — the one padded
+   main container — so all popups share the same padding and flow. */
+.modal{background:var(--surface);width:100%;max-width:640px;max-height:92vh;overflow-y:auto;border-radius:16px 16px 0 0;padding:16px 16px 28px}
+.modal h2{margin:0 0 12px;font-size:19px}
+#prompt-message{margin:0 0 12px;font-size:15px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.field input[type=text],.field input[type=date],.field select,.field textarea{width:100%;min-height:44px;border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.field textarea{min-height:90px;resize:vertical}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{min-height:48px;padding:0 18px;border-radius:24px;border:1px solid var(--border);background:var(--surface);font-weight:500;font-size:15px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.danger{color:var(--danger);border-color:var(--danger)}
+.btn.block{width:100%;margin-bottom:8px}
+.opt-btn{display:block;width:100%;min-height:48px;text-align:left;border:1px solid var(--border);border-radius:10px;background:var(--surface);padding:0 14px;margin-bottom:8px;font-size:15px}
+.opt-btn .dot{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:10px;vertical-align:middle}
+.fab{position:fixed;right:16px;bottom:20px;z-index:30;width:56px;height:56px;border-radius:50%;border:none;background:var(--accent);color:#fff;font-size:32px;line-height:1;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+.notify-row{display:flex;align-items:center;gap:10px;min-height:44px}
+.notify-row input[type=checkbox]{width:22px;height:22px;flex:none;accent-color:var(--accent)}
+.notify-row label{font-size:15px;font-weight:500;color:var(--text);margin:0}
+.hint{font-size:13px;color:var(--muted);margin:4px 0 0}
+</style>
+</head>
+<body>
+<div class="preview-banner"><b>PREVIEW</b> — Local Tasks web preview<br /><a href="local-tasks.html">About &amp; download the APK ↗</a> · <a href="index.html">Back to showcase ↗</a></div>
+<header>
+  <div class="topbar">
+    <h1>Local Tasks</h1>
+    <button class="icon-btn" id="btn-menu" type="button" aria-label="Menu">&#9776;</button>
+  </div>
+  <div class="boardrow">
+    <select id="board-select" aria-label="Board"></select>
+    <button class="mini-btn" id="btn-new-board" type="button">+ Board</button>
+    <button class="mini-btn" id="btn-rename-board" type="button">Rename</button>
+    <button class="mini-btn danger" id="btn-delete-board" type="button">Delete</button>
+  </div>
+  <div class="searchrow">
+    <input type="search" id="search-input" placeholder="Search tasks or people" autocomplete="off">
+  </div>
+  <div class="chips" id="status-chips" role="tablist" aria-label="Filter by status"></div>
+</header>
+
+<main id="board-container" aria-live="polite"></main>
+
+<button class="fab" id="btn-new-task" type="button" aria-label="New task">+</button>
+
+<!-- New task sheet (opened by the + button) -->
+<div class="modal-overlay" id="new-modal">
+  <div class="modal" role="dialog" aria-label="New task">
+    <h2>New task</h2>
+    <div class="field"><label for="nt-name">Task name</label><input type="text" id="nt-name" placeholder="Task name"></div>
+    <div class="field"><label for="nt-group">Group</label>
+      <select id="nt-group"></select>
+    </div>
+    <div class="field"><label for="nt-person">Person</label><input type="text" id="nt-person" placeholder="Who is doing this?"></div>
+    <div class="field"><label for="nt-status">Status</label>
+      <select id="nt-status"></select>
+    </div>
+    <div class="field"><label for="nt-priority">Priority</label>
+      <select id="nt-priority"></select>
+    </div>
+    <div class="field"><label for="nt-due">Due date</label><input type="date" id="nt-due"></div>
+    <div class="field">
+      <div class="notify-row"><input type="checkbox" id="nt-notify" checked><label for="nt-notify">Notify on due date</label></div>
+      <p class="hint" id="nt-notify-hint" style="display:none">Set a due date to get a notification that day.</p>
+    </div>
+    <div class="field"><label for="nt-notes">Notes</label><textarea id="nt-notes" placeholder="Notes about this task"></textarea></div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btn-nt-save">Save</button>
+      <button type="button" class="btn" id="btn-nt-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Task detail sheet -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal" role="dialog" aria-label="Task editor">
+    <h2 id="detail-title">Task</h2>
+    <div class="field"><label for="tk-name">Task name</label><input type="text" id="tk-name" placeholder="Task name"></div>
+    <div class="field"><label for="tk-group">Group</label>
+      <select id="tk-group"></select>
+    </div>
+    <div class="field"><label for="tk-person">Person</label><input type="text" id="tk-person" placeholder="Who is doing this?"></div>
+    <div class="field"><label for="tk-status">Status</label>
+      <select id="tk-status"></select>
+    </div>
+    <div class="field"><label for="tk-priority">Priority</label>
+      <select id="tk-priority"></select>
+    </div>
+    <div class="field"><label for="tk-due">Due date</label><input type="date" id="tk-due"></div>
+    <div class="field">
+      <div class="notify-row"><input type="checkbox" id="tk-notify" checked><label for="tk-notify">Notify on due date</label></div>
+      <p class="hint" id="tk-notify-hint" style="display:none">Set a due date to get a notification that day.</p>
+    </div>
+    <div class="field"><label for="tk-notes">Notes</label><textarea id="tk-notes" placeholder="Notes about this task"></textarea></div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btn-tk-save">Save</button>
+      <button type="button" class="btn" id="btn-tk-cancel">Cancel</button>
+      <button type="button" class="btn danger" id="btn-tk-delete">Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- Generic option picker (status / priority) -->
+<div class="modal-overlay" id="picker-modal">
+  <div class="modal" role="dialog" aria-label="Choose an option">
+    <h2 id="picker-title">Choose</h2>
+    <div id="picker-options"></div>
+    <button type="button" class="btn block" id="btn-picker-cancel">Cancel</button>
+  </div>
+</div>
+
+<!-- Person editor -->
+<div class="modal-overlay" id="person-modal">
+  <div class="modal" role="dialog" aria-label="Set person">
+    <h2>Person</h2>
+    <div class="field"><label for="person-input">Assigned to</label><input type="text" id="person-input" placeholder="Name (leave blank to clear)"></div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btn-person-save">Save</button>
+      <button type="button" class="btn" id="btn-person-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Menu / About -->
+<div class="modal-overlay" id="menu-modal">
+  <div class="modal" role="dialog" aria-label="Menu">
+    <h2>Local Tasks</h2>
+    <p><strong>Saves only on this device.</strong> Boards, groups and tasks are stored only on this phone. No account, no cloud, no sync.</p>
+    <button type="button" class="btn block" id="btn-theme">Dark theme: Off</button>
+    <button type="button" class="btn block" id="btn-export-backup">Export backup (JSON)</button>
+    <button type="button" class="btn block" id="btn-import-backup">Import backup (JSON)</button>
+    <input type="file" id="import-input" class="hidden-file" accept=".json,application/json">
+    <button type="button" class="btn block" id="btn-menu-close">Close</button>
+  </div>
+</div>
+
+<!-- Generic prompt / confirm / alert dialog.
+     Same padded .modal main container as every other popup — no native
+     prompt()/confirm()/alert() anywhere in the app, so the dialog always
+     looks and flows like the rest of the app. -->
+<div class="modal-overlay" id="prompt-modal">
+  <div class="modal" role="dialog" aria-label="Dialog">
+    <h2 id="prompt-title">Dialog</h2>
+    <p id="prompt-message" style="display:none"></p>
+    <div class="field" id="prompt-field"><label for="prompt-input" id="prompt-label">Value</label><input type="text" id="prompt-input" autocomplete="off"></div>
+    <div class="btn-row">
+      <button type="button" class="btn primary" id="btn-prompt-ok">OK</button>
+      <button type="button" class="btn" id="btn-prompt-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   Local Tasks — local-only storage
+   Bridge (Android WebView, if present):
+     window.TaskStore.save(jsonString)
+     window.TaskStore.load() -> JSON string (or empty string)
+     window.TaskStore.saveFile(base64, fileName, mimeType) [optional,
+       same shape as CalendarStore.saveFile in the calendar app]
+     window.TaskStore.rescheduleReminders() [optional: re-reads tasks.json
+       and re-schedules the 9:00 AM due-day alarms]
+   Fallback + mirror: localStorage key 'localtasks.data.v1'.
+   Load prefers the bridge when it returns non-empty, else localStorage.
+   ============================================================ */
+var LS_KEY = "localtasks.data.v1";
+var THEME_KEY = "localtasks.theme";
+
+var STATUSES = [
+  {id: "not_started", label: "Not Started", color: "#9aa0a6"},
+  {id: "working",     label: "Working on it", color: "#fdab3d"},
+  {id: "stuck",       label: "Stuck", color: "#e2445c"},
+  {id: "waiting",     label: "Waiting", color: "#ffcb00"},
+  {id: "done",        label: "Done", color: "#00c875"}
+];
+var PRIORITIES = ["Low", "Medium", "High", "Critical"];
+var FILTERS = [
+  {id: "all", label: "All"},
+  {id: "not_started", label: "Not Started"},
+  {id: "working", label: "Working"},
+  {id: "stuck", label: "Stuck"},
+  {id: "done", label: "Done"}
+];
+
+var data = null;              // {boards:[...], currentBoardId}
+var searchQuery = "";
+var statusFilter = "all";
+var saveTimer = null;
+var detailCtx = null;         // {boardId, groupId, taskId}
+var pickerCtx = null;         // {boardId, groupId, taskId, kind}
+var personCtx = null;         // {boardId, groupId, taskId}
+
+function uid(){ return "id_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2, 8); }
+function todayStr(){ var d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()); }
+function pad(n){ return (n < 10 ? "0" : "") + n; }
+function esc(s){ return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;"); }
+function statusDef(id){ for (var i = 0; i < STATUSES.length; i++) if (STATUSES[i].id === id) return STATUSES[i]; return STATUSES[0]; }
+function initials(name){
+  var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+}
+function hasBridge(){ return !!(window.TaskStore && typeof window.TaskStore.load === "function"); }
+function hasSaveFile(){ return !!(window.TaskStore && typeof window.TaskStore.saveFile === "function"); }
+// Ask the native side to re-read tasks.json and re-schedule the 9:00 AM
+// due-day alarms. No-op in a plain browser (no bridge).
+function rescheduleReminders(){
+  try { if (window.TaskStore && typeof window.TaskStore.rescheduleReminders === "function") window.TaskStore.rescheduleReminders(); } catch (e) {}
+}
+
+function seedData(){
+  return {
+    currentBoardId: "board_seed",
+    boards: [{
+      id: "board_seed",
+      name: "My Work",
+      groups: [
+        {id: uid(), name: "To Do", collapsed: false, tasks: [
+          {id: uid(), name: "Welcome to Local Tasks — tap a task to open it", person: "", status: "not_started", priority: "Medium", due: "", notes: "Everything here is stored only on this device.", notify: true},
+          {id: uid(), name: "Try changing a status by tapping its pill", person: "", status: "working", priority: "Low", due: "", notes: "", notify: true}
+        ]},
+        {id: uid(), name: "Doing", collapsed: false, tasks: [
+          {id: uid(), name: "Set up your first board", person: "", status: "working", priority: "High", due: todayStr(), notes: "", notify: true}
+        ]},
+        {id: uid(), name: "Done", collapsed: false, tasks: [
+          {id: uid(), name: "Download Local Tasks", person: "", status: "done", priority: "Low", due: "", notes: "", notify: true}
+        ]}
+      ]
+    }]
+  };
+}
+function normalize(d){
+  if (!d || !Array.isArray(d.boards)) return seedData();
+  d.boards.forEach(function(b){
+    if (!b.id) b.id = uid();
+    if (typeof b.name !== "string") b.name = "Board";
+    if (!Array.isArray(b.groups)) b.groups = [];
+    b.groups.forEach(function(g){
+      if (!g.id) g.id = uid();
+      if (typeof g.name !== "string") g.name = "Group";
+      if (typeof g.collapsed !== "boolean") g.collapsed = false;
+      if (!Array.isArray(g.tasks)) g.tasks = [];
+      g.tasks.forEach(function(t){
+        if (!t.id) t.id = uid();
+        if (typeof t.name !== "string") t.name = "";
+        if (typeof t.person !== "string") t.person = "";
+        if (statusDef(t.status).id !== t.status && STATUSES.map(function(s){return s.id;}).indexOf(t.status) < 0) t.status = "not_started";
+        if (PRIORITIES.indexOf(t.priority) < 0) t.priority = "Medium";
+        if (typeof t.due !== "string") t.due = "";
+        if (typeof t.notes !== "string") t.notes = "";
+        if (typeof t.notify !== "boolean") t.notify = true;
+      });
+    });
+  });
+  if (!d.currentBoardId || !d.boards.some(function(b){ return b.id === d.currentBoardId; })) {
+    d.currentBoardId = d.boards.length ? d.boards[0].id : null;
+  }
+  return d;
+}
+function currentBoard(){
+  // helper usable as currentBoard() on `data`, or currentBoard.call(d)
+  var d = this && this.boards ? this : data;
+  if (!d) return null;
+  for (var i = 0; i < d.boards.length; i++) if (d.boards[i].id === d.currentBoardId) return d.boards[i];
+  return d.boards[0] || null;
+}
+function findTask(boardId, groupId, taskId){
+  var b = null;
+  data.boards.forEach(function(x){ if (x.id === boardId) b = x; });
+  if (!b) return null;
+  var g = null;
+  b.groups.forEach(function(x){ if (x.id === groupId) g = x; });
+  if (!g) return null;
+  var t = null;
+  g.tasks.forEach(function(x){ if (x.id === taskId) t = x; });
+  return t ? {board: b, group: g, task: t} : null;
+}
+
+/* ---------- Storage: bridge + localStorage mirror ---------- */
+function loadData(){
+  var raw = "";
+  try { if (hasBridge()) raw = window.TaskStore.load() || ""; } catch (e) { raw = ""; }
+  if (!raw) { try { raw = localStorage.getItem(LS_KEY) || ""; } catch (e) { raw = ""; } }
+  if (raw) {
+    try {
+      var parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.boards)) { data = normalize(parsed); rescheduleReminders(); return; }
+    } catch (e) { /* corrupt data: fall through to seed */ }
+  }
+  data = seedData();
+  rescheduleReminders();
+}
+function saveNow(){
+  if (!data) return;
+  var json = JSON.stringify(data);
+  try { if (hasBridge() && typeof window.TaskStore.save === "function") window.TaskStore.save(json); } catch (e) {}
+  try { localStorage.setItem(LS_KEY, json); } catch (e) {}
+  rescheduleReminders();
+}
+function saveData(){ if (saveTimer) clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 300); }
+
+/* ---------- Theme ---------- */
+function applyTheme(){
+  var saved = null;
+  try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+  var dark = saved === "dark" || (saved !== "light"
+    && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+  document.documentElement.classList.toggle("dark", dark);
+  var b = document.getElementById("btn-theme");
+  if (b) b.textContent = "Dark theme: " + (dark ? "On" : "Off");
+  return dark;
+}
+function toggleTheme(){
+  var dark = !document.documentElement.classList.contains("dark");
+  try { localStorage.setItem(THEME_KEY, dark ? "dark" : "light"); } catch (e) {}
+  document.documentElement.classList.toggle("dark", dark);
+  var b = document.getElementById("btn-theme");
+  if (b) b.textContent = "Dark theme: " + (dark ? "On" : "Off");
+}
+
+/* ---------- Downloads ---------- */
+function textToBase64(text){ return btoa(unescape(encodeURIComponent(text))); }
+function downloadTextFile(fileName, text, mimeType){
+  if (hasSaveFile()) {
+    try { window.TaskStore.saveFile(textToBase64(text), fileName, mimeType || "application/octet-stream"); return; } catch (e) {}
+  }
+  var blob = new Blob([text], {type: mimeType || "application/octet-stream"});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement("a");
+  a.href = url; a.download = fileName;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 500);
+}
+
+/* ---------- DOM helpers ---------- */
+function el(tag, cls, text){
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+function clearEl(node){ while (node.firstChild) node.removeChild(node.firstChild); }
+function showOverlay(id){ document.getElementById(id).classList.add("show"); }
+function hideOverlay(id){ document.getElementById(id).classList.remove("show"); }
+function hideAllOverlays(){ ["detail-modal","new-modal","picker-modal","person-modal","menu-modal","prompt-modal"].forEach(hideOverlay); }
+
+/* ---------- Generic dialog (prompt / confirm / alert) ----------
+   One dialog, one padded .modal container, for every question the app
+   asks. Replaces the native prompt()/confirm()/alert() popups, which
+   cannot be padded or styled. opts:
+     {title, message, label, value, okLabel, danger, showInput, showCancel, onOk, onCancel} */
+var dialogCb = null;
+function openDialog(opts){
+  dialogCb = opts || {};
+  document.getElementById("prompt-title").textContent = opts.title || "Local Tasks";
+  var msg = document.getElementById("prompt-message");
+  if (opts.message) { msg.textContent = opts.message; msg.style.display = ""; }
+  else { msg.textContent = ""; msg.style.display = "none"; }
+  var field = document.getElementById("prompt-field");
+  var input = document.getElementById("prompt-input");
+  if (opts.showInput) {
+    field.style.display = "";
+    document.getElementById("prompt-label").textContent = opts.label || "Value";
+    input.value = (opts.value == null ? "" : opts.value);
+  } else {
+    field.style.display = "none";
+    input.value = "";
+  }
+  var okBtn = document.getElementById("btn-prompt-ok");
+  okBtn.textContent = opts.okLabel || "OK";
+  okBtn.className = "btn " + (opts.danger ? "danger" : "primary");
+  document.getElementById("btn-prompt-cancel").style.display = opts.showCancel === false ? "none" : "";
+  showOverlay("prompt-modal");
+  if (opts.showInput) setTimeout(function(){ input.focus(); input.select(); }, 50);
+}
+function closeDialog(ok){
+  if (!document.getElementById("prompt-modal").classList.contains("show")) return;
+  hideOverlay("prompt-modal");
+  var cb = dialogCb;
+  dialogCb = null;
+  if (ok && cb && typeof cb.onOk === "function") cb.onOk(document.getElementById("prompt-input").value);
+  else if (!ok && cb && typeof cb.onCancel === "function") cb.onCancel();
+}
+function showPrompt(title, label, initialValue, okLabel, onOk){
+  openDialog({title: title, label: label, value: initialValue, okLabel: okLabel, showInput: true, showCancel: true, onOk: onOk});
+}
+function showConfirm(title, message, okLabel, danger, onOk, onCancel){
+  openDialog({title: title, message: message, okLabel: okLabel, danger: danger, showInput: false, showCancel: true, onOk: onOk, onCancel: onCancel});
+}
+function showAlert(title, message, onOk){
+  openDialog({title: title, message: message, okLabel: "OK", showInput: false, showCancel: false, onOk: onOk});
+}
+
+/* Android back button: close the topmost open sheet/menu, if any.
+   Returns true when something was closed, false otherwise. */
+window.__tasksCloseTop = function(){
+  var order = ["prompt-modal", "new-modal", "picker-modal", "person-modal", "detail-modal", "menu-modal"];
+  for (var i = 0; i < order.length; i++) {
+    var m = document.getElementById(order[i]);
+    if (m && m.classList.contains("show")) {
+      if (order[i] === "prompt-modal") closeDialog(false);
+      else m.classList.remove("show");
+      return true;
+    }
+  }
+  return false;
+};
+
+/* ---------- Filtering ---------- */
+function taskVisible(t){
+  if (statusFilter !== "all" && t.status !== statusFilter) return false;
+  if (searchQuery) {
+    var q = searchQuery.toLowerCase();
+    var hay = (t.name + " " + t.person).toLowerCase();
+    if (hay.indexOf(q) < 0) return false;
+  }
+  return true;
+}
+function allTasks(board){
+  var out = [];
+  board.groups.forEach(function(g){ g.tasks.forEach(function(t){ out.push(t); }); });
+  return out;
+}
+
+/* ---------- Rendering ---------- */
+var container = document.getElementById("board-container");
+
+function renderBoardSelect(){
+  var sel = document.getElementById("board-select");
+  clearEl(sel);
+  data.boards.forEach(function(b){
+    var o = document.createElement("option");
+    o.value = b.id;
+    o.textContent = b.name;
+    if (b.id === data.currentBoardId) o.selected = true;
+    sel.appendChild(o);
+  });
+}
+function renderChips(){
+  var wrap = document.getElementById("status-chips");
+  clearEl(wrap);
+  FILTERS.forEach(function(f){
+    var b = el("button", statusFilter === f.id ? "active" : null, f.label);
+    b.type = "button";
+    b.addEventListener("click", function(){ statusFilter = f.id; render(); });
+    wrap.appendChild(b);
+  });
+}
+function renderSummary(board){
+  var tasks = allTasks(board);
+  var done = tasks.filter(function(t){ return t.status === "done"; }).length;
+  var today = todayStr();
+  var overdue = tasks.filter(function(t){ return t.due && t.due < today && t.status !== "done"; }).length;
+  var stuck = tasks.filter(function(t){ return t.status === "stuck"; }).length;
+  var strip = el("div", "summary");
+  var stats = [
+    {n: String(tasks.length), l: "Total tasks", cls: ""},
+    {n: String(done), l: "Done", cls: "green"},
+    {n: String(overdue), l: "Overdue", cls: overdue ? "red" : ""},
+    {n: String(stuck), l: "Stuck", cls: stuck ? "red" : ""}
+  ];
+  stats.forEach(function(s){
+    var d = el("div", "stat");
+    d.appendChild(el("div", "num" + (s.cls ? " " + s.cls : ""), s.n));
+    d.appendChild(el("div", "lbl", s.l));
+    strip.appendChild(d);
+  });
+  container.appendChild(strip);
+}
+function render(){
+  renderBoardSelect();
+  renderChips();
+  clearEl(container);
+  var board = currentBoard();
+  if (!board) { container.appendChild(el("div", "empty-note", "No boards yet — tap + Board to create one.")); return; }
+  renderSummary(board);
+  board.groups.forEach(function(group){ renderGroup(board, group); });
+  var addGroup = el("button", "add-group-btn", "+ Add group");
+  addGroup.type = "button";
+  addGroup.addEventListener("click", function(){
+    board.groups.push({id: uid(), name: "New Group", collapsed: false, tasks: []});
+    saveData(); render();
+  });
+  container.appendChild(addGroup);
+}
+function renderGroup(board, group){
+  var box = el("div", "group");
+  var head = el("div", "group-head");
+  var chev = el("button", "collapse", group.collapsed ? "▸" : "▾");
+  chev.type = "button";
+  chev.setAttribute("aria-label", group.collapsed ? "Expand group" : "Collapse group");
+  chev.addEventListener("click", function(){ group.collapsed = !group.collapsed; saveData(); render(); });
+  head.appendChild(chev);
+  var nameBtn = el("button", "gname", group.name);
+  nameBtn.type = "button";
+  nameBtn.title = "Tap to rename group";
+  nameBtn.addEventListener("click", function(){
+    showPrompt("Rename group", "Group name", group.name, "Rename", function(n){
+      if (n != null && n.trim()) { group.name = n.trim(); saveData(); render(); }
+    });
+  });
+  head.appendChild(nameBtn);
+  head.appendChild(el("span", "gcount", group.tasks.length + (group.tasks.length === 1 ? " task" : " tasks")));
+  var del = el("button", "gdel", "✕");
+  del.type = "button";
+  del.setAttribute("aria-label", "Delete group");
+  del.addEventListener("click", function(){
+    showConfirm("Delete group", "Delete group “" + group.name + "” and its " + group.tasks.length + " task(s)?", "Delete", true, function(){
+      board.groups = board.groups.filter(function(g){ return g.id !== group.id; });
+      saveData(); render();
+    });
+  });
+  head.appendChild(del);
+  box.appendChild(head);
+
+  var done = group.tasks.filter(function(t){ return t.status === "done"; }).length;
+  var pct = group.tasks.length ? Math.round(done / group.tasks.length * 100) : 0;
+  var pw = el("div", "progress-wrap");
+  var bar = el("div", "progress");
+  var fill = el("div", "fill");
+  fill.style.width = pct + "%";
+  bar.appendChild(fill);
+  pw.appendChild(bar);
+  pw.appendChild(el("span", "progress-lbl", pct + "% done"));
+  box.appendChild(pw);
+
+  if (group.collapsed) { container.appendChild(box); return; }
+
+  var scroll = el("div", "table-scroll");
+  var table = el("div", "task-table");
+  var headRow = el("div", "trow head");
+  [["Task", "cell-task"], ["Person", "cell-person"], ["Status", "cell-status"], ["Priority", "cell-priority"], ["Due date", "cell-due"], ["", "cell-del"]].forEach(function(c){
+    headRow.appendChild(el("div", "cell " + c[1], c[0]));
+  });
+  table.appendChild(headRow);
+
+  var visible = group.tasks.filter(taskVisible);
+  if (!group.tasks.length) {
+    table.appendChild(el("div", "empty-note", "No tasks yet — tap + to add one."));
+  } else if (!visible.length) {
+    table.appendChild(el("div", "empty-note", "No tasks match the current filter."));
+  }
+  visible.forEach(function(task){ table.appendChild(renderTaskRow(board, group, task)); });
+  scroll.appendChild(table);
+  box.appendChild(scroll);
+  container.appendChild(box);
+}
+function renderTaskRow(board, group, task){
+  var row = el("div", "trow");
+  row.setAttribute("data-task-id", task.id);
+
+  var cTask = el("div", "cell cell-task");
+  var nameBtn = el("button", "task-name", task.name || "(no name)");
+  nameBtn.type = "button";
+  nameBtn.title = "Tap to open task details";
+  nameBtn.addEventListener("click", function(){ openDetail(board.id, group.id, task.id); });
+  cTask.appendChild(nameBtn);
+  row.appendChild(cTask);
+
+  var cPerson = el("div", "cell cell-person");
+  var pBtn = el("button", "person-btn");
+  pBtn.type = "button";
+  pBtn.title = "Tap to set person";
+  var av = el("span", "avatar" + (task.person ? "" : " empty"), task.person ? initials(task.person) : "+");
+  pBtn.appendChild(av);
+  if (task.person) pBtn.appendChild(el("span", "person-name", task.person));
+  pBtn.addEventListener("click", function(){ openPersonEditor(board.id, group.id, task.id); });
+  cPerson.appendChild(pBtn);
+  row.appendChild(cPerson);
+
+  var cStatus = el("div", "cell cell-status");
+  var st = statusDef(task.status);
+  var sBtn = el("button", "status-pill" + (task.status === "waiting" ? " waiting" : ""), st.label);
+  sBtn.type = "button";
+  sBtn.style.backgroundColor = st.color;
+  sBtn.addEventListener("click", function(){ openPicker(board.id, group.id, task.id, "status"); });
+  cStatus.appendChild(sBtn);
+  row.appendChild(cStatus);
+
+  var cPri = el("div", "cell cell-priority");
+  var prBtn = el("button", "priority-pill " + task.priority.toLowerCase(), task.priority);
+  prBtn.type = "button";
+  prBtn.addEventListener("click", function(){ openPicker(board.id, group.id, task.id, "priority"); });
+  cPri.appendChild(prBtn);
+  row.appendChild(cPri);
+
+  var cDue = el("div", "cell cell-due");
+  var due = document.createElement("input");
+  due.type = "date";
+  due.className = "due-input";
+  due.value = task.due || "";
+  due.setAttribute("aria-label", "Due date for " + task.name);
+  if (task.due && task.due < todayStr() && task.status !== "done") due.classList.add("overdue");
+  due.addEventListener("change", function(){
+    task.due = due.value || "";
+    saveData(); render();
+  });
+  cDue.appendChild(due);
+  row.appendChild(cDue);
+
+  var cDel = el("div", "cell cell-del");
+  var dBtn = el("button", "del-btn", "✕");
+  dBtn.type = "button";
+  dBtn.setAttribute("aria-label", "Delete task");
+  dBtn.addEventListener("click", function(){
+    showConfirm("Delete task", "Delete task “" + task.name + "”?", "Delete", true, function(){
+      group.tasks = group.tasks.filter(function(t){ return t.id !== task.id; });
+      saveData(); render();
+    });
+  });
+  cDel.appendChild(dBtn);
+  row.appendChild(cDel);
+  return row;
+}
+
+/* ---------- Pickers (status / priority) ---------- */
+function openPicker(boardId, groupId, taskId, kind){
+  pickerCtx = {boardId: boardId, groupId: groupId, taskId: taskId, kind: kind};
+  var title = document.getElementById("picker-title");
+  var wrap = document.getElementById("picker-options");
+  clearEl(wrap);
+  var options = kind === "status"
+    ? STATUSES.map(function(s){ return {value: s.id, label: s.label, color: s.color}; })
+    : PRIORITIES.map(function(p){ return {value: p, label: p, color: null}; });
+  title.textContent = kind === "status" ? "Status" : "Priority";
+  options.forEach(function(o){
+    var b = el("button", "opt-btn");
+    b.type = "button";
+    if (o.color) {
+      var dot = el("span", "dot");
+      dot.style.backgroundColor = o.color;
+      b.appendChild(dot);
+    }
+    b.appendChild(document.createTextNode(o.label));
+    b.addEventListener("click", function(){
+      var found = findTask(boardId, groupId, taskId);
+      if (found) {
+        if (kind === "status") found.task.status = o.value;
+        else found.task.priority = o.value;
+        saveData();
+      }
+      hideOverlay("picker-modal");
+      render();
+    });
+    wrap.appendChild(b);
+  });
+  showOverlay("picker-modal");
+}
+function openPersonEditor(boardId, groupId, taskId){
+  personCtx = {boardId: boardId, groupId: groupId, taskId: taskId};
+  var found = findTask(boardId, groupId, taskId);
+  document.getElementById("person-input").value = found ? found.task.person : "";
+  showOverlay("person-modal");
+  setTimeout(function(){ document.getElementById("person-input").focus(); }, 50);
+}
+
+/* ---------- Task detail sheet ---------- */
+function fillSelect(sel, options, current){
+  clearEl(sel);
+  options.forEach(function(o){
+    var opt = document.createElement("option");
+    opt.value = o.value; opt.textContent = o.label;
+    if (o.value === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+function fillGroupSelect(sel, board, currentGroupId){
+  fillSelect(sel, board.groups.map(function(g){ return {value: g.id, label: g.name}; }), currentGroupId);
+}
+function updateNotifyHint(dueInputId, hintId){
+  var hint = document.getElementById(hintId);
+  if (hint) hint.style.display = document.getElementById(dueInputId).value ? "none" : "";
+}
+function findGroup(board, groupId){
+  var found = null;
+  board.groups.forEach(function(g){ if (g.id === groupId) found = g; });
+  return found;
+}
+// Move a task to another group in the same board (after the confirm).
+function moveTaskToGroup(boardId, fromGroupId, taskId, toGroupId){
+  var board = null;
+  data.boards.forEach(function(x){ if (x.id === boardId) board = x; });
+  if (!board) return false;
+  var from = findGroup(board, fromGroupId);
+  var to = findGroup(board, toGroupId);
+  if (!from || !to || from === to) return false;
+  var task = null;
+  from.tasks.forEach(function(t){ if (t.id === taskId) task = t; });
+  if (!task) return false;
+  from.tasks = from.tasks.filter(function(t){ return t.id !== taskId; });
+  to.tasks.push(task);
+  return true;
+}
+function openDetail(boardId, groupId, taskId){
+  var found = findTask(boardId, groupId, taskId);
+  if (!found) return;
+  detailCtx = {boardId: boardId, groupId: groupId, taskId: taskId};
+  var t = found.task;
+  document.getElementById("detail-title").textContent = "Edit task";
+  document.getElementById("tk-name").value = t.name;
+  fillGroupSelect(document.getElementById("tk-group"), found.board, groupId);
+  document.getElementById("tk-person").value = t.person || "";
+  fillSelect(document.getElementById("tk-status"), STATUSES.map(function(s){ return {value: s.id, label: s.label}; }), t.status);
+  fillSelect(document.getElementById("tk-priority"), PRIORITIES.map(function(p){ return {value: p, label: p}; }), t.priority);
+  document.getElementById("tk-due").value = t.due || "";
+  document.getElementById("tk-notify").checked = t.notify !== false;
+  updateNotifyHint("tk-due", "tk-notify-hint");
+  document.getElementById("tk-notes").value = t.notes || "";
+  showOverlay("detail-modal");
+  setTimeout(function(){ document.getElementById("tk-name").focus(); }, 50);
+}
+// Group dropdown in the detail sheet: changing it asks first, then moves.
+function onDetailGroupChange(){
+  if (!detailCtx) return;
+  var sel = document.getElementById("tk-group");
+  var toGroupId = sel.value;
+  if (toGroupId === detailCtx.groupId) return;
+  var found = findTask(detailCtx.boardId, detailCtx.groupId, detailCtx.taskId);
+  if (!found) { sel.value = detailCtx.groupId; return; }
+  var toGroup = findGroup(found.board, toGroupId);
+  var toName = toGroup ? toGroup.name : "another group";
+  var ctx = detailCtx;
+  showConfirm("Move task", "Move “" + found.task.name + "” to “" + toName + "”?", "Move", false,
+    function(){
+      if (moveTaskToGroup(ctx.boardId, ctx.groupId, ctx.taskId, toGroupId)) {
+        saveData();
+        hideOverlay("detail-modal");
+        render();
+      }
+    },
+    function(){ sel.value = ctx.groupId; });
+}
+function saveDetail(){
+  if (!detailCtx) return;
+  var found = findTask(detailCtx.boardId, detailCtx.groupId, detailCtx.taskId);
+  if (!found) { hideOverlay("detail-modal"); return; }
+  var name = document.getElementById("tk-name").value.trim();
+  if (!name) { showAlert("Task name needed", "Please enter a task name.", function(){ document.getElementById("tk-name").focus(); }); return; }
+  found.task.name = name;
+  found.task.person = document.getElementById("tk-person").value.trim();
+  found.task.status = document.getElementById("tk-status").value;
+  found.task.priority = document.getElementById("tk-priority").value;
+  found.task.due = document.getElementById("tk-due").value || "";
+  found.task.notify = document.getElementById("tk-notify").checked;
+  found.task.notes = document.getElementById("tk-notes").value;
+  saveData();
+  hideOverlay("detail-modal");
+  render();
+}
+
+/* ---------- New task sheet (FAB + button) ---------- */
+function openNewTask(){
+  var board = currentBoard();
+  if (!board) return;
+  document.getElementById("nt-name").value = "";
+  fillGroupSelect(document.getElementById("nt-group"), board, board.groups.length ? board.groups[0].id : null);
+  document.getElementById("nt-person").value = "";
+  fillSelect(document.getElementById("nt-status"), STATUSES.map(function(s){ return {value: s.id, label: s.label}; }), "not_started");
+  fillSelect(document.getElementById("nt-priority"), PRIORITIES.map(function(p){ return {value: p, label: p}; }), "Medium");
+  document.getElementById("nt-due").value = "";
+  document.getElementById("nt-notify").checked = true;
+  updateNotifyHint("nt-due", "nt-notify-hint");
+  document.getElementById("nt-notes").value = "";
+  showOverlay("new-modal");
+  setTimeout(function(){ document.getElementById("nt-name").focus(); }, 50);
+}
+function saveNewTask(){
+  var board = currentBoard();
+  if (!board) { hideOverlay("new-modal"); return; }
+  var name = document.getElementById("nt-name").value.trim();
+  if (!name) { showAlert("Task name needed", "Please enter a task name.", function(){ document.getElementById("nt-name").focus(); }); return; }
+  var group = findGroup(board, document.getElementById("nt-group").value) || board.groups[0];
+  if (!group) { hideOverlay("new-modal"); return; }
+  group.tasks.push({
+    id: uid(),
+    name: name,
+    person: document.getElementById("nt-person").value.trim(),
+    status: document.getElementById("nt-status").value,
+    priority: document.getElementById("nt-priority").value,
+    due: document.getElementById("nt-due").value || "",
+    notify: document.getElementById("nt-notify").checked,
+    notes: document.getElementById("nt-notes").value
+  });
+  saveData();
+  hideOverlay("new-modal");
+  render();
+}
+
+/* ---------- Export / Import ---------- */
+function exportBackup(){
+  downloadTextFile("local-tasks-backup-" + todayStr() + ".json", JSON.stringify(data, null, 2), "application/json");
+}
+function importBackupFile(file){
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(){
+    try {
+      var parsed = JSON.parse(String(reader.result));
+      if (!parsed || !Array.isArray(parsed.boards)) throw new Error("bad shape");
+      showConfirm("Import backup", "Import this backup? It will replace all current boards and tasks.", "Import", false, function(){
+        data = normalize(parsed);
+        if (!data.currentBoardId || !currentBoard.call(data)) data.currentBoardId = data.boards.length ? data.boards[0].id : null;
+        saveNow();
+        render();
+        showAlert("Backup imported", "Your boards and tasks were replaced with the backup.");
+      });
+    } catch (e) {
+      showAlert("Import failed", "That file is not a valid Local Tasks backup.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* ---------- Wire up ---------- */
+var _inited = false;
+function init(){
+  if (_inited) return; _inited = true;
+  loadData();
+  applyTheme();
+  document.getElementById("btn-theme").addEventListener("click", toggleTheme);
+  document.getElementById("btn-menu").addEventListener("click", function(){ showOverlay("menu-modal"); });
+  document.getElementById("btn-menu-close").addEventListener("click", function(){ hideOverlay("menu-modal"); });
+  document.getElementById("btn-export-backup").addEventListener("click", exportBackup);
+  document.getElementById("btn-import-backup").addEventListener("click", function(){ document.getElementById("import-input").click(); });
+  document.getElementById("import-input").addEventListener("change", function(e){
+    if (e.target.files && e.target.files[0]) importBackupFile(e.target.files[0]);
+    e.target.value = "";
+  });
+  document.getElementById("board-select").addEventListener("change", function(e){
+    data.currentBoardId = e.target.value;
+    saveData(); render();
+  });
+  document.getElementById("btn-new-board").addEventListener("click", function(){
+    showPrompt("New board", "Board name", "New Board", "Create", function(n){
+      if (n == null || !n.trim()) return;
+      var b = {id: uid(), name: n.trim(), groups: [
+        {id: uid(), name: "To Do", collapsed: false, tasks: []},
+        {id: uid(), name: "Doing", collapsed: false, tasks: []},
+        {id: uid(), name: "Done", collapsed: false, tasks: []}
+      ]};
+      data.boards.push(b);
+      data.currentBoardId = b.id;
+      saveData(); render();
+    });
+  });
+  document.getElementById("btn-rename-board").addEventListener("click", function(){
+    var board = currentBoard();
+    if (!board) return;
+    showPrompt("Rename board", "Board name", board.name, "Rename", function(n){
+      if (n != null && n.trim()) { board.name = n.trim(); saveData(); render(); }
+    });
+  });
+  document.getElementById("btn-delete-board").addEventListener("click", function(){
+    var board = currentBoard();
+    if (!board) return;
+    var total = allTasks(board).length;
+    showConfirm("Delete board", "Delete board “" + board.name + "” and its " + total + " task(s)?", "Delete", true, function(){
+      data.boards = data.boards.filter(function(b){ return b.id !== board.id; });
+      if (!data.boards.length) data = seedData();
+      data.currentBoardId = data.boards[0].id;
+      saveData(); render();
+    });
+  });
+  document.getElementById("search-input").addEventListener("input", function(e){
+    searchQuery = e.target.value.trim();
+    render();
+  });
+  document.getElementById("btn-tk-save").addEventListener("click", saveDetail);
+  document.getElementById("btn-tk-cancel").addEventListener("click", function(){ hideOverlay("detail-modal"); });
+  document.getElementById("tk-group").addEventListener("change", onDetailGroupChange);
+  document.getElementById("tk-due").addEventListener("change", function(){ updateNotifyHint("tk-due", "tk-notify-hint"); });
+  document.getElementById("btn-new-task").addEventListener("click", openNewTask);
+  document.getElementById("btn-nt-save").addEventListener("click", saveNewTask);
+  document.getElementById("btn-nt-cancel").addEventListener("click", function(){ hideOverlay("new-modal"); });
+  document.getElementById("nt-due").addEventListener("change", function(){ updateNotifyHint("nt-due", "nt-notify-hint"); });
+  document.getElementById("nt-name").addEventListener("keydown", function(e){
+    if (e.key === "Enter") saveNewTask();
+  });
+  document.getElementById("btn-tk-delete").addEventListener("click", function(){
+    if (!detailCtx) return;
+    var found = findTask(detailCtx.boardId, detailCtx.groupId, detailCtx.taskId);
+    if (!found) return;
+    showConfirm("Delete task", "Delete task “" + found.task.name + "”?", "Delete", true, function(){
+      found.group.tasks = found.group.tasks.filter(function(t){ return t.id !== found.task.id; });
+      saveData(); hideOverlay("detail-modal"); render();
+    });
+  });
+  document.getElementById("btn-picker-cancel").addEventListener("click", function(){ hideOverlay("picker-modal"); });
+  document.getElementById("btn-person-save").addEventListener("click", function(){
+    if (!personCtx) return;
+    var found = findTask(personCtx.boardId, personCtx.groupId, personCtx.taskId);
+    if (found) { found.task.person = document.getElementById("person-input").value.trim(); saveData(); }
+    hideOverlay("person-modal");
+    render();
+  });
+  document.getElementById("btn-person-cancel").addEventListener("click", function(){ hideOverlay("person-modal"); });
+  document.getElementById("person-input").addEventListener("keydown", function(e){
+    if (e.key === "Enter") document.getElementById("btn-person-save").click();
+  });
+  document.getElementById("btn-prompt-ok").addEventListener("click", function(){ closeDialog(true); });
+  document.getElementById("btn-prompt-cancel").addEventListener("click", function(){ closeDialog(false); });
+  document.getElementById("prompt-input").addEventListener("keydown", function(e){
+    if (e.key === "Enter") closeDialog(true);
+  });
+  ["detail-modal","new-modal","picker-modal","person-modal","menu-modal"].forEach(function(id){
+    document.getElementById(id).addEventListener("click", function(e){
+      if (e.target === document.getElementById(id)) hideOverlay(id);
+    });
+  });
+  document.getElementById("prompt-modal").addEventListener("click", function(e){
+    if (e.target === document.getElementById("prompt-modal")) closeDialog(false);
+  });
+  render();
+}
+document.addEventListener("DOMContentLoaded", init);
+if (document.readyState !== "loading") init();
+</script>
+</body>
+</html>

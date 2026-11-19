@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>
+.preview-banner{position:fixed;top:0;left:0;right:0;z-index:99999;height:52px;display:block;background:#ff9b00;color:#1d2927;font-family:'DM Sans',Arial,sans-serif;font-size:12px;line-height:1.5;text-align:center;padding:8px 10px;box-sizing:border-box;overflow:hidden}
+.preview-banner b{letter-spacing:.08em}
+.preview-banner a{color:#064b82;font-weight:700;text-decoration:underline}
+body{padding-top:52px!important}
+</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Local Invoices — Web Preview | Joey Lawson</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --blue: #1a73e8; --blue-dark: #1765cc; --ink: #202124; --muted: #5f6368; --line: #dadce0; --bg: #f1f3f4; --card: #fff; --red: #c5221f; --green: #137333; }
+  html, body { height: 100%; }
+  body { font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif; color: var(--ink); background: var(--bg); -webkit-tap-highlight-color: transparent; }
+  button { font-family: inherit; cursor: pointer; }
+  input, textarea, select { font-family: inherit; font-size: 16px; color: var(--ink); }
+  .hidden { display: none !important; }
+
+  /* ---------- App shell ---------- */
+  header.topbar { position: sticky; top: 0; z-index: 20; background: var(--card); border-bottom: 1px solid var(--line); padding: 10px 16px; display: flex; align-items: center; gap: 10px; }
+  header.topbar h1 { font-size: 20px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .icon-btn { border: none; background: transparent; font-size: 22px; line-height: 1; padding: 8px 10px; border-radius: 8px; color: var(--ink); min-width: 44px; min-height: 44px; }
+  .icon-btn:active { background: #e8eaed; }
+  .btn { border: none; border-radius: 8px; background: var(--blue); color: #fff; font-size: 15px; font-weight: 600; padding: 11px 16px; min-height: 44px; }
+  .btn:active { background: var(--blue-dark); }
+  .btn.secondary { background: #fff; color: var(--blue); border: 1px solid var(--line); }
+  .btn.danger { background: #fff; color: var(--red); border: 1px solid var(--line); }
+  .btn.ghost { background: transparent; color: var(--blue); padding: 11px 8px; }
+  main { padding: 16px 16px 120px; max-width: 860px; margin: 0 auto; }
+  .hint { color: var(--muted); font-size: 14px; line-height: 1.5; margin: 4px 2px 14px; }
+  .fab { position: fixed; right: 20px; bottom: 24px; z-index: 30; width: 56px; height: 56px; border-radius: 50%; border: none; background: var(--blue); color: #fff; font-size: 30px; line-height: 1; box-shadow: 0 4px 12px rgba(0,0,0,.3); }
+  .fab:active { background: var(--blue-dark); }
+
+  /* ---------- Invoice list ---------- */
+  .inv-card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+  .inv-card .row1 { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+  .inv-card .num { font-size: 17px; font-weight: 700; }
+  .inv-card .total { font-size: 17px; font-weight: 700; }
+  .inv-card .meta { color: var(--muted); font-size: 14px; margin-top: 4px; line-height: 1.45; }
+  .inv-card .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+  .inv-card .actions .btn { padding: 8px 12px; min-height: 40px; font-size: 14px; }
+  .empty { text-align: center; color: var(--muted); padding: 48px 20px; line-height: 1.6; }
+
+  /* ---------- Editor form ---------- */
+  .section { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+  .section h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; }
+  .field { margin-bottom: 12px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label { display: block; font-size: 13px; font-weight: 600; color: var(--muted); margin-bottom: 5px; }
+  .field input, .field textarea { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 11px 12px; background: #fff; }
+  .field input:focus, .field textarea:focus { outline: 2px solid var(--blue); border-color: var(--blue); }
+  .field textarea { min-height: 64px; resize: vertical; line-height: 1.45; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .grid3 { grid-template-columns: 1fr 1fr; } }
+
+  .line-row { border: 1px solid var(--line); border-radius: 10px; padding: 12px; margin-bottom: 10px; background: #fafafa; }
+  .line-row .line-top { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .line-row .line-mid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; align-items: end; }
+  .line-row .amt { font-size: 16px; font-weight: 700; padding-bottom: 11px; text-align: right; }
+  .line-row .rm { grid-column: 1 / -1; }
+  .mini-label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+  .line-row input { width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: 10px; background: #fff; }
+  .totals-box { border-top: 1px solid var(--line); margin-top: 4px; padding-top: 12px; }
+  .totals-box .trow { display: flex; justify-content: space-between; font-size: 16px; padding: 4px 0; }
+  .totals-box .trow.due { font-size: 20px; font-weight: 700; border-top: 2px solid var(--ink); margin-top: 6px; padding-top: 10px; }
+
+  /* ---------- Preview ---------- */
+  .preview-note { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 6px 2px 10px; }
+  #previewWrap { overflow: hidden; background: #9aa0a6; border-radius: 4px; padding: 0; }
+  #previewScale { transform-origin: top left; }
+  #toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: #202124; color: #fff; padding: 12px 18px; border-radius: 8px; font-size: 15px; z-index: 50; opacity: 0; pointer-events: none; transition: opacity .25s; max-width: 90vw; text-align: center; }
+  #toast.show { opacity: 1; }
+
+  /* ---------- Custom dialog (no native prompt/confirm/alert) ---------- */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 60; display: flex; align-items: flex-end; justify-content: center; }
+  .modal { background: #fff; border-radius: 16px 16px 0 0; width: 100%; max-width: 520px; padding: 20px 16px 28px; }
+  .modal h3 { font-size: 18px; margin-bottom: 8px; }
+  .modal p { color: var(--muted); font-size: 15px; line-height: 1.5; margin-bottom: 18px; }
+  .modal .mrow { display: flex; gap: 10px; justify-content: flex-end; }
+</style>
+
+<!-- Invoice page CSS: shared by the on-screen preview and the exported PDF.
+     Letter page, exactly the layout of the Lawson Family Reps example. -->
+<style id="invCss">
+  .page { width: 8.5in; min-height: 11in; background: #fff; color: #000;
+    font-family: Helvetica, Arial, sans-serif; padding: 0.55in 0.65in 0.6in;
+    box-sizing: border-box; }
+  .inv-head { display: flex; justify-content: space-between; align-items: flex-start; }
+  .inv-head-left { display: flex; align-items: flex-start; gap: 0.16in; }
+  .inv-logo { width: 1.02in; height: 1.02in; object-fit: contain; flex: none; }
+  .inv-company { font-size: 20pt; font-weight: 700; letter-spacing: .2pt; margin-top: 0.14in; white-space: nowrap; }
+  .inv-prepared { font-size: 13pt; margin-top: 0.05in; }
+  .inv-head-right { text-align: right; flex: none; }
+  .inv-title { font-size: 36pt; font-weight: 700; line-height: 1; letter-spacing: 1pt; }
+  .inv-meta { margin-top: 0.16in; font-size: 12.5pt; font-weight: 700; line-height: 1.5; }
+  .rule-thick { border: none; border-top: 3px solid #000; margin: 0.26in 0 0.22in; }
+  .rule-thick-b { border: none; border-top: 3px solid #000; margin: 0.34in 0 0.22in; }
+  .rule-thin { border: none; border-top: 1px solid #c9ced6; margin: 0.28in 0 0.26in; }
+  .sec-label { font-size: 13pt; font-weight: 700; }
+  .sec-name { font-size: 14pt; font-weight: 700; margin-top: 0.02in; }
+  .sec-addr { font-size: 13pt; line-height: 1.4; white-space: pre-line; margin-top: 0.02in; }
+  .sec-gap { height: 0.32in; }
+  table.inv-items { width: 100%; border-collapse: collapse; }
+  table.inv-items th { background: #111; color: #fff; text-align: left; font-size: 12pt; font-weight: 700; padding: 0.11in 0.12in; }
+  table.inv-items td { font-size: 12.5pt; padding: 0.11in 0.12in; vertical-align: top; }
+  table.inv-items tr.alt td { background: #f0f0f0; }
+  table.inv-items th.num, table.inv-items td.num { text-align: right; }
+  .inv-totals { margin-left: auto; width: 3.15in; margin-top: 0.16in; }
+  .tot-row { display: flex; justify-content: space-between; font-size: 12.5pt; padding: 0.05in 0; }
+  .tot-rule { border-top: 2px solid #000; margin: 0.07in 0 0.05in; }
+  .tot-due { display: flex; justify-content: space-between; font-size: 17pt; font-weight: 700; padding-top: 0.04in; }
+  .pay-body { font-size: 13pt; margin-top: 0.06in; }
+  .notes-body { font-size: 13pt; font-style: italic; margin-top: 0.06in; line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="preview-banner"><b>PREVIEW</b> — Local Invoices web preview<br /><a href="local-invoices.html">About &amp; download the APK ↗</a> · <a href="index.html">Back to showcase ↗</a></div>
+
+<!-- ============ LIST VIEW ============ -->
+<div id="listView">
+  <header class="topbar"><h1>Local Invoices</h1></header>
+  <main>
+    <p class="hint">Invoices saved only on this phone. Tap one to edit it, or make a PDF in the exact Lawson Family Reps layout.</p>
+    <div id="invList"></div>
+    <div id="emptyState" class="empty hidden">No invoices yet.<br>Tap <b>+</b> to make your first one.</div>
+  </main>
+  <button class="fab" id="newBtn" aria-label="New invoice">+</button>
+</div>
+
+<!-- ============ EDITOR VIEW ============ -->
+<div id="editorView" class="hidden">
+  <header class="topbar">
+    <button class="icon-btn" id="backBtn" aria-label="Back">&#8592;</button>
+    <h1 id="editorTitle">New Invoice</h1>
+    <button class="btn ghost" id="pdfBtn">PDF</button>
+    <button class="btn" id="saveBtn">Save</button>
+  </header>
+  <main>
+    <div class="section">
+      <h2>Invoice</h2>
+      <div class="grid3">
+        <div class="field"><label>Invoice #</label><input id="fInvNo" inputmode="numeric"></div>
+        <div class="field"><label>Project #</label><input id="fProjNo"></div>
+        <div class="field"><label>Invoice Date</label><input id="fInvDate" type="date"></div>
+      </div>
+      <div class="grid2">
+        <div class="field"><label>Company</label><input id="fCompany"></div>
+        <div class="field"><label>Prepared By</label><input id="fPreparedBy"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Bill To</h2>
+      <div class="field"><label>Name</label><input id="fBillName" placeholder="Bob"></div>
+      <div class="field"><label>Address</label><textarea id="fBillAddr" placeholder="Arnold Ln"></textarea></div>
+      <div class="field"><label>Project</label><input id="fProject" placeholder="Sub Contract Work"></div>
+    </div>
+
+    <div class="section">
+      <h2>Work Lines</h2>
+      <div id="linesBox"></div>
+      <button class="btn secondary" id="addLineBtn" type="button">+ Add line</button>
+      <div class="totals-box">
+        <div class="trow"><span>Subtotal</span><span id="tSubtotal">$0.00</span></div>
+        <div class="trow"><span>Tax</span><span id="tTaxShow">$0.00</span></div>
+        <div class="trow due"><span>Total Due</span><span id="tTotal">$0.00</span></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Payment &amp; Notes</h2>
+      <div class="grid2">
+        <div class="field"><label>Tax ($)</label><input id="fTax" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        <div class="field"><label>Payment Due</label><input id="fPayDue"></div>
+      </div>
+      <div class="field"><label>Notes</label><textarea id="fNotes" style="min-height:80px"></textarea></div>
+    </div>
+
+    <p class="preview-note">Preview &mdash; this is what the PDF looks like</p>
+    <div id="previewWrap"><div id="previewScale"></div></div>
+  </main>
+</div>
+
+<div id="toast"></div>
+<div id="modalRoot"></div>
+
+<script>
+"use strict";
+/* Local Invoices v1.0 — saves ONLY on this device (native bridge
+   invoices.json, localStorage backup). No account, no cloud. */
+
+var STORE_KEY = "localinvoices.v1";
+var DEFAULT_COMPANY = "LAWSON FAMILY REPS";
+var DEFAULT_PREPARED = "Joseph Lawson";
+var DEFAULT_PROJECT = "Sub Contract Work";
+var DEFAULT_PAYDUE = "Upon Receipt";
+var DEFAULT_NOTES = "Thank you for choosing Lawson Family Reps. We appreciate your business.";
+var DEFAULT_RATE = 18;
+
+var invoices = [];
+var editingId = null;
+
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+function money(n) {
+  n = isFinite(n) ? n : 0;
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+function num(v, d) { var n = parseFloat(v); return isFinite(n) ? n : (d || 0); }
+function todayISO() {
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+function parseISO(iso) {
+  var p = String(iso || "").split("-");
+  if (p.length !== 3) return new Date();
+  return new Date(+p[0], +p[1] - 1, +p[2]);
+}
+function fmtShort(iso) {
+  var d = parseISO(iso);
+  return String(d.getMonth() + 1).padStart(2, "0") + "/" + String(d.getDate()).padStart(2, "0") + "/" + d.getFullYear();
+}
+function fmtLong(iso) {
+  return parseISO(iso).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+}
+function fmtHours(h) { return (Math.round(h * 10) / 10).toFixed(1); }
+function lineAmount(l) { return num(l.hours) * num(l.rate); }
+function subtotal(inv) { return inv.lines.reduce(function (s, l) { return s + lineAmount(l); }, 0); }
+function totalDue(inv) { return subtotal(inv) + num(inv.tax); }
+function uid() { return "inv-" + Date.now().toString(36) + "-" + Math.floor(Math.random() * 1e6).toString(36); }
+
+/* ---------- storage ---------- */
+function loadAll() {
+  var raw = "";
+  try { if (window.LocalInvoices && LocalInvoices.load) raw = LocalInvoices.load() || ""; } catch (e) {}
+  if (!raw) { try { raw = localStorage.getItem(STORE_KEY) || ""; } catch (e) {} }
+  try {
+    var data = JSON.parse(raw || "{}");
+    invoices = Array.isArray(data.invoices) ? data.invoices : [];
+  } catch (e) { invoices = []; }
+}
+function saveAll() {
+  var raw = JSON.stringify({ v: 1, invoices: invoices });
+  try { if (window.LocalInvoices && LocalInvoices.save) LocalInvoices.save(raw); } catch (e) {}
+  try { localStorage.setItem(STORE_KEY, raw); } catch (e) {}
+}
+function nextNumber() {
+  var max = 0;
+  invoices.forEach(function (inv) {
+    var n = parseInt(String(inv.number || "").replace(/\D/g, ""), 10);
+    if (isFinite(n) && n > max) max = n;
+  });
+  return String(max + 1).padStart(4, "0");
+}
+
+/* ---------- invoice page HTML (preview + PDF share this) ---------- */
+function invoicePageHTML(inv) {
+  var rows = inv.lines.map(function (l, i) {
+    return "<tr" + (i % 2 === 1 ? ' class="alt"' : "") + "><td>" + esc(fmtShort(l.date)) + "</td>" +
+      "<td>" + esc(l.desc) + "</td>" +
+      '<td class="num">' + esc(fmtHours(num(l.hours))) + "</td>" +
+      '<td class="num">' + esc(money(lineAmount(l))) + "</td></tr>";
+  }).join("");
+  return '<div class="page">' +
+    '<div class="inv-head"><div class="inv-head-left">' +
+      '<img class="inv-logo" src="logo.png" alt="Lawson Family Reps logo">' +
+      '<div><div class="inv-company">' + esc(inv.company) + '</div>' +
+      '<div class="inv-prepared">Prepared By: ' + esc(inv.preparedBy) + '</div></div>' +
+    '</div><div class="inv-head-right">' +
+      '<div class="inv-title">INVOICE</div>' +
+      '<div class="inv-meta">Invoice #: ' + esc(inv.number) + '<br>Project #: ' + esc(inv.projectNo) + '<br>Invoice Date: ' + esc(fmtLong(inv.date)) + '</div>' +
+    '</div></div>' +
+    '<hr class="rule-thick">' +
+    '<div class="sec-label">BILL TO</div>' +
+    '<div class="sec-name">' + esc(inv.billName) + '</div>' +
+    '<div class="sec-addr">' + esc(inv.billAddr) + '</div>' +
+    '<div class="sec-gap"></div>' +
+    '<div class="sec-label">PROJECT</div>' +
+    '<div class="sec-name">' + esc(inv.project) + '</div>' +
+    '<hr class="rule-thin">' +
+    '<table class="inv-items"><thead><tr><th>DATE</th><th>DESCRIPTION</th><th class="num">HOURS</th><th class="num">AMOUNT</th></tr></thead>' +
+    '<tbody>' + rows + '</tbody></table>' +
+    '<div class="inv-totals">' +
+      '<div class="tot-row"><span>Subtotal:</span><span>' + esc(money(subtotal(inv))) + '</span></div>' +
+      '<div class="tot-row"><span>Tax:</span><span>' + esc(money(num(inv.tax))) + '</span></div>' +
+      '<div class="tot-rule"></div>' +
+      '<div class="tot-due"><span>Total Due:</span><span>' + esc(money(totalDue(inv))) + '</span></div>' +
+    '</div>' +
+    '<hr class="rule-thick-b">' +
+    '<div class="sec-label">PAYMENT INFORMATION</div>' +
+    '<div class="pay-body">Payment Due: ' + esc(inv.payDue) + '</div>' +
+    '<div class="sec-gap"></div>' +
+    '<div class="sec-label">NOTES</div>' +
+    '<div class="notes-body">' + esc(inv.notes) + '</div>' +
+  '</div>';
+}
+function exportDocHTML(inv) {
+  var css = $("invCss").textContent;
+  return '<!DOCTYPE html><html><head><meta charset="utf-8">' +
+    '<title>Invoice ' + esc(inv.number) + ' - Lawson Family Reps</title>' +
+    '<style>html,body{margin:0;padding:0;background:#fff;}@page{size:Letter;margin:0;}' + css + '</style>' +
+    '</head><body>' + invoicePageHTML(inv) + '</body></html>';
+}
+function exportPdf(inv) {
+  var html = exportDocHTML(inv);
+  var title = "Invoice-" + (inv.number || "0000");
+  if (window.LocalInvoices && LocalInvoices.exportPdf) {
+    LocalInvoices.exportPdf(title, html);
+    toast("Opening print — choose Save as PDF");
+  } else {
+    var w = window.open("", "_blank");
+    if (!w) { toast("Pop-up blocked — allow pop-ups to export the PDF"); return; }
+    w.document.write(html);
+    w.document.close();
+    w.focus();
+    setTimeout(function () { w.print(); }, 400);
+  }
+}
+
+/* ---------- list view ---------- */
+function renderList() {
+  var box = $("invList");
+  box.innerHTML = "";
+  $("emptyState").classList.toggle("hidden", invoices.length > 0);
+  var sorted = invoices.slice().sort(function (a, b) {
+    if (a.date !== b.date) return a.date < b.date ? 1 : -1;
+    return String(b.number).localeCompare(String(a.number));
+  });
+  sorted.forEach(function (inv) {
+    var card = document.createElement("div");
+    card.className = "inv-card";
+    card.innerHTML =
+      '<div class="row1"><span class="num">Invoice #' + esc(inv.number) + '</span><span class="total">' + esc(money(totalDue(inv))) + '</span></div>' +
+      '<div class="meta">' + esc(fmtLong(inv.date)) + ' &middot; ' + esc(inv.projectNo || "") + '<br>' +
+      'Bill to: ' + esc(inv.billName || "(no name)") + ' &middot; ' + esc(inv.project || "") + '<br>' +
+      inv.lines.length + ' line' + (inv.lines.length === 1 ? "" : "s") + ' &middot; Subtotal ' + esc(money(subtotal(inv))) + '</div>' +
+      '<div class="actions">' +
+        '<button class="btn" data-act="open">Open</button>' +
+        '<button class="btn secondary" data-act="pdf">PDF</button>' +
+        '<button class="btn secondary" data-act="dup">Duplicate</button>' +
+        '<button class="btn danger" data-act="del">Delete</button>' +
+      '</div>';
+    card.querySelector('[data-act="open"]').addEventListener("click", function () { openEditor(inv.id); });
+    card.querySelector('[data-act="pdf"]').addEventListener("click", function () { exportPdf(inv); });
+    card.querySelector('[data-act="dup"]').addEventListener("click", function () { duplicateInvoice(inv); });
+    card.querySelector('[data-act="del"]').addEventListener("click", function () { confirmDelete(inv); });
+    box.appendChild(card);
+  });
+}
+function duplicateInvoice(inv) {
+  var copy = JSON.parse(JSON.stringify(inv));
+  copy.id = uid();
+  copy.number = nextNumber();
+  copy.date = todayISO();
+  copy.updated = Date.now();
+  invoices.push(copy);
+  saveAll();
+  renderList();
+  toast("Duplicated as Invoice #" + copy.number);
+}
+
+/* ---------- editor ---------- */
+function blankInvoice() {
+  var last = invoices.slice().sort(function (a, b) { return (b.updated || 0) - (a.updated || 0); })[0];
+  return {
+    id: uid(), number: nextNumber(), projectNo: last ? last.projectNo : "PRJ-001",
+    date: todayISO(), company: DEFAULT_COMPANY, preparedBy: DEFAULT_PREPARED,
+    billName: "", billAddr: "", project: DEFAULT_PROJECT,
+    lines: [{ date: todayISO(), desc: DEFAULT_PROJECT, hours: 3, rate: DEFAULT_RATE }],
+    tax: 0, payDue: DEFAULT_PAYDUE, notes: DEFAULT_NOTES, updated: Date.now()
+  };
+}
+function openEditor(id) {
+  var inv = id ? invoices.find(function (x) { return x.id === id; }) : blankInvoice();
+  if (!inv) return;
+  editingId = inv.id;
+  if (!id) { /* new: keep in memory only until Save */ }
+  $("editorTitle").textContent = id ? "Invoice #" + inv.number : "New Invoice";
+  $("fInvNo").value = inv.number;
+  $("fProjNo").value = inv.projectNo || "";
+  $("fInvDate").value = inv.date || todayISO();
+  $("fCompany").value = inv.company || DEFAULT_COMPANY;
+  $("fPreparedBy").value = inv.preparedBy || DEFAULT_PREPARED;
+  $("fBillName").value = inv.billName || "";
+  $("fBillAddr").value = inv.billAddr || "";
+  $("fProject").value = inv.project || "";
+  $("fTax").value = num(inv.tax).toFixed(2);
+  $("fPayDue").value = inv.payDue || DEFAULT_PAYDUE;
+  $("fNotes").value = inv.notes || "";
+  renderLines(inv.lines);
+  $("listView").classList.add("hidden");
+  $("editorView").classList.remove("hidden");
+  window.scrollTo(0, 0);
+  updatePreview();
+}
+function renderLines(lines) {
+  var box = $("linesBox");
+  box.innerHTML = "";
+  lines.forEach(function (l, i) { box.appendChild(lineRow(l, i)); });
+  if (!lines.length) box.appendChild(lineRow({ date: todayISO(), desc: DEFAULT_PROJECT, hours: 3, rate: DEFAULT_RATE }, 0));
+}
+function lineRow(l, i) {
+  var row = document.createElement("div");
+  row.className = "line-row";
+  row.innerHTML =
+    '<div class="line-top">' +
+      '<div><label class="mini-label">Date</label><input type="date" class="l-date" value="' + esc(l.date || todayISO()) + '"></div>' +
+      '<div><label class="mini-label">Description</label><input type="text" class="l-desc" value="' + esc(l.desc || "") + '" placeholder="Sub Contract Work"></div>' +
+    '</div>' +
+    '<div class="line-mid">' +
+      '<div><label class="mini-label">Hours</label><input type="number" min="0" step="0.1" inputmode="decimal" class="l-hours" value="' + esc(num(l.hours)) + '"></div>' +
+      '<div><label class="mini-label">Rate ($/hr)</label><input type="number" min="0" step="0.01" inputmode="decimal" class="l-rate" value="' + esc(num(l.rate, DEFAULT_RATE)) + '"></div>' +
+      '<div class="amt l-amt"></div>' +
+    '</div>' +
+    '<button class="btn danger rm" type="button">Remove line</button>';
+  row.querySelector(".rm").addEventListener("click", function () {
+    row.remove();
+    if (!$("linesBox").querySelector(".line-row")) renderLines([{ date: todayISO(), desc: DEFAULT_PROJECT, hours: 3, rate: DEFAULT_RATE }]);
+    updatePreview();
+  });
+  return row;
+}
+function collectForm() {
+  var lines = [];
+  $("linesBox").querySelectorAll(".line-row").forEach(function (row) {
+    lines.push({
+      date: row.querySelector(".l-date").value || todayISO(),
+      desc: row.querySelector(".l-desc").value || "",
+      hours: num(row.querySelector(".l-hours").value),
+      rate: num(row.querySelector(".l-rate").value, DEFAULT_RATE)
+    });
+  });
+  return {
+    id: editingId, number: $("fInvNo").value.trim() || nextNumber(),
+    projectNo: $("fProjNo").value.trim(), date: $("fInvDate").value || todayISO(),
+    company: $("fCompany").value.trim() || DEFAULT_COMPANY,
+    preparedBy: $("fPreparedBy").value.trim() || DEFAULT_PREPARED,
+    billName: $("fBillName").value.trim(), billAddr: $("fBillAddr").value,
+    project: $("fProject").value.trim() || DEFAULT_PROJECT,
+    lines: lines.length ? lines : [{ date: todayISO(), desc: DEFAULT_PROJECT, hours: 3, rate: DEFAULT_RATE }],
+    tax: num($("fTax").value), payDue: $("fPayDue").value.trim() || DEFAULT_PAYDUE,
+    notes: $("fNotes").value, updated: Date.now()
+  };
+}
+function updatePreview() {
+  var inv = collectForm();
+  $("previewScale").innerHTML = invoicePageHTML(inv);
+  $("linesBox").querySelectorAll(".line-row").forEach(function (row, i) {
+    var amt = row.querySelector(".l-amt");
+    if (amt && inv.lines[i]) amt.textContent = money(lineAmount(inv.lines[i]));
+  });
+  $("tSubtotal").textContent = money(subtotal(inv));
+  $("tTaxShow").textContent = money(num(inv.tax));
+  $("tTotal").textContent = money(totalDue(inv));
+  fitPreview();
+}
+function fitPreview() {
+  var wrap = $("previewWrap"), scale = $("previewScale"), page = scale.querySelector(".page");
+  if (!page) return;
+  var w = wrap.clientWidth;
+  var s = w / page.offsetWidth;
+  scale.style.transform = "scale(" + s + ")";
+  wrap.style.height = (page.offsetHeight * s) + "px";
+}
+function saveCurrent() {
+  var inv = collectForm();
+  var idx = invoices.findIndex(function (x) { return x.id === inv.id; });
+  if (idx >= 0) invoices[idx] = inv; else invoices.push(inv);
+  saveAll();
+  renderList();
+  return inv;
+}
+function showList() {
+  $("editorView").classList.add("hidden");
+  $("listView").classList.remove("hidden");
+  window.scrollTo(0, 0);
+}
+
+/* ---------- custom confirm dialog ---------- */
+function confirmDialog(title, text, okLabel, onOk) {
+  var root = $("modalRoot");
+  root.innerHTML =
+    '<div class="modal-overlay"><div class="modal" role="dialog" aria-modal="true">' +
+    '<h3>' + esc(title) + '</h3><p>' + esc(text) + '</p>' +
+    '<div class="mrow"><button class="btn secondary" id="mCancel">Cancel</button>' +
+    '<button class="btn" id="mOk">' + esc(okLabel) + '</button></div>' +
+    '</div></div>';
+  root.querySelector("#mCancel").addEventListener("click", function () { root.innerHTML = ""; });
+  root.querySelector(".modal-overlay").addEventListener("click", function (e) {
+    if (e.target === this) root.innerHTML = "";
+  });
+  root.querySelector("#mOk").addEventListener("click", function () { root.innerHTML = ""; onOk(); });
+}
+function confirmDelete(inv) {
+  confirmDialog("Delete invoice #" + inv.number + "?",
+    "This removes Invoice #" + inv.number + " (" + (inv.billName || "no name") + ", " + money(totalDue(inv)) + ") from this phone. This cannot be undone.",
+    "Delete", function () {
+      invoices = invoices.filter(function (x) { return x.id !== inv.id; });
+      saveAll();
+      renderList();
+      toast("Invoice #" + inv.number + " deleted");
+    });
+}
+
+/* ---------- toast ---------- */
+var toastTimer = null;
+function toast(msg) {
+  var t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function () { t.classList.remove("show"); }, 2600);
+}
+
+/* ---------- wire up ---------- */
+$("newBtn").addEventListener("click", function () { openEditor(null); });
+$("backBtn").addEventListener("click", function () { showList(); });
+$("saveBtn").addEventListener("click", function () {
+  var inv = saveCurrent();
+  $("editorTitle").textContent = "Invoice #" + inv.number;
+  toast("Invoice #" + inv.number + " saved");
+});
+$("pdfBtn").addEventListener("click", function () {
+  var inv = saveCurrent();
+  $("editorTitle").textContent = "Invoice #" + inv.number;
+  exportPdf(inv);
+});
+$("addLineBtn").addEventListener("click", function () {
+  var box = $("linesBox");
+  var last = box.querySelectorAll(".line-row");
+  var prev = last.length ? collectForm().lines[collectForm().lines.length - 1] : null;
+  box.appendChild(lineRow(prev ? { date: prev.date, desc: prev.desc, hours: prev.hours, rate: prev.rate } : { date: todayISO(), desc: DEFAULT_PROJECT, hours: 3, rate: DEFAULT_RATE }, last.length));
+  updatePreview();
+});
+$("editorView").addEventListener("input", updatePreview);
+window.addEventListener("resize", fitPreview);
+
+loadAll();
+renderList();
+</script>
+</body>
+</html>
